@@ -1,0 +1,152 @@
+"use client";
+
+import type React from "react";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import Image from "next/image";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Mail, Lock } from "lucide-react";
+
+export default function LoginPage() {
+  const router = useRouter();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+
+  const handleLogin = async (e: React.FormEvent) => {
+  e.preventDefault();
+
+  const res = await fetch("/api/auth/login", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, password }),
+  });
+
+  const data = await res.json();
+
+  if (!res.ok) {
+    alert(data.message);
+    return;
+  }
+
+  localStorage.setItem("userId", data.user.UserId);
+  localStorage.setItem("userEmail", data.user.Email);
+
+  router.push("/dashboard");
+};
+
+
+  const handleGoogleLogin = () => {
+    localStorage.setItem("userEmail", "akshatsinghal0204@gmail.com");
+    router.push("/dashboard");
+  };
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4">
+      <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-8">
+        {/* Logo */}
+        <div className="flex justify-center mb-6">
+          <Image
+            src="/images/image.png"
+            alt="STEMROBO"
+            width={220}
+            height={60}
+            className="object-contain"
+          />
+        </div>
+
+        {/* Title */}
+        <h1 className="text-2xl font-semibold text-center text-gray-800 mb-8">
+          Login to Continue
+        </h1>
+
+        <form onSubmit={handleLogin} className="space-y-5">
+          {/* Email */}
+          <div>
+            <label className="text-sm text-gray-600 mb-1 block">
+              Email address
+            </label>
+            <div className="relative">
+              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+              <Input
+                type="email"
+                placeholder="Enter your email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="pl-10 h-12"
+                required
+              />
+            </div>
+          </div>
+
+          {/* Password */}
+          <div>
+            <label className="text-sm text-gray-600 mb-1 block">
+              Password
+            </label>
+            <div className="relative">
+              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+              <Input
+                type="password"
+                placeholder="Enter your password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="pl-10 h-12"
+                required
+              />
+            </div>
+          </div>
+
+          {/* Forgot password */}
+          <div className="text-right">
+            <a
+              href="#"
+              className="text-sm text-blue-600 hover:underline"
+            >
+              Forgot password?
+            </a>
+          </div>
+
+          {/* Buttons */}
+          <div className="flex gap-3">
+            <Button
+              type="submit"
+              className="flex-1 h-12 bg-blue-600 hover:bg-blue-700"
+            >
+              Login
+            </Button>
+            <Button
+              type="button"
+              className="flex-1 h-12 bg-green-600 hover:bg-green-700"
+            >
+              Callback
+            </Button>
+          </div>
+
+          {/* Divider */}
+          <div className="flex items-center gap-4 py-4">
+            <div className="flex-1 h-px bg-gray-300" />
+            <span className="text-sm text-gray-500">or</span>
+            <div className="flex-1 h-px bg-gray-300" />
+          </div>
+
+          {/* Google Login */}
+          <Button
+            type="button"
+            onClick={handleGoogleLogin}
+            variant="outline"
+            className="w-full h-12 flex items-center justify-center gap-2"
+          >
+            <Image
+              src="https://www.google.com/favicon.ico"
+              alt="Google"
+              width={18}
+              height={18}
+            />
+            Continue with Google
+          </Button>
+        </form>
+      </div>
+    </div>
+  );
+}
