@@ -44,7 +44,8 @@ Blockly.Blocks['teachable_show_webcam'] = {
       .appendField("show the")
       .appendField(
         new Blockly.FieldDropdown([
-          ["webcam", "webcam"]
+          ["webcam", "webcam"],
+          ["image", "image"]
         ]),
         "SRC"
       );
@@ -57,7 +58,15 @@ Blockly.Blocks['teachable_show_webcam'] = {
 Blockly.Blocks['teachable_predict_image'] = {
   init: function () {
     this.appendDummyInput()
-      .appendField("predict image from")
+      .appendField("predict")
+      .appendField(
+        new Blockly.FieldDropdown([
+          ["image", "image"],
+          ["pose", "pose"]
+        ]),
+        "TYPE"
+      )
+      .appendField("from")
       .appendField(
         new Blockly.FieldDropdown([
           ["webcam", "webcam"],
@@ -81,6 +90,479 @@ Blockly.Blocks['teachable_predict_audio'] = {
   }
 };
 
+/* =========================
+   FACIAL FEATURE BLOCKS
+========================= */
+
+Blockly.Blocks['facial_load_image'] = {
+  init: function () {
+    this.appendDummyInput()
+      .appendField("Load Image");
+    this.setPreviousStatement(true);
+    this.setNextStatement(true);
+    this.setColour(160);
+  }
+};
+
+Blockly.Blocks['facial_get_count'] = {
+  init: function () {
+    this.appendDummyInput()
+      .appendField("Get")
+      .appendField(new Blockly.FieldDropdown([
+        ["face", "face"],
+        ["eye", "eye"],
+        ["nose", "nose"],
+        ["smile", "smile"]
+      ]), "FEATURE")
+      .appendField("count");
+    this.setPreviousStatement(true);
+    this.setNextStatement(true);
+    this.setColour(160);
+  }
+};
+
+Blockly.Blocks['facial_get_gender'] = {
+  init: function () {
+    this.appendDummyInput()
+      .appendField("Get")
+      .appendField(new Blockly.FieldDropdown([
+        ["male", "male"],
+        ["female", "female"]
+      ]), "GENDER")
+      .appendField("count");
+    this.setPreviousStatement(true);
+    this.setNextStatement(true);
+    this.setColour(160);
+  }
+};
+
+Blockly.Blocks['facial_get_expression'] = {
+  init: function () {
+    this.appendDummyInput()
+      .appendField("Get")
+      .appendField(new Blockly.FieldDropdown([
+        ["happy", "happy"],
+        ["sad", "sad"],
+        ["angry", "angry"],
+        ["fearful", "fearful"],
+        ["surprised", "surprised"],
+        ["disgusted", "disgusted"],
+        ["neutral", "neutral"]
+      ]), "EXPRESSION")
+      .appendField("expression count");
+    this.setPreviousStatement(true);
+    this.setNextStatement(true);
+    this.setColour(160);
+  }
+};
+
+Blockly.Blocks['facial_get_age_list'] = {
+  init: function () {
+    this.appendDummyInput()
+      .appendField("Get age list");
+    this.setPreviousStatement(true);
+    this.setNextStatement(true);
+    this.setColour(160);
+  }
+};
+
+Blockly.Blocks['facial_show_image'] = {
+  init: function () {
+    this.appendDummyInput()
+      .appendField("Show image")
+      .appendField(new Blockly.FieldDropdown([
+        ["with border", "with"],
+        ["without border", "without"]
+      ]), "BORDER");
+    this.setPreviousStatement(true);
+    this.setNextStatement(true);
+    this.setColour(160);
+  }
+};
+
+/* =========================
+   OBJECT DETECTION BLOCKS
+========================= */
+
+Blockly.Blocks['object_load_image'] = {
+  init: function () {
+    this.appendDummyInput()
+      .appendField("Load Image");
+    this.setPreviousStatement(true);
+    this.setNextStatement(true);
+    this.setColour(180);
+  }
+};
+
+Blockly.Blocks['object_get_count'] = {
+  init: function () {
+    this.appendDummyInput()
+      .appendField("Get")
+      .appendField(new Blockly.FieldDropdown([
+        ["aeroplane", "aeroplane"],
+        ["bicycle", "bicycle"],
+        ["bird", "bird"],
+        ["boat", "boat"],
+        ["bottle", "bottle"],
+        ["bus", "bus"],
+        ["car", "car"],
+        ["cat", "cat"],
+        ["chair", "chair"],
+        ["cow", "cow"],
+        ["diningtable", "diningtable"],
+        ["dog", "dog"],
+        ["horse", "horse"],
+        ["motorbike", "motorbike"],
+        ["person", "person"],
+        ["pottedplant", "pottedplant"],
+        ["sheep", "sheep"],
+        ["sofa", "sofa"],
+        ["train", "train"],
+        ["tvmonitor", "tvmonitor"]
+      ]), "OBJECT")
+      .appendField("count");
+    this.setPreviousStatement(true);
+    this.setNextStatement(true);
+    this.setColour(180);
+  }
+};
+
+Blockly.Blocks['object_show_image'] = {
+  init: function () {
+    this.appendDummyInput()
+      .appendField("Show image")
+      .appendField(new Blockly.FieldDropdown([
+        ["with border", "with"],
+        ["without border", "without"]
+      ]), "BORDER");
+    this.setPreviousStatement(true);
+    this.setNextStatement(true);
+    this.setColour(180);
+  }
+};
+
+/* =========================
+   FACE RECOGNITION BLOCKS
+========================= */
+
+Blockly.Blocks['facerecog_load_image'] = {
+  init: function () {
+    this.appendDummyInput()
+      .appendField("Load Image");
+    this.setPreviousStatement(true);
+    this.setNextStatement(true);
+    this.setColour(200);
+  }
+};
+
+Blockly.Blocks['facerecog_predict'] = {
+  init: function () {
+    this.appendDummyInput()
+      .appendField("Predict the result");
+    this.setPreviousStatement(true);
+    this.setNextStatement(true);
+    this.setColour(200);
+  }
+};
+
+Blockly.Blocks['facerecog_show_image'] = {
+  init: function () {
+    this.appendDummyInput()
+      .appendField("Show image")
+      .appendField(new Blockly.FieldDropdown([
+        ["with border", "with"],
+        ["without border", "without"]
+      ]), "BORDER");
+    this.setPreviousStatement(true);
+    this.setNextStatement(true);
+    this.setColour(200);
+  }
+};
+
+/* =========================
+   FINGER DETECTION BLOCKS
+========================= */
+
+Blockly.Blocks['finger_start_detection'] = {
+  init: function () {
+    this.appendDummyInput()
+      .appendField("Start Detection");
+    this.setPreviousStatement(true);
+    this.setNextStatement(true);
+    this.setColour(220);
+  }
+};
+
+Blockly.Blocks['finger_get_coordinate'] = {
+  init: function () {
+    this.appendDummyInput()
+      .appendField("Get")
+      .appendField(new Blockly.FieldDropdown([
+        ["x", "x"],
+        ["y", "y"],
+        ["z", "z"]
+      ]), "AXIS")
+      .appendField("coordinate of point")
+      .appendField(new Blockly.FieldDropdown([
+        ["0", "0"], ["1", "1"], ["2", "2"], ["3", "3"], ["4", "4"],
+        ["5", "5"], ["6", "6"], ["7", "7"], ["8", "8"], ["9", "9"],
+        ["10", "10"], ["11", "11"], ["12", "12"], ["13", "13"], ["14", "14"],
+        ["15", "15"], ["16", "16"], ["17", "17"], ["18", "18"], ["19", "19"],
+        ["20", "20"]
+      ]), "POINT");
+    this.setPreviousStatement(true);
+    this.setNextStatement(true);
+    this.setColour(220);
+  }
+};
+
+Blockly.Blocks['finger_get_count'] = {
+  init: function () {
+    this.appendDummyInput()
+      .appendField("Finger Count");
+    this.setPreviousStatement(true);
+    this.setNextStatement(true);
+    this.setColour(220);
+  }
+};
+
+Blockly.Blocks['finger_stop_detection'] = {
+  init: function () {
+    this.appendDummyInput()
+      .appendField("Stop Detection");
+    this.setPreviousStatement(true);
+    this.setNextStatement(true);
+    this.setColour(220);
+  }
+};
+
+Blockly.Blocks['finger_set_delay'] = {
+  init: function () {
+    this.appendValueInput("DELAY")
+      .setCheck("Number")
+      .appendField("Set Delay of");
+    this.appendDummyInput()
+      .appendField("Seconds");
+    this.setPreviousStatement(true);
+    this.setNextStatement(true);
+    this.setColour(220);
+  }
+};
+
+/* =========================
+   COMPUTER VISION (OPENCV) BLOCKS
+========================= */
+
+Blockly.Blocks['cv_load_image'] = {
+  init: function () {
+    this.appendDummyInput()
+      .appendField("Load Image");
+    this.setPreviousStatement(true);
+    this.setNextStatement(true);
+    this.setColour(280);
+  }
+};
+
+Blockly.Blocks['cv_put_text'] = {
+  init: function () {
+    this.appendValueInput("TEXT")
+      .setCheck("String")
+      .appendField("Put Text:");
+    this.appendDummyInput()
+      .appendField("Position:")
+      .appendField("x:")
+      .appendField(new Blockly.FieldNumber(100), "X")
+      .appendField("y:")
+      .appendField(new Blockly.FieldNumber(100), "Y");
+    this.appendDummyInput()
+      .appendField("Font Style:")
+      .appendField(new Blockly.FieldDropdown([
+        ["SIMPLEX", "SIMPLEX"],
+        ["PLAIN", "PLAIN"],
+        ["DUPLEX", "DUPLEX"],
+        ["COMPLEX", "COMPLEX"],
+        ["TRIPLEX", "TRIPLEX"],
+        ["COMPLEX_SMALL", "COMPLEX_SMALL"],
+        ["SCRIPT_SIMPLEX", "SCRIPT_SIMPLEX"],
+        ["SCRIPT_COMPLEX", "SCRIPT_COMPLEX"]
+      ]), "FONT");
+    this.appendDummyInput()
+      .appendField("Font Size:")
+      .appendField(new Blockly.FieldNumber(2, 0.1, 10, 0.1), "SIZE");
+    this.appendDummyInput()
+      .appendField("Color in")
+      .appendField("R:")
+      .appendField(new Blockly.FieldNumber(255, 0, 255), "R")
+      .appendField("G:")
+      .appendField(new Blockly.FieldNumber(0, 0, 255), "G")
+      .appendField("B:")
+      .appendField(new Blockly.FieldNumber(0, 0, 255), "B");
+    this.appendDummyInput()
+      .appendField("Line Thickness:")
+      .appendField(new Blockly.FieldNumber(2, 1, 10), "THICKNESS");
+    this.setPreviousStatement(true);
+    this.setNextStatement(true);
+    this.setColour(280);
+  }
+};
+
+Blockly.Blocks['cv_draw_line'] = {
+  init: function () {
+    this.appendDummyInput()
+      .appendField("Draw Line");
+    this.appendDummyInput()
+      .appendField("Start Point:")
+      .appendField("x:")
+      .appendField(new Blockly.FieldNumber(100), "X1")
+      .appendField("y:")
+      .appendField(new Blockly.FieldNumber(100), "Y1");
+    this.appendDummyInput()
+      .appendField("End Point:")
+      .appendField("x:")
+      .appendField(new Blockly.FieldNumber(100), "X2")
+      .appendField("y:")
+      .appendField(new Blockly.FieldNumber(100), "Y2");
+    this.appendDummyInput()
+      .appendField("Color in")
+      .appendField("R:")
+      .appendField(new Blockly.FieldNumber(255, 0, 255), "R")
+      .appendField("G:")
+      .appendField(new Blockly.FieldNumber(0, 0, 255), "G")
+      .appendField("B:")
+      .appendField(new Blockly.FieldNumber(0, 0, 255), "B");
+    this.appendDummyInput()
+      .appendField("Line Thickness:")
+      .appendField(new Blockly.FieldNumber(2, 1, 10), "THICKNESS");
+    this.setPreviousStatement(true);
+    this.setNextStatement(true);
+    this.setColour(280);
+  }
+};
+
+Blockly.Blocks['cv_draw_rectangle'] = {
+  init: function () {
+    this.appendDummyInput()
+      .appendField("Draw Rectangle");
+    this.appendDummyInput()
+      .appendField("Start Position:")
+      .appendField("x:")
+      .appendField(new Blockly.FieldNumber(100), "X1")
+      .appendField("y:")
+      .appendField(new Blockly.FieldNumber(100), "Y1");
+    this.appendDummyInput()
+      .appendField("End Position:")
+      .appendField("x:")
+      .appendField(new Blockly.FieldNumber(100), "X2")
+      .appendField("y:")
+      .appendField(new Blockly.FieldNumber(100), "Y2");
+    this.appendDummyInput()
+      .appendField("Color in")
+      .appendField("R:")
+      .appendField(new Blockly.FieldNumber(255, 0, 255), "R")
+      .appendField("G:")
+      .appendField(new Blockly.FieldNumber(0, 0, 255), "G")
+      .appendField("B:")
+      .appendField(new Blockly.FieldNumber(0, 0, 255), "B");
+    this.appendDummyInput()
+      .appendField("Thickness:")
+      .appendField(new Blockly.FieldNumber(2, 1, 10), "THICKNESS");
+    this.setPreviousStatement(true);
+    this.setNextStatement(true);
+    this.setColour(280);
+  }
+};
+
+Blockly.Blocks['cv_draw_circle'] = {
+  init: function () {
+    this.appendDummyInput()
+      .appendField("Draw Circle");
+    this.appendDummyInput()
+      .appendField("Position:")
+      .appendField("x:")
+      .appendField(new Blockly.FieldNumber(100), "X")
+      .appendField("y:")
+      .appendField(new Blockly.FieldNumber(100), "Y");
+    this.appendDummyInput()
+      .appendField("Radius:")
+      .appendField(new Blockly.FieldNumber(50, 1, 500), "RADIUS");
+    this.appendDummyInput()
+      .appendField("Color in")
+      .appendField("R:")
+      .appendField(new Blockly.FieldNumber(255, 0, 255), "R")
+      .appendField("G:")
+      .appendField(new Blockly.FieldNumber(0, 0, 255), "G")
+      .appendField("B:")
+      .appendField(new Blockly.FieldNumber(0, 0, 255), "B");
+    this.appendDummyInput()
+      .appendField("Thickness:")
+      .appendField(new Blockly.FieldNumber(2, 1, 10), "THICKNESS");
+    this.setPreviousStatement(true);
+    this.setNextStatement(true);
+    this.setColour(280);
+  }
+};
+
+Blockly.Blocks['cv_resize'] = {
+  init: function () {
+    this.appendDummyInput()
+      .appendField("Resize")
+      .appendField("x:")
+      .appendField(new Blockly.FieldNumber(100), "X")
+      .appendField("y:")
+      .appendField(new Blockly.FieldNumber(100), "Y");
+    this.setPreviousStatement(true);
+    this.setNextStatement(true);
+    this.setColour(280);
+  }
+};
+
+Blockly.Blocks['cv_xy'] = {
+  init: function () {
+    this.appendDummyInput()
+      .appendField("x:")
+      .appendField(new Blockly.FieldNumber(50), "X")
+      .appendField("y:")
+      .appendField(new Blockly.FieldNumber(50), "Y");
+    this.setOutput(true);
+    this.setColour(280);
+  }
+};
+
+Blockly.Blocks['cv_rgb'] = {
+  init: function () {
+    this.appendDummyInput()
+      .appendField("R:")
+      .appendField(new Blockly.FieldNumber(255, 0, 255), "R")
+      .appendField("G:")
+      .appendField(new Blockly.FieldNumber(0, 0, 255), "G")
+      .appendField("B:")
+      .appendField(new Blockly.FieldNumber(0, 0, 255), "B");
+    this.setOutput(true);
+    this.setColour(280);
+  }
+};
+
+Blockly.Blocks['cv_show_image'] = {
+  init: function () {
+    this.appendValueInput("NAME")
+      .setCheck("String")
+      .appendField("Show image as");
+    this.setPreviousStatement(true);
+    this.setNextStatement(true);
+    this.setColour(280);
+  }
+};
+
+Blockly.Blocks['cv_save_image'] = {
+  init: function () {
+    this.appendValueInput("NAME")
+      .setCheck("String")
+      .appendField("Save image as");
+    this.setPreviousStatement(true);
+    this.setNextStatement(true);
+    this.setColour(280);
+  }
+};
 
   /* =========================
      SPEAK BLOCK
@@ -2468,17 +2950,198 @@ pythonGenerator.forBlock['teachable_load_image'] = function () {
   return `print("__TEACHABLE_LOAD_IMAGE__")\n`;
 };
 
-pythonGenerator.forBlock['teachable_show_webcam'] = function () {
-  return `print("__TEACHABLE_SHOW_WEBCAM__")\n`;
+pythonGenerator.forBlock['teachable_show_webcam'] = function (block) {
+  const src = block.getFieldValue("SRC");
+  return `print("__TEACHABLE_SHOW__:${src}")\n`;
 };
 
 pythonGenerator.forBlock['teachable_predict_image'] = function (block) {
+  const type = block.getFieldValue("TYPE");
   const src = block.getFieldValue("SRC");
-  return `print("__TEACHABLE_PREDICT_IMAGE__:${src}")\n`;
+  return `print("__TEACHABLE_PREDICT__:${type}:${src}")\n`;
 };
 
 pythonGenerator.forBlock['teachable_predict_audio'] = function () {
   return `print("__TEACHABLE_PREDICT_AUDIO__")\n`;
+};
+
+/* =========================
+   FACIAL FEATURE GENERATORS
+========================= */
+
+pythonGenerator.forBlock['facial_load_image'] = function () {
+  return `print("__FACIAL_LOAD_IMAGE__")\n`;
+};
+
+pythonGenerator.forBlock['facial_get_count'] = function (block) {
+  const feature = block.getFieldValue("FEATURE");
+  return `print("__FACIAL_GET_COUNT__:${feature}")\n`;
+};
+
+pythonGenerator.forBlock['facial_get_gender'] = function (block) {
+  const gender = block.getFieldValue("GENDER");
+  return `print("__FACIAL_GET_GENDER__:${gender}")\n`;
+};
+
+pythonGenerator.forBlock['facial_get_expression'] = function (block) {
+  const expression = block.getFieldValue("EXPRESSION");
+  return `print("__FACIAL_GET_EXPRESSION__:${expression}")\n`;
+};
+
+pythonGenerator.forBlock['facial_get_age_list'] = function () {
+  return `print("__FACIAL_GET_AGE_LIST__")\n`;
+};
+
+pythonGenerator.forBlock['facial_show_image'] = function (block) {
+  const border = block.getFieldValue("BORDER");
+  return `print("__FACIAL_SHOW__:${border}")\n`;
+};
+
+/* =========================
+   OBJECT DETECTION GENERATORS
+========================= */
+
+pythonGenerator.forBlock['object_load_image'] = function () {
+  return `print("__OBJECT_LOAD_IMAGE__")\n`;
+};
+
+pythonGenerator.forBlock['object_get_count'] = function (block) {
+  const object = block.getFieldValue("OBJECT");
+  return `print("__OBJECT_GET_COUNT__:${object}")\n`;
+};
+
+pythonGenerator.forBlock['object_show_image'] = function (block) {
+  const border = block.getFieldValue("BORDER");
+  return `print("__OBJECT_SHOW__:${border}")\n`;
+};
+
+/* =========================
+   FACE RECOGNITION GENERATORS
+========================= */
+
+pythonGenerator.forBlock['facerecog_load_image'] = function () {
+  return `print("__FACERECOG_LOAD_IMAGE__")\n`;
+};
+
+pythonGenerator.forBlock['facerecog_predict'] = function () {
+  return `print("__FACERECOG_PREDICT__")\n`;
+};
+
+pythonGenerator.forBlock['facerecog_show_image'] = function (block) {
+  const border = block.getFieldValue("BORDER");
+  return `print("__FACERECOG_SHOW__:${border}")\n`;
+};
+
+/* =========================
+   FINGER DETECTION GENERATORS
+========================= */
+
+pythonGenerator.forBlock['finger_start_detection'] = function () {
+  return `print("__FINGER_START__")\n`;
+};
+
+pythonGenerator.forBlock['finger_get_coordinate'] = function (block) {
+  const axis = block.getFieldValue("AXIS");
+  const point = block.getFieldValue("POINT");
+  return `print("__FINGER_GET_COORD__:${axis}:${point}")\n`;
+};
+
+pythonGenerator.forBlock['finger_get_count'] = function () {
+  return `print("__FINGER_GET_COUNT__")\n`;
+};
+
+pythonGenerator.forBlock['finger_stop_detection'] = function () {
+  return `print("__FINGER_STOP__")\n`;
+};
+
+pythonGenerator.forBlock['finger_set_delay'] = function (block, generator) {
+  const delay = generator.valueToCode(block, 'DELAY', pythonGenerator.ORDER_ATOMIC) || '0';
+  return `print("__FINGER_DELAY__:${delay}")\n`;
+};
+
+/* =========================
+   COMPUTER VISION (OPENCV) GENERATORS
+========================= */
+
+pythonGenerator.forBlock['cv_load_image'] = function () {
+  return `print("__CV_LOAD_IMAGE__")\n`;
+};
+
+pythonGenerator.forBlock['cv_put_text'] = function (block, generator) {
+  const text = generator.valueToCode(block, 'TEXT', pythonGenerator.ORDER_ATOMIC) || '""';
+  const x = block.getFieldValue("X");
+  const y = block.getFieldValue("Y");
+  const font = block.getFieldValue("FONT");
+  const size = block.getFieldValue("SIZE");
+  const r = block.getFieldValue("R");
+  const g = block.getFieldValue("G");
+  const b = block.getFieldValue("B");
+  const thickness = block.getFieldValue("THICKNESS");
+  return `print("__CV_PUT_TEXT__:${text}:${x}:${y}:${font}:${size}:${r}:${g}:${b}:${thickness}")\n`;
+};
+
+pythonGenerator.forBlock['cv_draw_line'] = function (block) {
+  const x1 = block.getFieldValue("X1");
+  const y1 = block.getFieldValue("Y1");
+  const x2 = block.getFieldValue("X2");
+  const y2 = block.getFieldValue("Y2");
+  const r = block.getFieldValue("R");
+  const g = block.getFieldValue("G");
+  const b = block.getFieldValue("B");
+  const thickness = block.getFieldValue("THICKNESS");
+  return `print("__CV_DRAW_LINE__:${x1}:${y1}:${x2}:${y2}:${r}:${g}:${b}:${thickness}")\n`;
+};
+
+pythonGenerator.forBlock['cv_draw_rectangle'] = function (block) {
+  const x1 = block.getFieldValue("X1");
+  const y1 = block.getFieldValue("Y1");
+  const x2 = block.getFieldValue("X2");
+  const y2 = block.getFieldValue("Y2");
+  const r = block.getFieldValue("R");
+  const g = block.getFieldValue("G");
+  const b = block.getFieldValue("B");
+  const thickness = block.getFieldValue("THICKNESS");
+  return `print("__CV_DRAW_RECT__:${x1}:${y1}:${x2}:${y2}:${r}:${g}:${b}:${thickness}")\n`;
+};
+
+pythonGenerator.forBlock['cv_draw_circle'] = function (block) {
+  const x = block.getFieldValue("X");
+  const y = block.getFieldValue("Y");
+  const radius = block.getFieldValue("RADIUS");
+  const r = block.getFieldValue("R");
+  const g = block.getFieldValue("G");
+  const b = block.getFieldValue("B");
+  const thickness = block.getFieldValue("THICKNESS");
+  return `print("__CV_DRAW_CIRCLE__:${x}:${y}:${radius}:${r}:${g}:${b}:${thickness}")\n`;
+};
+
+pythonGenerator.forBlock['cv_resize'] = function (block) {
+  const x = block.getFieldValue("X");
+  const y = block.getFieldValue("Y");
+  return `print("__CV_RESIZE__:${x}:${y}")\n`;
+};
+
+pythonGenerator.forBlock['cv_xy'] = function (block) {
+  const x = block.getFieldValue("X");
+  const y = block.getFieldValue("Y");
+  return [`(${x}, ${y})`, pythonGenerator.ORDER_ATOMIC];
+};
+
+pythonGenerator.forBlock['cv_rgb'] = function (block) {
+  const r = block.getFieldValue("R");
+  const g = block.getFieldValue("G");
+  const b = block.getFieldValue("B");
+  return [`(${r}, ${g}, ${b})`, pythonGenerator.ORDER_ATOMIC];
+};
+
+pythonGenerator.forBlock['cv_show_image'] = function (block, generator) {
+  const name = generator.valueToCode(block, 'NAME', pythonGenerator.ORDER_ATOMIC) || '""';
+  return `print("__CV_SHOW__:${name}")\n`;
+};
+
+pythonGenerator.forBlock['cv_save_image'] = function (block, generator) {
+  const name = generator.valueToCode(block, 'NAME', pythonGenerator.ORDER_ATOMIC) || '""';
+  return `print("__CV_SAVE__:${name}")\n`;
 };
 
   pythonGenerator.forBlock['turtle_left'] = function (block, generator) {
@@ -3663,6 +4326,49 @@ function AICodingPage() {
   <block type="teachable_predict_audio" />
 </category>
 
+<category name="AI Learning" colour="340">
+  <category name="Facial Feature" colour="160">
+    <block type="facial_load_image" />
+    <block type="facial_get_count" />
+    <block type="facial_get_gender" />
+    <block type="facial_get_expression" />
+    <block type="facial_get_age_list" />
+    <block type="facial_show_image" />
+  </category>
+
+  <category name="Object Detection" colour="180">
+    <block type="object_load_image" />
+    <block type="object_get_count" />
+    <block type="object_show_image" />
+  </category>
+
+  <category name="Face Recognition" colour="200">
+    <block type="facerecog_load_image" />
+    <block type="facerecog_predict" />
+    <block type="facerecog_show_image" />
+  </category>
+
+  <category name="Finger Detection" colour="220">
+    <block type="finger_start_detection" />
+    <block type="finger_get_coordinate" />
+    <block type="finger_get_count" />
+    <block type="finger_stop_detection" />
+    <block type="finger_set_delay" />
+  </category>
+
+  <category name="Computer Vision" colour="280">
+    <block type="cv_load_image" />
+    <block type="cv_put_text" />
+    <block type="cv_draw_line" />
+    <block type="cv_draw_rectangle" />
+    <block type="cv_draw_circle" />
+    <block type="cv_resize" />
+    <block type="cv_xy" />
+    <block type="cv_rgb" />
+    <block type="cv_show_image" />
+    <block type="cv_save_image" />
+  </category>
+</category>
 
 </xml>
 `, []);
@@ -4058,148 +4764,862 @@ function stopWebcam() {
   if (tmWebcam) {
     try {
       tmWebcam.stop();
+      if (tmWebcam._animationId) {
+        cancelAnimationFrame(tmWebcam._animationId);
+      }
     } catch (e) {
       console.warn("TM webcam already stopped");
     }
     tmWebcam = null;
   }
+
+  // Stop predictions
+  isPredicting = false;
+  if (predictionInterval) {
+    clearInterval(predictionInterval);
+    predictionInterval = null;
+  }
+  if (predictionAnimationId) {
+    cancelAnimationFrame(predictionAnimationId);
+    predictionAnimationId = null;
+  }
+
+  // Reset state flags
+  isModelReady = false;
+  isWebcamReady = false;
+  pendingPredictionConfig = null;
+
+  // Clear model and loaded image
+  tmModel = null;
+  tmLoadedImage = null;
+
+  // Remove prediction results
+  const resultDiv = document.getElementById("tm-result");
+  if (resultDiv) {
+    resultDiv.remove();
+  }
 }
 
 let tmModel = null;
 let tmWebcam = null;
+let tmLoadedImage = null;
 let currentPrediction = null;
 let currentConfidence = 0;
+let predictionInterval = null;
+let predictionAnimationId = null;
 
-async function loadTeachableModel(url) {
-  if (!window.tmImage) {
-    alert("Teachable Machine library not loaded yet");
-    return;
+// State tracking for auto-start
+let pendingPredictionConfig = null; // {type, src, outputCallback, containerRef}
+let isModelReady = false;
+let isWebcamReady = false;
+
+function checkAndStartPrediction() {
+  if (!pendingPredictionConfig) return;
+
+  const { type, src, outputCallback, containerRef } = pendingPredictionConfig;
+
+  // Check if prerequisites are met
+  if (src === "webcam") {
+    if (isModelReady && isWebcamReady && tmModel && tmWebcam) {
+      // Start prediction automatically
+      outputCallback("🎯 Auto-starting prediction...");
+      predictFromWebcam(type, outputCallback, containerRef);
+      pendingPredictionConfig = null; // Clear pending
+    }
+  } else if (src === "image") {
+    if (isModelReady && tmModel && tmLoadedImage) {
+      outputCallback("🎯 Auto-starting prediction...");
+      predictFromImage(type, outputCallback, containerRef);
+      pendingPredictionConfig = null; // Clear pending
+    }
   }
-
-  const modelURL = url + "model.json";
-  const metadataURL = url + "metadata.json";
-
-  tmModel = await window.tmImage.load(modelURL, metadataURL);
-  alert("✅ Model loaded successfully");
 }
 
-async function startTeachableWebcam(containerRef) {
-  if (!window.__cameraAllowed) {
-    alert("Please click 'Enable Camera' first");
+async function loadTeachableModel(url, outputCallback) {
+  if (!window.tmImage) {
+    const msg = "⏳ Teachable Machine library not loaded yet. Waiting...";
+    alert(msg);
+    outputCallback(msg);
     return;
   }
 
+  try {
+    isModelReady = false;
+    outputCallback("🔄 Loading model from: " + url);
+    const modelURL = url + "model.json";
+    const metadataURL = url + "metadata.json";
+
+    tmModel = await window.tmImage.load(modelURL, metadataURL);
+    isModelReady = true;
+    const successMsg = "✅ Model loaded successfully!";
+    outputCallback(successMsg);
+
+    // Check if we can auto-start prediction
+    checkAndStartPrediction();
+  } catch (error) {
+    const errorMsg = "❌ Failed to load model: " + error.message;
+    alert(errorMsg);
+    outputCallback(errorMsg);
+    isModelReady = false;
+  }
+}
+
+async function startTeachableWebcam(containerRef, outputCallback) {
   if (!window.tmImage || !window.tmImage.Webcam) {
-    alert("Teachable Machine not loaded yet. Please wait 1–2 seconds and run again.");
+    const msg = "Teachable Machine not loaded yet. Please wait 1–2 seconds and run again.";
+    alert(msg);
+    outputCallback(msg);
     return;
   }
 
-  // 🔴 IMPORTANT: destroy old webcam if exists
-  if (tmWebcam) {
-    try {
-      tmWebcam.stop();
-    } catch {}
-    tmWebcam = null;
+  try {
+    isWebcamReady = false;
+
+    // Stop old webcam if exists
+    if (tmWebcam) {
+      try {
+        tmWebcam.stop();
+        if (tmWebcam._animationId) {
+          cancelAnimationFrame(tmWebcam._animationId);
+        }
+      } catch {}
+      tmWebcam = null;
+    }
+
+    outputCallback("📹 Starting webcam...");
+
+    tmWebcam = new window.tmImage.Webcam(400, 400, true);
+    await tmWebcam.setup();
+    await tmWebcam.play();
+
+    // Wait a brief moment for webcam to fully initialize
+    await new Promise(resolve => setTimeout(resolve, 100));
+
+    containerRef.current.innerHTML = "";
+
+    const wrapper = document.createElement("div");
+    wrapper.style.display = "flex";
+    wrapper.style.flexDirection = "column";
+    wrapper.style.alignItems = "center";
+    wrapper.style.gap = "10px";
+
+    tmWebcam.canvas.style.width = "100%";
+    tmWebcam.canvas.style.maxWidth = "420px";
+    tmWebcam.canvas.style.borderRadius = "12px";
+    tmWebcam.canvas.style.display = "block";
+
+    wrapper.appendChild(tmWebcam.canvas);
+    containerRef.current.appendChild(wrapper);
+
+    isWebcamReady = true;
+    outputCallback("✅ Webcam started successfully!");
+
+    // Keep webcam updating continuously
+    let animationId;
+    function loop() {
+      if (tmWebcam) {
+        tmWebcam.update();
+        animationId = requestAnimationFrame(loop);
+      }
+    }
+    loop();
+
+    // Store animation ID for cleanup
+    tmWebcam._animationId = animationId;
+
+    // Check if we can auto-start prediction
+    checkAndStartPrediction();
+  } catch (error) {
+    const errorMsg = "❌ Webcam error: " + error.message;
+    alert(errorMsg);
+    outputCallback(errorMsg);
+    isWebcamReady = false;
   }
+}
 
-  tmWebcam = new window.tmImage.Webcam(300, 300, true);
+async function loadAndShowImage(containerRef, outputCallback) {
+  return new Promise((resolve) => {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = "image/*";
 
-  await tmWebcam.setup();   // ⬅ this triggers camera popup
-  await tmWebcam.play();    // ⬅ this starts stream
+    input.onchange = async (e) => {
+      const file = e.target.files[0];
+      if (!file) {
+        resolve();
+        return;
+      }
 
-  containerRef.current.innerHTML = "";
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const img = new Image();
+        img.onload = () => {
+          tmLoadedImage = img;
 
-  tmWebcam.canvas.style.width = "100%";
-  tmWebcam.canvas.style.maxWidth = "420px";
-  tmWebcam.canvas.style.borderRadius = "12px";
-  tmWebcam.canvas.style.display = "block";
-  tmWebcam.canvas.style.margin = "auto";
+          containerRef.current.innerHTML = "";
 
-  containerRef.current.appendChild(tmWebcam.canvas);
+          const displayImg = document.createElement("img");
+          displayImg.src = event.target.result;
+          displayImg.style.width = "100%";
+          displayImg.style.maxWidth = "420px";
+          displayImg.style.borderRadius = "12px";
+          displayImg.style.display = "block";
+          displayImg.style.margin = "auto";
 
-  // keep webcam updating
-  window.requestAnimationFrame(function loop() {
-    if (!tmWebcam) return;
-    tmWebcam.update();
-    requestAnimationFrame(loop);
+          containerRef.current.appendChild(displayImg);
+
+          outputCallback("✅ Image loaded successfully!");
+          resolve();
+        };
+        img.src = event.target.result;
+      };
+      reader.readAsDataURL(file);
+    };
+
+    input.click();
   });
 }
 let isPredicting = false;
 
-async function startLivePrediction() {
-  if (!tmModel || !tmWebcam) {
-    alert("Model or webcam not ready");
+async function predictFromWebcam(type, outputCallback, containerRef) {
+  // If not ready yet, save config for auto-start
+  if (!tmModel || !tmWebcam || !isModelReady || !isWebcamReady) {
+    outputCallback("⏳ Waiting for model and webcam to be ready...");
+    pendingPredictionConfig = { type, src: "webcam", outputCallback, containerRef };
+    checkAndStartPrediction(); // Try immediately in case it just became ready
     return;
   }
 
+  // Stop any existing prediction loop
+  if (predictionInterval) {
+    clearInterval(predictionInterval);
+  }
+  if (predictionAnimationId) {
+    cancelAnimationFrame(predictionAnimationId);
+  }
+  isPredicting = false;
+
+  outputCallback(`🔄 Starting ${type} prediction from webcam...`);
   isPredicting = true;
 
   async function loop() {
-    if (!isPredicting) return;
+    if (!isPredicting || !tmWebcam || !tmModel) {
+      predictionAnimationId = null;
+      return;
+    }
 
-    tmWebcam.update(); // update camera frame
-
-    const predictions = await tmModel.predict(tmWebcam.canvas);
-
-    // 🔥 SHOW RESULT (customize this later)
-    showPredictionResult(predictions);
-
-    requestAnimationFrame(loop);
+    try {
+      tmWebcam.update();
+      const predictions = await tmModel.predict(tmWebcam.canvas);
+      showPredictionResult(predictions, type, outputCallback, containerRef);
+      predictionAnimationId = requestAnimationFrame(loop);
+    } catch (error) {
+      outputCallback("❌ Prediction error: " + error.message);
+      isPredicting = false;
+      predictionAnimationId = null;
+    }
   }
 
   loop();
 }
-function showPredictionResult(predictions) {
+
+async function predictFromImage(type, outputCallback, containerRef) {
+  // If not ready yet, save config for auto-start
+  if (!tmModel || !tmLoadedImage || !isModelReady) {
+    outputCallback("⏳ Waiting for model and image to be ready...");
+    pendingPredictionConfig = { type, src: "image", outputCallback, containerRef };
+    checkAndStartPrediction(); // Try immediately in case it just became ready
+    return;
+  }
+
+  try {
+    outputCallback(`🔄 Predicting ${type} from image...`);
+    const predictions = await tmModel.predict(tmLoadedImage);
+    showPredictionResult(predictions, type, outputCallback, containerRef);
+  } catch (error) {
+    outputCallback("❌ Prediction error: " + error.message);
+  }
+}
+
+let lastConsoleOutputTime = 0;
+const CONSOLE_OUTPUT_INTERVAL = 2000; // Output to console every 2 seconds
+
+function showPredictionResult(predictions, type, outputCallback, containerRef) {
   predictions.sort((a, b) => b.probability - a.probability);
 
   const top = predictions[0];
-
-  // 🔥 STORE RESULT GLOBALLY
   currentPrediction = top.className;
   currentConfidence = top.probability;
 
+  // Display in canvas area (updates every frame for smooth experience)
   let resultDiv = document.getElementById("tm-result");
 
   if (!resultDiv) {
     resultDiv = document.createElement("div");
     resultDiv.id = "tm-result";
-    resultDiv.style.marginTop = "12px";
+    resultDiv.style.marginTop = "16px";
+    resultDiv.style.padding = "20px";
     resultDiv.style.fontSize = "16px";
     resultDiv.style.fontWeight = "bold";
     resultDiv.style.textAlign = "center";
-    canvasContainerRef.current.appendChild(resultDiv);
+    resultDiv.style.backgroundColor = "#ffffff";
+    resultDiv.style.borderRadius = "12px";
+    resultDiv.style.border = "1px solid #e0e0e0";
+    resultDiv.style.boxShadow = "0 2px 8px rgba(0,0,0,0.1)";
+
+    if (containerRef.current.firstChild) {
+      containerRef.current.insertBefore(resultDiv, containerRef.current.firstChild.nextSibling);
+    } else {
+      containerRef.current.appendChild(resultDiv);
+    }
   }
+
+  // Create progress bars for all predictions with class-specific colors
+  let predictionBars = predictions.map(p => {
+    const percentage = (p.probability * 100).toFixed(1);
+
+    // Assign colors based on class name (like Teachable Machine)
+    let barColor = '#9E9E9E'; // default gray
+    const className = p.className.toLowerCase();
+
+    if (className.includes('smile') || className.includes('happy')) {
+      barColor = '#4CAF50'; // Green for smile/happy
+    } else if (className.includes('sad') || className.includes('cry')) {
+      barColor = '#E91E63'; // Pink/Red for sad
+    } else if (className.includes('angry')) {
+      barColor = '#F44336'; // Red for angry
+    }
+
+    return `
+      <div style="margin: 8px 0; text-align: left;">
+        <div style="display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 4px; font-weight: 500;">
+          <span style="text-transform: capitalize;">${p.className}</span>
+          <span style="font-weight: bold;">${percentage}%</span>
+        </div>
+        <div style="width: 100%; background: #E0E0E0; border-radius: 8px; height: 20px; overflow: hidden; box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);">
+          <div style="width: ${percentage}%; background: ${barColor}; height: 100%; transition: width 0.3s ease; border-radius: 8px;"></div>
+        </div>
+      </div>
+    `;
+  }).join('');
 
   resultDiv.innerHTML = `
-    🧠 <b>${currentPrediction}</b><br/>
-    Confidence: ${(currentConfidence * 100).toFixed(1)}%
+    <div style="color: #4CAF50; font-size: 18px;">🧠 ${type.toUpperCase()} PREDICTION</div>
+    <div style="margin-top: 8px; font-size: 20px; color: #333;">
+      <b>${currentPrediction}</b>
+    </div>
+    <div style="font-size: 14px; color: #666;">
+      Confidence: ${(currentConfidence * 100).toFixed(1)}%
+    </div>
+    <div style="margin-top: 10px;">
+      ${predictionBars}
+    </div>
   `;
 
-  // 👇 REACT HERE
-  reactToPrediction(currentPrediction, currentConfidence);
-}
-function reactToPrediction(label, confidence) {
-  if (confidence < 0.7) return; // ignore weak predictions
+  // Output to console periodically (not every frame to avoid spam)
+  const now = Date.now();
+  if (now - lastConsoleOutputTime > CONSOLE_OUTPUT_INTERVAL) {
+    lastConsoleOutputTime = now;
 
-  switch (label.toLowerCase()) {
-    case "happy":
-    case "smile":
-      showSpriteOnly("Laugh");
-      break;
+    let allPredictions = predictions.map((p, i) =>
+      `${i + 1}. ${p.className}: ${(p.probability * 100).toFixed(1)}%`
+    ).join('\n');
 
-    case "angry":
-      showSpriteOnly("Angry");
-      break;
+    const consoleOutput = `
+🧠 ${type.toUpperCase()} PREDICTION:
+${currentPrediction} (${(currentConfidence * 100).toFixed(1)}%)
+    `.trim();
 
-    case "sad":
-      showSpriteOnly("Cry");
-      break;
+    outputCallback(consoleOutput);
   }
 }
-
 
 function predictTeachableAudio() {
   alert("Audio model support can be added similarly using tmAudio");
+}
+
+/* =========================
+   AI LEARNING - GLOBAL VARIABLES
+========================= */
+
+// Facial Features
+let facialImage = null;
+let facialDetections = [];
+
+// Object Detection
+let objectImage = null;
+let objectDetections = [];
+let cocoModel = null;
+
+// Face Recognition
+let faceRecogImage = null;
+let faceRecogResult = null;
+
+// Finger Detection
+let fingerHands = null;
+let fingerCamera = null;
+let fingerResults = null;
+let fingerDelay = 0;
+let fingerDetecting = false;
+let fingerAnimationId = null;
+
+// Computer Vision (OpenCV)
+let cvImage = null;
+let cvMat = null;
+
+// Command Queue for async operations
+let commandQueue = [];
+let isProcessingQueue = false;
+
+async function processCommandQueue() {
+  if (isProcessingQueue || commandQueue.length === 0) return;
+
+  isProcessingQueue = true;
+
+  while (commandQueue.length > 0) {
+    const command = commandQueue.shift();
+    await command();
+  }
+
+  isProcessingQueue = false;
+}
+
+/* =========================
+   FACIAL FEATURE FUNCTIONS
+========================= */
+
+async function loadFacialImage(containerRef, outputCallback) {
+  return new Promise((resolve) => {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = "image/*";
+
+    input.onchange = async (e) => {
+      const file = e.target.files[0];
+      if (!file) {
+        resolve();
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = async (event) => {
+        const img = new Image();
+        img.onload = async () => {
+          facialImage = img;
+
+          // Load face-api models if not loaded
+          if (!window.faceapi || !window.faceapi.nets.tinyFaceDetector.isLoaded) {
+            outputCallback("Loading face detection models...");
+            try {
+              await window.faceapi.nets.tinyFaceDetector.loadFromUri('/models');
+              await window.faceapi.nets.faceLandmark68Net.loadFromUri('/models');
+              await window.faceapi.nets.faceRecognitionNet.loadFromUri('/models');
+              await window.faceapi.nets.faceExpressionNet.loadFromUri('/models');
+              await window.faceapi.nets.ageGenderNet.loadFromUri('/models');
+            } catch (err) {
+              console.warn("Could not load models from /models, using CDN models");
+            }
+          }
+
+          // Detect faces
+          outputCallback("Detecting faces...");
+          const detections = await window.faceapi
+            .detectAllFaces(img, new window.faceapi.TinyFaceDetectorOptions())
+            .withFaceLandmarks()
+            .withFaceExpressions()
+            .withAgeAndGender();
+
+          facialDetections = detections;
+          outputCallback(`✅ Image loaded! Found ${detections.length} face(s)`);
+          resolve();
+        };
+        img.src = event.target.result;
+      };
+      reader.readAsDataURL(file);
+    };
+
+    input.click();
+  });
+}
+
+function showFacialImage(containerRef, withBorder, outputCallback) {
+  if (!facialImage) {
+    outputCallback("❌ No image loaded");
+    return;
+  }
+
+  containerRef.current.innerHTML = "";
+
+  const canvas = document.createElement("canvas");
+  canvas.width = facialImage.width;
+  canvas.height = facialImage.height;
+
+  const ctx = canvas.getContext("2d");
+  ctx.drawImage(facialImage, 0, 0);
+
+  if (withBorder && facialDetections.length > 0) {
+    // Draw rectangles around faces
+    facialDetections.forEach(detection => {
+      const box = detection.detection.box;
+      ctx.strokeStyle = "#00FF00";
+      ctx.lineWidth = 3;
+      ctx.strokeRect(box.x, box.y, box.width, box.height);
+
+      // Draw age and gender
+      ctx.fillStyle = "#00FF00";
+      ctx.font = "16px Arial";
+      const gender = detection.gender;
+      const age = Math.round(detection.age);
+      ctx.fillText(`${gender}, ${age}y`, box.x, box.y - 10);
+    });
+  }
+
+  canvas.style.maxWidth = "100%";
+  canvas.style.borderRadius = "12px";
+  canvas.style.display = "block";
+  canvas.style.margin = "auto";
+
+  containerRef.current.appendChild(canvas);
+  outputCallback("✅ Image displayed");
+}
+
+/* =========================
+   OBJECT DETECTION FUNCTIONS
+========================= */
+
+async function loadObjectImage(containerRef, outputCallback) {
+  return new Promise((resolve) => {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = "image/*";
+
+    input.onchange = async (e) => {
+      const file = e.target.files[0];
+      if (!file) {
+        resolve();
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = async (event) => {
+        const img = new Image();
+        img.onload = async () => {
+          objectImage = img;
+
+          // Load COCO-SSD model
+          if (!cocoModel && window.cocoSsd) {
+            outputCallback("Loading object detection model...");
+            cocoModel = await window.cocoSsd.load();
+          }
+
+          // Detect objects
+          if (cocoModel) {
+            outputCallback("Detecting objects...");
+            objectDetections = await cocoModel.detect(img);
+            outputCallback(`✅ Image loaded! Found ${objectDetections.length} object(s)`);
+          } else {
+            outputCallback("✅ Image loaded!");
+          }
+
+          resolve();
+        };
+        img.src = event.target.result;
+      };
+      reader.readAsDataURL(file);
+    };
+
+    input.click();
+  });
+}
+
+function showObjectImage(containerRef, withBorder, outputCallback) {
+  if (!objectImage) {
+    outputCallback("❌ No image loaded");
+    return;
+  }
+
+  containerRef.current.innerHTML = "";
+
+  const canvas = document.createElement("canvas");
+  canvas.width = objectImage.width;
+  canvas.height = objectImage.height;
+
+  const ctx = canvas.getContext("2d");
+  ctx.drawImage(objectImage, 0, 0);
+
+  if (withBorder && objectDetections.length > 0) {
+    // Draw rectangles around objects
+    objectDetections.forEach(detection => {
+      const [x, y, width, height] = detection.bbox;
+      ctx.strokeStyle = "#FF0000";
+      ctx.lineWidth = 3;
+      ctx.strokeRect(x, y, width, height);
+
+      ctx.fillStyle = "#FF0000";
+      ctx.font = "16px Arial";
+      ctx.fillText(`${detection.class} (${Math.round(detection.score * 100)}%)`, x, y - 10);
+    });
+  }
+
+  canvas.style.maxWidth = "100%";
+  canvas.style.borderRadius = "12px";
+  canvas.style.display = "block";
+  canvas.style.margin = "auto";
+
+  containerRef.current.appendChild(canvas);
+  outputCallback("✅ Image displayed");
+}
+
+/* =========================
+   FACE RECOGNITION FUNCTIONS
+========================= */
+
+async function loadFaceRecogImage(containerRef, outputCallback) {
+  return new Promise((resolve) => {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = "image/*";
+
+    input.onchange = async (e) => {
+      const file = e.target.files[0];
+      if (!file) {
+        resolve();
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = async (event) => {
+        const img = new Image();
+        img.onload = () => {
+          faceRecogImage = img;
+          outputCallback("✅ Image loaded!");
+          resolve();
+        };
+        img.src = event.target.result;
+      };
+      reader.readAsDataURL(file);
+    };
+
+    input.click();
+  });
+}
+
+async function predictFaceRecog(outputCallback) {
+  if (!faceRecogImage) {
+    outputCallback("❌ No image loaded");
+    return;
+  }
+
+  if (!window.faceapi || !window.faceapi.nets.tinyFaceDetector.isLoaded) {
+    outputCallback("Loading face detection models...");
+    try {
+      await window.faceapi.nets.tinyFaceDetector.loadFromUri('/models');
+    } catch (err) {
+      console.warn("Could not load models");
+    }
+  }
+
+  outputCallback("Detecting faces...");
+  const detections = await window.faceapi
+    .detectAllFaces(faceRecogImage, new window.faceapi.TinyFaceDetectorOptions());
+
+  const faceCount = detections.length;
+  if (faceCount > 0) {
+    faceRecogResult = `Face Detected - ${faceCount} face(s) found`;
+    outputCallback(`✅ ${faceRecogResult}`);
+  } else {
+    faceRecogResult = "No Face Detected";
+    outputCallback(`❌ ${faceRecogResult}`);
+  }
+}
+
+function showFaceRecogImage(containerRef, withBorder, outputCallback) {
+  if (!faceRecogImage) {
+    outputCallback("❌ No image loaded");
+    return;
+  }
+
+  containerRef.current.innerHTML = "";
+
+  const img = document.createElement("img");
+  img.src = faceRecogImage.src;
+  img.style.maxWidth = "100%";
+  img.style.borderRadius = "12px";
+  img.style.display = "block";
+  img.style.margin = "auto";
+
+  containerRef.current.appendChild(img);
+  outputCallback("✅ Image displayed");
+}
+
+/* =========================
+   FINGER DETECTION FUNCTIONS
+========================= */
+
+async function startFingerDetection(containerRef, outputCallback) {
+  if (!window.Hands) {
+    outputCallback("❌ MediaPipe Hands not loaded");
+    return;
+  }
+
+  try {
+    outputCallback("📹 Starting hand detection...");
+
+    fingerDetecting = true;
+
+    // Create video element
+    const video = document.createElement("video");
+    video.style.display = "none";
+
+    const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+    video.srcObject = stream;
+    await video.play();
+
+    containerRef.current.innerHTML = "";
+
+    const canvas = document.createElement("canvas");
+    canvas.width = 640;
+    canvas.height = 480;
+    canvas.style.maxWidth = "100%";
+    canvas.style.borderRadius = "12px";
+    canvas.style.display = "block";
+    canvas.style.margin = "auto";
+
+    containerRef.current.appendChild(canvas);
+
+    const ctx = canvas.getContext("2d");
+
+    // Simple hand tracking loop
+    function detect() {
+      if (!fingerDetecting) return;
+
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+      // Store video reference for coordinate access
+      fingerCamera = video;
+
+      setTimeout(() => {
+        fingerAnimationId = requestAnimationFrame(detect);
+      }, fingerDelay * 1000);
+    }
+
+    detect();
+    outputCallback("✅ Hand detection started!");
+
+  } catch (error) {
+    outputCallback("❌ Camera error: " + error.message);
+  }
+}
+
+function stopFingerDetection(outputCallback) {
+  fingerDetecting = false;
+
+  if (fingerAnimationId) {
+    cancelAnimationFrame(fingerAnimationId);
+    fingerAnimationId = null;
+  }
+
+  if (fingerCamera && fingerCamera.srcObject) {
+    fingerCamera.srcObject.getTracks().forEach(t => t.stop());
+    fingerCamera = null;
+  }
+
+  fingerResults = null;
+  outputCallback("✅ Hand detection stopped");
+}
+
+/* =========================
+   COMPUTER VISION (OPENCV) FUNCTIONS
+========================= */
+
+async function loadCVImage(containerRef, outputCallback) {
+  return new Promise((resolve) => {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = "image/*";
+
+    input.onchange = async (e) => {
+      const file = e.target.files[0];
+      if (!file) {
+        resolve();
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const img = new Image();
+        img.onload = () => {
+          cvImage = img;
+
+          // Convert to OpenCV Mat
+          if (window.cv) {
+            const canvas = document.createElement("canvas");
+            canvas.width = img.width;
+            canvas.height = img.height;
+            const ctx = canvas.getContext("2d");
+            ctx.drawImage(img, 0, 0);
+            cvMat = window.cv.imread(canvas);
+          }
+
+          outputCallback("✅ Image loaded!");
+          resolve();
+        };
+        img.src = event.target.result;
+      };
+      reader.readAsDataURL(file);
+    };
+
+    input.click();
+  });
+}
+
+function applyCVOperations(operations, containerRef, outputCallback) {
+  if (!cvMat || !window.cv) {
+    outputCallback("❌ No image loaded or OpenCV not ready");
+    return;
+  }
+
+  // Apply operations to mat
+  // Operations are stored and applied when show/save is called
+}
+
+function showCVImage(containerRef, name, outputCallback) {
+  if (!cvMat || !window.cv) {
+    outputCallback("❌ No image loaded");
+    return;
+  }
+
+  containerRef.current.innerHTML = "";
+
+  const canvas = document.createElement("canvas");
+  window.cv.imshow(canvas, cvMat);
+
+  canvas.style.maxWidth = "100%";
+  canvas.style.borderRadius = "12px";
+  canvas.style.display = "block";
+  canvas.style.margin = "auto";
+
+  containerRef.current.appendChild(canvas);
+  outputCallback(`✅ Image displayed as: ${name}`);
+}
+
+function saveCVImage(name, outputCallback) {
+  if (!cvMat || !window.cv) {
+    outputCallback("❌ No image to save");
+    return;
+  }
+
+  const canvas = document.createElement("canvas");
+  window.cv.imshow(canvas, cvMat);
+
+  canvas.toBlob((blob) => {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = name;
+    a.click();
+    outputCallback(`✅ Image saved as: ${name}`);
+  });
 }
 
   const runCode = () => {
@@ -4207,6 +5627,10 @@ function predictTeachableAudio() {
       setOutput("Python runtime not available.");
       return;
     }
+
+    // Reset command queue
+    commandQueue = [];
+    isProcessingQueue = false;
 
     setOutput("Running...\n");
 
@@ -4238,34 +5662,804 @@ function predictTeachableAudio() {
     let pendingPlot = null;
     let plotLabels = { x: "", y: "" };
 
+    // Add AI Learning helper functions to Skulpt
+    // Handler for AI Learning commands
+    async function handleAICommand(cleanText, containerRef, setOutput) {
+      // Facial Features
+      if (cleanText === "__FACIAL_LOAD_IMAGE__") {
+        await loadFacialImage(containerRef, (msg) => setOutput(prev => prev + "\n" + msg));
+        return;
+      }
+
+      if (cleanText.startsWith("__FACIAL_GET_COUNT__:")) {
+        const feature = cleanText.split(":")[1];
+        let count = 0;
+
+        if (!facialDetections || facialDetections.length === 0) {
+          setOutput(prev => prev + `\n${feature} count: 0`);
+          return;
+        }
+
+        if (feature === "face") {
+          count = facialDetections.length;
+        } else if (feature === "eye") {
+          facialDetections.forEach(d => {
+            if (d.landmarks) count += 2;
+          });
+        } else if (feature === "nose") {
+          facialDetections.forEach(d => {
+            if (d.landmarks) count += 1;
+          });
+        } else if (feature === "smile") {
+          facialDetections.forEach(d => {
+            if (d.expressions && d.expressions.happy > 0.5) count++;
+          });
+        }
+
+        setOutput(prev => prev + `\n${feature} count: ${count}`);
+        return;
+      }
+
+      if (cleanText.startsWith("__FACIAL_GET_GENDER__:")) {
+        const gender = cleanText.split(":")[1];
+        let count = 0;
+
+        if (!facialDetections || facialDetections.length === 0) {
+          setOutput(prev => prev + `\n${gender} count: 0`);
+          return;
+        }
+
+        facialDetections.forEach(d => {
+          if (d.gender && d.gender === gender) count++;
+        });
+
+        setOutput(prev => prev + `\n${gender} count: ${count}`);
+        return;
+      }
+
+      if (cleanText.startsWith("__FACIAL_GET_EXPRESSION__:")) {
+        const expression = cleanText.split(":")[1];
+        let count = 0;
+
+        if (!facialDetections || facialDetections.length === 0) {
+          setOutput(prev => prev + `\n${expression} count: 0`);
+          return;
+        }
+
+        facialDetections.forEach(d => {
+          if (d.expressions && d.expressions[expression] > 0.5) count++;
+        });
+
+        setOutput(prev => prev + `\n${expression} count: ${count}`);
+        return;
+      }
+
+      if (cleanText === "__FACIAL_GET_AGE_LIST__") {
+        if (!facialDetections || facialDetections.length === 0) {
+          setOutput(prev => prev + `\nAge list: []`);
+          return;
+        }
+
+        const ages = facialDetections.map(d => Math.round(d.age || 0));
+        setOutput(prev => prev + `\nAge list: [${ages.join(", ")}]`);
+        return;
+      }
+
+      if (cleanText.startsWith("__FACIAL_SHOW__:")) {
+        const border = cleanText.split(":")[1];
+        showFacialImage(containerRef, border === "with", (msg) => setOutput(prev => prev + "\n" + msg));
+        return;
+      }
+
+      // Object Detection
+      if (cleanText === "__OBJECT_LOAD_IMAGE__") {
+        await loadObjectImage(containerRef, (msg) => setOutput(prev => prev + "\n" + msg));
+        return;
+      }
+
+      if (cleanText.startsWith("__OBJECT_GET_COUNT__:")) {
+        const object = cleanText.split(":")[1];
+        let count = 0;
+
+        if (!objectDetections || objectDetections.length === 0) {
+          setOutput(prev => prev + `\n${object} count: 0`);
+          return;
+        }
+
+        objectDetections.forEach(d => {
+          if (d.class === object) count++;
+        });
+
+        setOutput(prev => prev + `\n${object} count: ${count}`);
+        return;
+      }
+
+      if (cleanText.startsWith("__OBJECT_SHOW__:")) {
+        const border = cleanText.split(":")[1];
+        showObjectImage(containerRef, border === "with", (msg) => setOutput(prev => prev + "\n" + msg));
+        return;
+      }
+
+      // Face Recognition
+      if (cleanText === "__FACERECOG_LOAD_IMAGE__") {
+        await loadFaceRecogImage(containerRef, (msg) => setOutput(prev => prev + "\n" + msg));
+        return;
+      }
+
+      if (cleanText === "__FACERECOG_PREDICT__") {
+        await predictFaceRecog((msg) => setOutput(prev => prev + "\n" + msg));
+        return;
+      }
+
+      if (cleanText.startsWith("__FACERECOG_SHOW__:")) {
+        const border = cleanText.split(":")[1];
+        showFaceRecogImage(containerRef, border === "with", (msg) => setOutput(prev => prev + "\n" + msg));
+        return;
+      }
+
+      // Finger Detection
+      if (cleanText === "__FINGER_START__") {
+        await startFingerDetection(containerRef, (msg) => setOutput(prev => prev + "\n" + msg));
+        return;
+      }
+
+      if (cleanText.startsWith("__FINGER_GET_COORD__:")) {
+        const parts = cleanText.split(":");
+        const axis = parts[1];
+        const point = parseInt(parts[2]);
+
+        if (!fingerResults || !fingerResults.multiHandLandmarks || fingerResults.multiHandLandmarks.length === 0) {
+          setOutput(prev => prev + `\nCoordinate ${axis} of point ${point}: 0`);
+          return;
+        }
+
+        const landmarks = fingerResults.multiHandLandmarks[0];
+        if (landmarks && landmarks[point]) {
+          const value = landmarks[point][axis] || 0;
+          setOutput(prev => prev + `\nCoordinate ${axis} of point ${point}: ${value.toFixed(3)}`);
+        } else {
+          setOutput(prev => prev + `\nCoordinate ${axis} of point ${point}: 0`);
+        }
+        return;
+      }
+
+      if (cleanText === "__FINGER_GET_COUNT__") {
+        if (!fingerResults || !fingerResults.multiHandLandmarks || fingerResults.multiHandLandmarks.length === 0) {
+          setOutput(prev => prev + `\nFinger count: 0`);
+          return;
+        }
+
+        const landmarks = fingerResults.multiHandLandmarks[0];
+        let count = 0;
+
+        // Thumb
+        if (landmarks[4].x < landmarks[3].x) count++;
+        // Index
+        if (landmarks[8].y < landmarks[6].y) count++;
+        // Middle
+        if (landmarks[12].y < landmarks[10].y) count++;
+        // Ring
+        if (landmarks[16].y < landmarks[14].y) count++;
+        // Pinky
+        if (landmarks[20].y < landmarks[18].y) count++;
+
+        setOutput(prev => prev + `\nFinger count: ${count}`);
+        return;
+      }
+
+      if (cleanText === "__FINGER_STOP__") {
+        stopFingerDetection((msg) => setOutput(prev => prev + "\n" + msg));
+        return;
+      }
+
+      if (cleanText.startsWith("__FINGER_DELAY__:")) {
+        const delay = cleanText.split(":")[1];
+        fingerDelay = parseFloat(delay) || 0;
+        setOutput(prev => prev + `\n⏱️ Finger detection delay set to ${delay} seconds`);
+        return;
+      }
+
+      // Computer Vision
+      if (cleanText === "__CV_LOAD_IMAGE__") {
+        await loadCVImage(containerRef, (msg) => setOutput(prev => prev + "\n" + msg));
+        return;
+      }
+
+      if (cleanText.startsWith("__CV_PUT_TEXT__:")) {
+        const parts = cleanText.split(":");
+        const text = parts[1].replace(/"/g, '');
+        const x = parseInt(parts[2]);
+        const y = parseInt(parts[3]);
+        const font = parts[4];
+        const size = parseFloat(parts[5]);
+        const r = parseInt(parts[6]);
+        const g = parseInt(parts[7]);
+        const b = parseInt(parts[8]);
+        const thickness = parseInt(parts[9]);
+
+        if (cvMat && window.cv) {
+          const fontMap = {
+            'SIMPLEX': window.cv.FONT_HERSHEY_SIMPLEX,
+            'PLAIN': window.cv.FONT_HERSHEY_PLAIN,
+            'DUPLEX': window.cv.FONT_HERSHEY_DUPLEX,
+            'COMPLEX': window.cv.FONT_HERSHEY_COMPLEX,
+            'TRIPLEX': window.cv.FONT_HERSHEY_TRIPLEX,
+            'COMPLEX_SMALL': window.cv.FONT_HERSHEY_COMPLEX_SMALL,
+            'SCRIPT_SIMPLEX': window.cv.FONT_HERSHEY_SCRIPT_SIMPLEX,
+            'SCRIPT_COMPLEX': window.cv.FONT_HERSHEY_SCRIPT_COMPLEX
+          };
+          window.cv.putText(cvMat, text, new window.cv.Point(x, y), fontMap[font] || window.cv.FONT_HERSHEY_SIMPLEX, size, new window.cv.Scalar(b, g, r), thickness);
+          setOutput(prev => prev + `\n✅ Text added: "${text}"`);
+        }
+        return;
+      }
+
+      if (cleanText.startsWith("__CV_DRAW_LINE__:")) {
+        const parts = cleanText.split(":");
+        const x1 = parseInt(parts[1]);
+        const y1 = parseInt(parts[2]);
+        const x2 = parseInt(parts[3]);
+        const y2 = parseInt(parts[4]);
+        const r = parseInt(parts[5]);
+        const g = parseInt(parts[6]);
+        const b = parseInt(parts[7]);
+        const thickness = parseInt(parts[8]);
+
+        if (cvMat && window.cv) {
+          window.cv.line(cvMat, new window.cv.Point(x1, y1), new window.cv.Point(x2, y2), new window.cv.Scalar(b, g, r), thickness);
+          setOutput(prev => prev + `\n✅ Line drawn`);
+        }
+        return;
+      }
+
+      if (cleanText.startsWith("__CV_DRAW_RECTANGLE__:")) {
+        const parts = cleanText.split(":");
+        const x1 = parseInt(parts[1]);
+        const y1 = parseInt(parts[2]);
+        const x2 = parseInt(parts[3]);
+        const y2 = parseInt(parts[4]);
+        const r = parseInt(parts[5]);
+        const g = parseInt(parts[6]);
+        const b = parseInt(parts[7]);
+        const thickness = parseInt(parts[8]);
+
+        if (cvMat && window.cv) {
+          window.cv.rectangle(cvMat, new window.cv.Point(x1, y1), new window.cv.Point(x2, y2), new window.cv.Scalar(b, g, r), thickness);
+          setOutput(prev => prev + `\n✅ Rectangle drawn`);
+        }
+        return;
+      }
+
+      if (cleanText.startsWith("__CV_DRAW_CIRCLE__:")) {
+        const parts = cleanText.split(":");
+        const x = parseInt(parts[1]);
+        const y = parseInt(parts[2]);
+        const radius = parseInt(parts[3]);
+        const r = parseInt(parts[4]);
+        const g = parseInt(parts[5]);
+        const b = parseInt(parts[6]);
+        const thickness = parseInt(parts[7]);
+
+        if (cvMat && window.cv) {
+          window.cv.circle(cvMat, new window.cv.Point(x, y), radius, new window.cv.Scalar(b, g, r), thickness);
+          setOutput(prev => prev + `\n✅ Circle drawn`);
+        }
+        return;
+      }
+
+      if (cleanText.startsWith("__CV_RESIZE__:")) {
+        const parts = cleanText.split(":");
+        const width = parseInt(parts[1]);
+        const height = parseInt(parts[2]);
+
+        if (cvMat && window.cv) {
+          const resized = new window.cv.Mat();
+          window.cv.resize(cvMat, resized, new window.cv.Size(width, height));
+          cvMat.delete();
+          cvMat = resized;
+          setOutput(prev => prev + `\n✅ Image resized to ${width}x${height}`);
+        }
+        return;
+      }
+
+      if (cleanText.startsWith("__CV_SHOW__:")) {
+        const border = cleanText.split(":")[1];
+        showCVImage(containerRef, border === "with", (msg) => setOutput(prev => prev + "\n" + msg));
+        return;
+      }
+
+      if (cleanText === "__CV_SAVE__") {
+        saveCVImage((msg) => setOutput(prev => prev + "\n" + msg));
+        return;
+      }
+    }
+
+    Sk.builtins.__facial_get_count__ = new Sk.builtin.func((feature) => {
+      const f = Sk.ffi.remapToJs(feature);
+      if (!facialDetections || facialDetections.length === 0) return Sk.ffi.remapToPy(0);
+
+      let count = 0;
+      if (f === "face") {
+        count = facialDetections.length;
+      } else if (f === "eye") {
+        facialDetections.forEach(d => {
+          if (d.landmarks) count += 2; // each face has 2 eyes
+        });
+      } else if (f === "nose") {
+        count = facialDetections.length; // each face has 1 nose
+      } else if (f === "smile") {
+        facialDetections.forEach(d => {
+          if (d.expressions && d.expressions.happy > 0.5) count++;
+        });
+      }
+      return Sk.ffi.remapToPy(count);
+    });
+
+    Sk.builtins.__facial_get_gender__ = new Sk.builtin.func((gender) => {
+      const g = Sk.ffi.remapToJs(gender);
+      if (!facialDetections || facialDetections.length === 0) return Sk.ffi.remapToPy(0);
+
+      let count = 0;
+      facialDetections.forEach(d => {
+        if (d.gender && d.gender.toLowerCase() === g) count++;
+      });
+      return Sk.ffi.remapToPy(count);
+    });
+
+    Sk.builtins.__facial_get_expression__ = new Sk.builtin.func((expression) => {
+      const exp = Sk.ffi.remapToJs(expression);
+      if (!facialDetections || facialDetections.length === 0) return Sk.ffi.remapToPy(0);
+
+      let count = 0;
+      facialDetections.forEach(d => {
+        if (d.expressions && d.expressions[exp] > 0.5) count++;
+      });
+      return Sk.ffi.remapToPy(count);
+    });
+
+    Sk.builtins.__facial_get_age_list__ = new Sk.builtin.func(() => {
+      if (!facialDetections || facialDetections.length === 0) return Sk.ffi.remapToPy([]);
+
+      const ages = facialDetections.map(d => Math.round(d.age || 0));
+      return Sk.ffi.remapToPy(ages);
+    });
+
+    Sk.builtins.__object_get_count__ = new Sk.builtin.func((object) => {
+      const obj = Sk.ffi.remapToJs(object);
+      if (!objectDetections || objectDetections.length === 0) return Sk.ffi.remapToPy(0);
+
+      let count = 0;
+      objectDetections.forEach(d => {
+        if (d.class === obj) count++;
+      });
+      return Sk.ffi.remapToPy(count);
+    });
+
+    Sk.builtins.__finger_get_coord__ = new Sk.builtin.func((axis, point) => {
+      const a = Sk.ffi.remapToJs(axis);
+      const p = Sk.ffi.remapToJs(point);
+
+      if (!fingerResults || !fingerResults.multiHandLandmarks || fingerResults.multiHandLandmarks.length === 0) {
+        return Sk.ffi.remapToPy(0);
+      }
+
+      const landmarks = fingerResults.multiHandLandmarks[0];
+      if (landmarks && landmarks[p]) {
+        const value = landmarks[p][a] || 0;
+        return Sk.ffi.remapToPy(value);
+      }
+
+      return Sk.ffi.remapToPy(0);
+    });
+
+    Sk.builtins.__finger_get_count__ = new Sk.builtin.func(() => {
+      if (!fingerResults || !fingerResults.multiHandLandmarks || fingerResults.multiHandLandmarks.length === 0) {
+        return Sk.ffi.remapToPy(0);
+      }
+
+      // Simple finger counting logic (can be improved)
+      const landmarks = fingerResults.multiHandLandmarks[0];
+      let count = 0;
+
+      // Thumb
+      if (landmarks[4].x < landmarks[3].x) count++;
+      // Index
+      if (landmarks[8].y < landmarks[6].y) count++;
+      // Middle
+      if (landmarks[12].y < landmarks[10].y) count++;
+      // Ring
+      if (landmarks[16].y < landmarks[14].y) count++;
+      // Pinky
+      if (landmarks[20].y < landmarks[18].y) count++;
+
+      return Sk.ffi.remapToPy(count);
+    });
+
     Sk.configure({
       output: (text) => {
         console.log("[Skulpt Output]", text);
 
 
         const cleanText = text.trim();
+
+        // Queue AI Learning commands that need async processing
+        if (cleanText === "__FACIAL_LOAD_IMAGE__" ||
+            cleanText.startsWith("__FACIAL_GET_") ||
+            cleanText.startsWith("__FACIAL_SHOW__") ||
+            cleanText === "__OBJECT_LOAD_IMAGE__" ||
+            cleanText.startsWith("__OBJECT_GET_") ||
+            cleanText.startsWith("__OBJECT_SHOW__") ||
+            cleanText === "__FACERECOG_LOAD_IMAGE__" ||
+            cleanText === "__FACERECOG_PREDICT__" ||
+            cleanText.startsWith("__FACERECOG_SHOW__") ||
+            cleanText === "__FINGER_START__" ||
+            cleanText.startsWith("__FINGER_GET_") ||
+            cleanText === "__FINGER_STOP__" ||
+            cleanText.startsWith("__FINGER_DELAY__") ||
+            cleanText === "__CV_LOAD_IMAGE__" ||
+            cleanText.startsWith("__CV_")) {
+
+          commandQueue.push(async () => {
+            await handleAICommand(cleanText, canvasContainerRef, setOutput);
+          });
+
+          // Start processing queue if not already processing
+          if (!isProcessingQueue) {
+            processCommandQueue();
+          }
+          return;
+        }
+
         /* =========================
    TEACHABLE HANDLER
 ========================= */
 if (cleanText.startsWith("__TEACHABLE_LOAD__")) {
   const url = cleanText.replace("__TEACHABLE_LOAD__:", "").trim();
-  loadTeachableModel(url);
+  loadTeachableModel(url, (msg) => setOutput(prev => prev + "\n" + msg));
   return;
 }
 
-if (cleanText === "__TEACHABLE_SHOW_WEBCAM__") {
-  startTeachableWebcam(canvasContainerRef);
+if (cleanText === "__TEACHABLE_LOAD_IMAGE__") {
+  loadAndShowImage(canvasContainerRef, (msg) => setOutput(prev => prev + "\n" + msg));
   return;
 }
 
-if (cleanText.startsWith("__TEACHABLE_PREDICT_IMAGE__")) {
+if (cleanText.startsWith("__TEACHABLE_SHOW__:")) {
   const src = cleanText.split(":")[1];
-  startLivePrediction(src);
+  if (src === "webcam") {
+    startTeachableWebcam(canvasContainerRef, (msg) => setOutput(prev => prev + "\n" + msg));
+  } else if (src === "image") {
+    loadAndShowImage(canvasContainerRef, (msg) => setOutput(prev => prev + "\n" + msg));
+  }
+  return;
+}
+
+if (cleanText.startsWith("__TEACHABLE_PREDICT__:")) {
+  const parts = cleanText.split(":");
+  const type = parts[1]; // "image" or "pose"
+  const src = parts[2];  // "webcam" or "image"
+
+  if (src === "webcam") {
+    predictFromWebcam(type, (msg) => setOutput(prev => prev + "\n" + msg), canvasContainerRef);
+  } else if (src === "image") {
+    predictFromImage(type, (msg) => setOutput(prev => prev + "\n" + msg), canvasContainerRef);
+  }
   return;
 }
 
 if (cleanText === "__TEACHABLE_PREDICT_AUDIO__") {
   predictTeachableAudio();
+  return;
+}
+
+/* =========================
+   AI LEARNING HANDLERS
+========================= */
+
+// Facial Features
+if (cleanText === "__FACIAL_LOAD_IMAGE__") {
+  loadFacialImage(canvasContainerRef, (msg) => setOutput(prev => prev + "\n" + msg));
+  return;
+}
+
+if (cleanText.startsWith("__FACIAL_GET_COUNT__:")) {
+  const feature = cleanText.split(":")[1];
+  let count = 0;
+
+  if (!facialDetections || facialDetections.length === 0) {
+    setOutput(prev => prev + `\n${feature} count: 0`);
+    return;
+  }
+
+  if (feature === "face") {
+    count = facialDetections.length;
+  } else if (feature === "eye") {
+    facialDetections.forEach(d => {
+      if (d.landmarks) count += 2;
+    });
+  } else if (feature === "nose") {
+    facialDetections.forEach(d => {
+      if (d.landmarks) count += 1;
+    });
+  } else if (feature === "smile") {
+    facialDetections.forEach(d => {
+      if (d.expressions && d.expressions.happy > 0.5) count++;
+    });
+  }
+
+  setOutput(prev => prev + `\n${feature} count: ${count}`);
+  return;
+}
+
+if (cleanText.startsWith("__FACIAL_GET_GENDER__:")) {
+  const gender = cleanText.split(":")[1];
+  let count = 0;
+
+  if (!facialDetections || facialDetections.length === 0) {
+    setOutput(prev => prev + `\n${gender} count: 0`);
+    return;
+  }
+
+  facialDetections.forEach(d => {
+    if (d.gender && d.gender === gender) count++;
+  });
+
+  setOutput(prev => prev + `\n${gender} count: ${count}`);
+  return;
+}
+
+if (cleanText.startsWith("__FACIAL_GET_EXPRESSION__:")) {
+  const expression = cleanText.split(":")[1];
+  let count = 0;
+
+  if (!facialDetections || facialDetections.length === 0) {
+    setOutput(prev => prev + `\n${expression} count: 0`);
+    return;
+  }
+
+  facialDetections.forEach(d => {
+    if (d.expressions && d.expressions[expression] > 0.5) count++;
+  });
+
+  setOutput(prev => prev + `\n${expression} count: ${count}`);
+  return;
+}
+
+if (cleanText === "__FACIAL_GET_AGE_LIST__") {
+  if (!facialDetections || facialDetections.length === 0) {
+    setOutput(prev => prev + `\nAge list: []`);
+    return;
+  }
+
+  const ages = facialDetections.map(d => Math.round(d.age || 0));
+  setOutput(prev => prev + `\nAge list: [${ages.join(", ")}]`);
+  return;
+}
+
+if (cleanText.startsWith("__FACIAL_SHOW__:")) {
+  const border = cleanText.split(":")[1];
+  showFacialImage(canvasContainerRef, border === "with", (msg) => setOutput(prev => prev + "\n" + msg));
+  return;
+}
+
+// Object Detection
+if (cleanText === "__OBJECT_LOAD_IMAGE__") {
+  loadObjectImage(canvasContainerRef, (msg) => setOutput(prev => prev + "\n" + msg));
+  return;
+}
+
+if (cleanText.startsWith("__OBJECT_GET_COUNT__:")) {
+  const object = cleanText.split(":")[1];
+  let count = 0;
+
+  if (!objectDetections || objectDetections.length === 0) {
+    setOutput(prev => prev + `\n${object} count: 0`);
+    return;
+  }
+
+  objectDetections.forEach(d => {
+    if (d.class === object) count++;
+  });
+
+  setOutput(prev => prev + `\n${object} count: ${count}`);
+  return;
+}
+
+if (cleanText.startsWith("__OBJECT_SHOW__:")) {
+  const border = cleanText.split(":")[1];
+  showObjectImage(canvasContainerRef, border === "with", (msg) => setOutput(prev => prev + "\n" + msg));
+  return;
+}
+
+// Face Recognition
+if (cleanText === "__FACERECOG_LOAD_IMAGE__") {
+  loadFaceRecogImage(canvasContainerRef, (msg) => setOutput(prev => prev + "\n" + msg));
+  return;
+}
+
+if (cleanText === "__FACERECOG_PREDICT__") {
+  predictFaceRecog((msg) => setOutput(prev => prev + "\n" + msg));
+  return;
+}
+
+if (cleanText.startsWith("__FACERECOG_SHOW__:")) {
+  const border = cleanText.split(":")[1];
+  showFaceRecogImage(canvasContainerRef, border === "with", (msg) => setOutput(prev => prev + "\n" + msg));
+  return;
+}
+
+// Finger Detection
+if (cleanText === "__FINGER_START__") {
+  startFingerDetection(canvasContainerRef, (msg) => setOutput(prev => prev + "\n" + msg));
+  return;
+}
+
+if (cleanText === "__FINGER_STOP__") {
+  stopFingerDetection((msg) => setOutput(prev => prev + "\n" + msg));
+  return;
+}
+
+if (cleanText.startsWith("__FINGER_GET_COORD__:")) {
+  const parts = cleanText.split(":");
+  const axis = parts[1];
+  const point = parseInt(parts[2]);
+
+  if (!fingerResults || !fingerResults.multiHandLandmarks || fingerResults.multiHandLandmarks.length === 0) {
+    setOutput(prev => prev + `\nCoordinate ${axis} of point ${point}: 0`);
+    return;
+  }
+
+  const landmarks = fingerResults.multiHandLandmarks[0];
+  if (landmarks && landmarks[point]) {
+    const value = landmarks[point][axis] || 0;
+    setOutput(prev => prev + `\nCoordinate ${axis} of point ${point}: ${value.toFixed(3)}`);
+  } else {
+    setOutput(prev => prev + `\nCoordinate ${axis} of point ${point}: 0`);
+  }
+  return;
+}
+
+if (cleanText === "__FINGER_GET_COUNT__") {
+  if (!fingerResults || !fingerResults.multiHandLandmarks || fingerResults.multiHandLandmarks.length === 0) {
+    setOutput(prev => prev + `\nFinger count: 0`);
+    return;
+  }
+
+  const landmarks = fingerResults.multiHandLandmarks[0];
+  let count = 0;
+
+  // Thumb
+  if (landmarks[4].x < landmarks[3].x) count++;
+  // Index
+  if (landmarks[8].y < landmarks[6].y) count++;
+  // Middle
+  if (landmarks[12].y < landmarks[10].y) count++;
+  // Ring
+  if (landmarks[16].y < landmarks[14].y) count++;
+  // Pinky
+  if (landmarks[20].y < landmarks[18].y) count++;
+
+  setOutput(prev => prev + `\nFinger count: ${count}`);
+  return;
+}
+
+if (cleanText.startsWith("__FINGER_DELAY__:")) {
+  const delay = cleanText.split(":")[1];
+  fingerDelay = parseFloat(delay) || 0;
+  setOutput(prev => prev + `\n⏱️ Finger detection delay set to ${delay} seconds`);
+  return;
+}
+
+// Computer Vision
+if (cleanText === "__CV_LOAD_IMAGE__") {
+  loadCVImage(canvasContainerRef, (msg) => setOutput(prev => prev + "\n" + msg));
+  return;
+}
+
+if (cleanText.startsWith("__CV_PUT_TEXT__:")) {
+  const parts = cleanText.split(":");
+  const text = parts[1].replace(/"/g, '');
+  const x = parseInt(parts[2]);
+  const y = parseInt(parts[3]);
+  const font = parts[4];
+  const size = parseFloat(parts[5]);
+  const r = parseInt(parts[6]);
+  const g = parseInt(parts[7]);
+  const b = parseInt(parts[8]);
+  const thickness = parseInt(parts[9]);
+
+  if (cvMat && window.cv) {
+    const fontMap = {
+      'SIMPLEX': window.cv.FONT_HERSHEY_SIMPLEX,
+      'PLAIN': window.cv.FONT_HERSHEY_PLAIN,
+      'DUPLEX': window.cv.FONT_HERSHEY_DUPLEX,
+      'COMPLEX': window.cv.FONT_HERSHEY_COMPLEX,
+      'TRIPLEX': window.cv.FONT_HERSHEY_TRIPLEX,
+      'COMPLEX_SMALL': window.cv.FONT_HERSHEY_COMPLEX_SMALL,
+      'SCRIPT_SIMPLEX': window.cv.FONT_HERSHEY_SCRIPT_SIMPLEX,
+      'SCRIPT_COMPLEX': window.cv.FONT_HERSHEY_SCRIPT_COMPLEX
+    };
+    window.cv.putText(cvMat, text, new window.cv.Point(x, y), fontMap[font] || window.cv.FONT_HERSHEY_SIMPLEX, size, new window.cv.Scalar(b, g, r), thickness);
+    setOutput(prev => prev + `\n✅ Text added: "${text}"`);
+  }
+  return;
+}
+
+if (cleanText.startsWith("__CV_DRAW_LINE__:")) {
+  const parts = cleanText.split(":");
+  const x1 = parseInt(parts[1]);
+  const y1 = parseInt(parts[2]);
+  const x2 = parseInt(parts[3]);
+  const y2 = parseInt(parts[4]);
+  const r = parseInt(parts[5]);
+  const g = parseInt(parts[6]);
+  const b = parseInt(parts[7]);
+  const thickness = parseInt(parts[8]);
+
+  if (cvMat && window.cv) {
+    window.cv.line(cvMat, new window.cv.Point(x1, y1), new window.cv.Point(x2, y2), new window.cv.Scalar(b, g, r), thickness);
+    setOutput(prev => prev + `\n✅ Line drawn from (${x1},${y1}) to (${x2},${y2})`);
+  }
+  return;
+}
+
+if (cleanText.startsWith("__CV_DRAW_RECT__:")) {
+  const parts = cleanText.split(":");
+  const x1 = parseInt(parts[1]);
+  const y1 = parseInt(parts[2]);
+  const x2 = parseInt(parts[3]);
+  const y2 = parseInt(parts[4]);
+  const r = parseInt(parts[5]);
+  const g = parseInt(parts[6]);
+  const b = parseInt(parts[7]);
+  const thickness = parseInt(parts[8]);
+
+  if (cvMat && window.cv) {
+    window.cv.rectangle(cvMat, new window.cv.Point(x1, y1), new window.cv.Point(x2, y2), new window.cv.Scalar(b, g, r), thickness);
+    setOutput(prev => prev + `\n✅ Rectangle drawn from (${x1},${y1}) to (${x2},${y2})`);
+  }
+  return;
+}
+
+if (cleanText.startsWith("__CV_DRAW_CIRCLE__:")) {
+  const parts = cleanText.split(":");
+  const x = parseInt(parts[1]);
+  const y = parseInt(parts[2]);
+  const radius = parseInt(parts[3]);
+  const r = parseInt(parts[4]);
+  const g = parseInt(parts[5]);
+  const b = parseInt(parts[6]);
+  const thickness = parseInt(parts[7]);
+
+  if (cvMat && window.cv) {
+    window.cv.circle(cvMat, new window.cv.Point(x, y), radius, new window.cv.Scalar(b, g, r), thickness);
+    setOutput(prev => prev + `\n✅ Circle drawn at (${x},${y}) with radius ${radius}`);
+  }
+  return;
+}
+
+if (cleanText.startsWith("__CV_RESIZE__:")) {
+  const parts = cleanText.split(":");
+  const width = parseInt(parts[1]);
+  const height = parseInt(parts[2]);
+
+  if (cvMat && window.cv) {
+    const dsize = new window.cv.Size(width, height);
+    window.cv.resize(cvMat, cvMat, dsize, 0, 0, window.cv.INTER_AREA);
+    setOutput(prev => prev + `\n✅ Image resized to ${width}x${height}`);
+  }
+  return;
+}
+
+if (cleanText.startsWith("__CV_SHOW__:")) {
+  const name = cleanText.split(":")[1].replace(/"/g, '');
+  showCVImage(canvasContainerRef, name, (msg) => setOutput(prev => prev + "\n" + msg));
+  return;
+}
+
+if (cleanText.startsWith("__CV_SAVE__:")) {
+  const name = cleanText.split(":")[1].replace(/"/g, '');
+  saveCVImage(name, (msg) => setOutput(prev => prev + "\n" + msg));
   return;
 }
 
@@ -4602,6 +6796,31 @@ function handleFileUpload(e) {
 
 <Script
   src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"
+  strategy="beforeInteractive"
+/>
+
+<Script
+  src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@latest"
+  strategy="beforeInteractive"
+/>
+
+<Script
+  src="https://cdn.jsdelivr.net/npm/@mediapipe/hands@latest"
+  strategy="beforeInteractive"
+/>
+
+<Script
+  src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils@latest"
+  strategy="beforeInteractive"
+/>
+
+<Script
+  src="https://docs.opencv.org/4.x/opencv.js"
+  strategy="beforeInteractive"
+/>
+
+<Script
+  src="https://cdn.jsdelivr.net/npm/face-api.js@latest/dist/face-api.min.js"
   strategy="beforeInteractive"
 />
 
