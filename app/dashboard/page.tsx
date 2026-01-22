@@ -18,7 +18,7 @@ const modules = [
 
 export default function DashboardPage() {
   const router = useRouter();
-
+  const [tutorialCounts, setTutorialCounts] = useState<Record<string, number>>({})
   const [userEmail, setUserEmail] = useState("");
   const [projects, setProjects] = useState<any[]>([]);
   const [showModal, setShowModal] = useState(false);
@@ -50,15 +50,32 @@ export default function DashboardPage() {
     }
   };
 
+  const loadTutorialCounts = async () => {
+    try {
+      const res = await fetch("/api/tutorials/count")
+      const data = await res.json()
+
+      const mapped: Record<string, number> = {}
+      data.forEach((row: any) => {
+        mapped[row.type] = Number(row.tutorial_count)
+      })
+
+      setTutorialCounts(mapped)
+    } catch (err) {
+      console.error("Failed to load tutorial counts", err)
+    }
+  }
+
   /* ---------- AUTH ---------- */
   useEffect(() => {
-    const email = localStorage.getItem("userEmail");
-    if (!email) router.push("/login");
+    const email = localStorage.getItem("userEmail")
+    if (!email) router.push("/login")
     else {
-      setUserEmail(email);
-      loadProjects();
+      setUserEmail(email)
+      loadProjects()
+      loadTutorialCounts() // 👈 ADD THIS
     }
-  }, []);
+  }, [])
 
   /* ---------- CREATE PROJECT ---------- */
   const createProjectAndRedirect = async () => {
@@ -191,44 +208,101 @@ export default function DashboardPage() {
         </div>
       )}
       {/* PROJECT LIST */}
-<div className="max-w-7xl mx-auto mt-20">
-  <h2 className="text-3xl font-light mb-6">
-    Your Projects
-  </h2>
+      <div className="max-w-7xl mx-auto mt-20">
+        <h2 className="text-3xl font-light mb-6">
+          Your Projects
+        </h2>
 
-  {projects.length === 0 ? (
-    <div className="text-gray-500 text-lg">
-      No projects created yet.
-    </div>
-  ) : (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {projects.map((project) => (
-        <div
-          key={project.projectid ?? project.ProjectId}
-          className="border rounded-xl p-5 shadow-sm hover:shadow-md cursor-pointer transition"
-          onClick={() =>
-            router.push(
-              `/workspace/basic-coding?projectId=${
-                project.projectid ?? project.ProjectId
-              }`
-            )
-          }
-        >
-          <h3 className="text-xl font-medium mb-2">
-            {project.projectname ?? project.ProjectName}
-          </h3>
+        {projects.length === 0 ? (
+          <div className="text-gray-500 text-lg">
+            No projects created yet.
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {projects.map((project) => (
+              <div
+                key={project.projectid ?? project.ProjectId}
+                className="border rounded-xl p-5 shadow-sm hover:shadow-md cursor-pointer transition"
+                onClick={() =>
+                  router.push(
+                    `/workspace/basic-coding?projectId=${project.projectid ?? project.ProjectId
+                    }`
+                  )
+                }
+              >
+                <h3 className="text-xl font-medium mb-2">
+                  {project.projectname ?? project.ProjectName}
+                </h3>
 
-          <p className="text-sm text-gray-500">
-            Created on{" "}
-            {new Date(
-              project.createdon ?? project.CreatedOn
-            ).toLocaleDateString()}
-          </p>
+                <p className="text-sm text-gray-500">
+                  Created on{" "}
+                  {new Date(
+                    project.createdon ?? project.CreatedOn
+                  ).toLocaleDateString()}
+                </p>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+      {/* =========================
+   PROJECTS / TUTORIALS SECTION
+========================= */}
+      <div className="max-w-7xl mx-auto mt-24 px-6 pb-20">
+        <h2 className="text-4xl font-light text-center mb-12">
+          Projects
+        </h2>
+
+        {/* Tabs */}
+        <div className="flex rounded-xl overflow-hidden mb-6 border">
+          <div className="flex-1 text-center py-4 bg-blue-800 text-white font-semibold">
+            PROJECTS
+          </div>
+          <div className="flex-1 text-center py-4 bg-blue-950 text-white font-semibold border-b-4 border-pink-500">
+            TUTORIALS
+          </div>
         </div>
-      ))}
-    </div>
-  )}
-</div>
+
+        {/* Tutorials Table */}
+        <div className="bg-gray-50 rounded-xl shadow-sm overflow-hidden">
+          <table className="w-full border-collapse">
+            <thead className="bg-white border-b">
+              <tr>
+                <th className="text-left px-6 py-4 w-16">#</th>
+                <th className="text-left px-6 py-4">Example Name</th>
+                <th className="text-right px-6 py-4">Count</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {[
+                { id: 1, name: "Basic Coding", key: "BASIC" },
+                { id: 2, name: "AI Coding", key: "AI" },
+                { id: 3, name: "STEMBOT Coding", key: "STEMBOT" },
+              ].map((item, index) => (
+                <tr
+                  key={item.id}
+                  className={index % 2 === 0 ? "bg-gray-100" : "bg-white"}
+                >
+                  <td className="px-6 py-4 font-medium">{item.id}</td>
+                  <td
+                    className="px-6 py-4 text-blue-600 cursor-pointer hover:underline"
+                    onClick={() => router.push(`/tutorials/${item.key}`)}
+                  >
+                    {item.name}
+                  </td>
+
+                  <td className="px-6 py-4 text-right">
+                    <span className="inline-block bg-blue-800 text-white text-sm px-3 py-1 rounded-md">
+                      {tutorialCounts[item.key] ?? 0}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
 
     </div>
   );

@@ -6,6 +6,21 @@ import 'blockly/msg/en';
 import 'blockly/blocks';
 import Sk from 'skulpt';
 import 'skulpt/dist/skulpt-stdlib.js';
+import { useSearchParams } from "next/navigation"
+const variablesRef = { current: {} as Record<string, any> }
+
+
+function appendConsole(text: string) {
+  console.log(text)
+}
+
+function showInputPrompt(prompt: string): Promise<string> {
+  return new Promise((resolve) => {
+    const value = window.prompt(prompt) ?? ""
+    resolve(value)
+  })
+}
+
 
 // Custom Blockly Blocks Definitions
 const defineBlocks = () => {
@@ -3301,10 +3316,76 @@ function BasicCodingPage() {
   const fileInputRef = useRef(null);
   const blocklyDiv = useRef(null);
   const canvasContainerRef = useRef(null);
-  const workspaceRef = useRef(null);
   const [code, setCode] = useState('');
   const [view, setView] = useState('blocks');
   const [output, setOutput] = useState('');
+const searchParams = useSearchParams()
+const activityId = searchParams.get("activityId")
+const workspaceRef = useRef<Blockly.WorkspaceSvg | null>(null)
+function appendOutput(text: string) {
+  setOutput(prev => prev + text + "\n")
+}
+async function executeBlock(block: Blockly.Block) {
+  const variables = variablesRef.current
+
+  /* ==========================
+     SET VARIABLE
+  ========================== */
+  if (block.type === "variables_set") {
+  const varId = block.getFieldValue("VAR")
+  const variable = block.workspace.getVariableById(varId)
+  const varName = variable?.name ?? varId
+
+  const valueBlock = block.getInputTargetBlock("VALUE")
+  let value: any = null
+
+  if (valueBlock?.type === "text") {
+    value = valueBlock.getFieldValue("TEXT")
+  }
+
+  if (valueBlock?.type === "input_prompt") {
+    value = await showInputPrompt(
+      valueBlock.getFieldValue("TEXT")
+    )
+  }
+
+  variables[varName] = value
+  appendConsole(`[DEBUG] ${varName} = ${value}`)
+}
+
+  /* ==========================
+     PRINT
+  ========================== */
+  if (block.type === "text_print") {
+  const valueBlock = block.getInputTargetBlock("TEXT")
+
+  if (valueBlock?.type === "variables_get") {
+    const varId = valueBlock.getFieldValue("VAR")
+    const variable = block.workspace.getVariableById(varId)
+    const varName = variable?.name ?? varId
+
+    appendOutput(String(variables[varName] ?? ""))
+  }
+}
+
+  /* ==========================
+     NEXT BLOCK
+  ========================== */
+  const next = block.getNextBlock()
+  if (next) {
+    await executeBlock(next)
+  }
+}
+
+async function runWorkspace(workspace: Blockly.Workspace) {
+  variablesRef.current = {} // reset variables
+
+  const topBlocks = workspace.getTopBlocks(true)
+
+  for (const block of topBlocks) {
+    await executeBlock(block)
+  }
+}
 
   function getCanvasTextOutput() {
     let pre = canvasContainerRef.current.querySelector(".canvas-text-output");
@@ -3561,6 +3642,123 @@ function BasicCodingPage() {
 
 </xml>
 `, []);
+useEffect(() => {
+  if (!activityId || !workspaceRef.current) return
+
+  fetch(`/api/tutorials/activity/${activityId}/blocks`)
+    .then(res => res.json())
+    .then(blocks => {
+      loadBlocksIntoWorkspace(blocks)
+    })
+    .catch(console.error)
+}, [activityId])
+
+function loadBlocksIntoWorkspace(blocks: any[]) {
+  const workspace = workspaceRef.current
+  if (!workspace) return
+
+  workspace.clear()
+
+  let previousBlock: Blockly.Block | null = null
+
+  blocks.forEach((block) => {
+    let newBlock: Blockly.Block | null = null
+
+    /* ===============================
+       1️⃣ SET VARIABLE BLOCK
+    =============================== */
+    if (block.block_type === "SET_VARIABLE") {
+      newBlock = workspace.newBlock("variables_set")
+
+      newBlock.setFieldValue(
+        block.block_config.variable,
+        "VAR"
+      )
+
+      /* ---- STRING VALUE ---- */
+      if (block.block_config.type === "STRING") {
+        const stringBlock = workspace.newBlock("text")
+
+        stringBlock.setFieldValue(
+          block.block_config.value,
+          "TEXT"
+        )
+
+        stringBlock.initSvg()
+        stringBlock.render()
+
+        newBlock
+          .getInput("VALUE")
+          ?.connection?.connect(stringBlock.outputConnection)
+      }
+
+      /* ---- CREATE TURTLE ---- */
+      if (block.block_config.type === "CREATE_TURTLE") {
+        const turtleBlock = workspace.newBlock("turtle_create")
+
+        turtleBlock.initSvg()
+        turtleBlock.render()
+
+        newBlock
+          .getInput("VALUE")
+          ?.connection?.connect(turtleBlock.outputConnection)
+      }
+    }
+
+    /* ===============================
+       2️⃣ PRINT BLOCK
+    =============================== */
+    if (block.block_type === "PRINT") {
+      newBlock = workspace.newBlock("text_print")
+
+      const varBlock = workspace.newBlock("variables_get")
+      varBlock.setFieldValue(
+        block.block_config.variable,
+        "VAR"
+      )
+
+      varBlock.initSvg()
+      varBlock.render()
+
+      newBlock
+        .getInput("TEXT")
+        ?.connection?.connect(varBlock.outputConnection)
+    }
+
+    /* ===============================
+       3️⃣ TURTLE MOVE (Draw a Line)
+    =============================== */
+    if (block.block_type === "TURTLE_MOVE") {
+      newBlock = workspace.newBlock("turtle_move")
+
+      newBlock.setFieldValue(
+        block.block_config.variable,
+        "VAR"
+      )
+
+      newBlock.setFieldValue(
+        String(block.block_config.value),
+        "DISTANCE"
+      )
+    }
+
+    if (!newBlock) return
+
+    newBlock.initSvg()
+    newBlock.render()
+
+    /* ===============================
+       CONNECT SEQUENCE
+    =============================== */
+    if (previousBlock) {
+      previousBlock.nextConnection
+        ?.connect(newBlock.previousConnection)
+    }
+
+    previousBlock = newBlock
+  })
+}
+
 
  useEffect(() => {
   defineBlocks();
@@ -4334,6 +4532,17 @@ function handleFileUpload(e) {
         <button onClick={runCode} style={{ padding: '8px 24px', background: '#4CAF50', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>
           ▶ Run
         </button>
+        <button
+  style={{ padding: '8px 24px', background: '#4CAF50', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
+  onClick={async () => {
+    if (!workspaceRef.current) return
+    setOutput("")  
+    await runWorkspace(workspaceRef.current)
+  }}
+>
+ ▶ Run tutorials
+</button>
+
         <div style={{ marginLeft: 'auto', display: 'flex', gap: '10px' }}>
           <button
             onClick={() => setView('blocks')}
@@ -4387,18 +4596,34 @@ function handleFileUpload(e) {
         }}>
           {/* Canvas Container */}
           <div
-            ref={canvasContainerRef}
-            style={{
-              width: '100%',
-              flex: view === 'canvas' ? 0.8 : 0.6,
-              marginBottom: '20px',
-              background: '#ffffff',
-              borderRadius: '8px',
-              border: '2px solid #5566AA',
-              position: 'relative',
-              minHeight: '300px'
-            }}
-          />
+  ref={canvasContainerRef}
+  style={{
+    width: '100%',
+    flex: view === 'canvas' ? 0.8 : 0.6,
+    marginBottom: '20px',
+    background: '#ffffff',
+    borderRadius: '8px',
+    border: '2px solid #5566AA',
+    position: 'relative',
+    minHeight: '300px',
+    padding: '10px',
+    overflow: 'auto'
+  }}
+>
+  {/* ✅ Canvas Output Overlay */}
+  <pre
+    style={{
+      fontSize: '13px',
+      whiteSpace: 'pre-wrap',
+      wordWrap: 'break-word',
+      color: '#000',
+      margin: 0,
+      fontFamily: 'monospace'
+    }}
+  >
+    {output || 'Canvas ready...'}
+  </pre>
+</div>
 
           {/* Output Box */}
           <div style={{
