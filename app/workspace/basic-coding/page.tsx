@@ -3394,11 +3394,18 @@ function BasicCodingPage() {
   const [view, setView] = useState('blocks');
   const [output, setOutput] = useState('');
   const searchParams = useSearchParams()
-  const activityId = searchParams.get("activityId")
+    const [activityId, setActivityId] = useState<string | null>(null);
+
   const workspaceRef = useRef<Blockly.WorkspaceSvg | null>(null)
   function appendOutput(text: string) {
     setOutput(prev => prev + text + "\n")
   }
+
+  useEffect(() => {
+    if (!searchParams) return;
+    setActivityId(searchParams.get("activityId"));
+  }, [searchParams]);
+  if (!activityId) return null;
   async function executeBlock(block: Blockly.Block) {
     const variables = variablesRef.current
 
