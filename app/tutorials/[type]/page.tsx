@@ -72,45 +72,45 @@ export default function TutorialActivitiesPage() {
             </thead>
 
             <tbody>
-  {activities.map((a, index) => (
-    <tr
-      key={a.id}
-      className={index % 2 === 0 ? "bg-gray-50" : "bg-white"}
-    >
-      <td className="px-6 py-4">{index + 1}</td>
+              {activities.map((a, index) => (
+                <tr
+                  key={a.id}
+                  className={index % 2 === 0 ? "bg-gray-50" : "bg-white"}
+                >
+                  <td className="px-6 py-4">{index + 1}</td>
 
-      {/* ✅ Clickable Activity Name */}
-      <td
-        className="px-6 py-4 text-blue-600 cursor-pointer hover:underline"
-        onClick={() =>
-          router.push(
-            `/workspace/basic-coding?activityId=${a.id}`
-          )
-        }
-      >
-        {a.activity_name}
-      </td>
+                  {/* ✅ Clickable Activity Name */}
+                  <td
+                    className="px-6 py-4 text-blue-600 cursor-pointer hover:underline"
+                    onClick={() =>
+                      router.push(
+                        `/workspace/basic-coding?activityId=${a.id}`
+                      )
+                    }
+                  >
+                    {a.activity_name}
+                  </td>
 
-      <td className="px-6 py-4 text-center">{a.level}</td>
+                  <td className="px-6 py-4 text-center">{a.level}</td>
 
-      <td className="px-6 py-4 text-center">
-        {a.pdf_url && (
-          <a href={a.pdf_url} target="_blank">
-            <FileText className="inline w-5 h-5" />
-          </a>
-        )}
-      </td>
+                  <td className="px-6 py-4 text-center">
+                    {a.pdf_url && (
+                      <a href={a.pdf_url} target="_blank">
+                        <FileText className="inline w-5 h-5" />
+                      </a>
+                    )}
+                  </td>
 
-      <td className="px-6 py-4 text-center">
-        {a.video_url && (
-          <a href={a.video_url} target="_blank">
-            <Video className="inline w-5 h-5" />
-          </a>
-        )}
-      </td>
-    </tr>
-  ))}
-</tbody>
+                  <td className="px-6 py-4 text-center">
+                    {a.video_url && (
+                      <a href={a.video_url} target="_blank">
+                        <Video className="inline w-5 h-5" />
+                      </a>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
 
           </table>
         </div>
