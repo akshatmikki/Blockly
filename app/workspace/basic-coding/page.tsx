@@ -7,6 +7,12 @@ import 'blockly/blocks';
 import Sk from 'skulpt';
 import 'skulpt/dist/skulpt-stdlib.js';
 import { useSearchParams } from "next/navigation"
+import { javascriptGenerator } from "blockly/javascript";
+import { createTurtle } from "@/lib/turtleEngine";
+
+const turtleEngineRef = { current: null as any };
+
+
 const variablesRef = { current: {} as Record<string, any> }
 
 
@@ -73,79 +79,79 @@ const defineBlocks = () => {
   /* =========================
      FILE HANDLING
   ========================= */
-/* =========================
-   FILE UPLOAD BLOCK
-========================= */
+  /* =========================
+     FILE UPLOAD BLOCK
+  ========================= */
 
-Blockly.Blocks['file_upload'] = {
-  init: function () {
-    this.appendDummyInput()
-      .appendField(
-        new Blockly.FieldImage(
-          "https://cdn-icons-png.flaticon.com/512/716/716784.png",
-          20,
-          20,
-          "*"
+  Blockly.Blocks['file_upload'] = {
+    init: function () {
+      this.appendDummyInput()
+        .appendField(
+          new Blockly.FieldImage(
+            "https://cdn-icons-png.flaticon.com/512/716/716784.png",
+            20,
+            20,
+            "*"
+          )
         )
-      )
-      .appendField("Upload file");
+        .appendField("Upload file");
 
-    this.setPreviousStatement(true);
-    this.setNextStatement(true);
-    this.setColour(120);
-    this.setTooltip("Upload a file from your device");
-  }
-};
+      this.setPreviousStatement(true);
+      this.setNextStatement(true);
+      this.setColour(120);
+      this.setTooltip("Upload a file from your device");
+    }
+  };
 
   Blockly.Blocks['file_open'] = {
-  init: function () {
-    this.appendDummyInput()
-      .appendField("Open file")
-      .appendField(new Blockly.FieldTextInput("file.txt"), "FILENAME")
-      .appendField("in")
-      .appendField(
-        new Blockly.FieldDropdown([
-          ["read", "r"],
-          ["write", "w"]
-        ]),
-        "MODE"
-      )
-      .appendField("mode");
+    init: function () {
+      this.appendDummyInput()
+        .appendField("Open file")
+        .appendField(new Blockly.FieldTextInput("file.txt"), "FILENAME")
+        .appendField("in")
+        .appendField(
+          new Blockly.FieldDropdown([
+            ["read", "r"],
+            ["write", "w"]
+          ]),
+          "MODE"
+        )
+        .appendField("mode");
 
-    this.setPreviousStatement(true);
-    this.setNextStatement(true);
-    this.setColour(120);
-  }
-};
+      this.setPreviousStatement(true);
+      this.setNextStatement(true);
+      this.setColour(120);
+    }
+  };
 
-Blockly.Blocks['file_read'] = {
-  init: function () {
-    this.appendDummyInput().appendField("Read file");
-    this.setPreviousStatement(true);
-    this.setNextStatement(true);
-    this.setColour(120);
-  }
-};
+  Blockly.Blocks['file_read'] = {
+    init: function () {
+      this.appendDummyInput().appendField("Read file");
+      this.setPreviousStatement(true);
+      this.setNextStatement(true);
+      this.setColour(120);
+    }
+  };
 
-Blockly.Blocks['file_write'] = {
-  init: function () {
-    this.appendValueInput("TEXT")
-      .setCheck("String")
-      .appendField("Write to file");
-    this.setPreviousStatement(true);
-    this.setNextStatement(true);
-    this.setColour(120);
-  }
-};
+  Blockly.Blocks['file_write'] = {
+    init: function () {
+      this.appendValueInput("TEXT")
+        .setCheck("String")
+        .appendField("Write to file");
+      this.setPreviousStatement(true);
+      this.setNextStatement(true);
+      this.setColour(120);
+    }
+  };
 
-Blockly.Blocks['file_close'] = {
-  init: function () {
-    this.appendDummyInput().appendField("Close file");
-    this.setPreviousStatement(true);
-    this.setNextStatement(true);
-    this.setColour(120);
-  }
-};
+  Blockly.Blocks['file_close'] = {
+    init: function () {
+      this.appendDummyInput().appendField("Close file");
+      this.setPreviousStatement(true);
+      this.setNextStatement(true);
+      this.setColour(120);
+    }
+  };
 
   /* =========================
      SERIAL
@@ -287,6 +293,19 @@ Blockly.Blocks['file_close'] = {
       this.setTooltip("Turn turtle left");
     }
   };
+
+  Blockly.Blocks["turtle_move"] = {
+    init() {
+      this.appendDummyInput()
+        .appendField("move")
+        .appendField(new Blockly.FieldNumber(10, 0), "STEPS")
+
+      this.setPreviousStatement(true)
+      this.setNextStatement(true)
+      this.setColour(160)
+      this.setTooltip("Move turtle forward")
+    },
+  }
 
   // Turtle: Pen Color
 
@@ -2200,6 +2219,51 @@ Blockly.Blocks['file_close'] = {
 
 };
 
+const defineJavascriptGenerators = () => {
+  javascriptGenerator.forBlock["turtle_color"] = function (block) {
+    const color = block.getFieldValue("COLOR");
+    return `__turtle.fillcolor("${color}");\n`;
+  };
+
+  javascriptGenerator.forBlock["turtle_forward"] = function (block) {
+    const dist =
+      javascriptGenerator.valueToCode(block, "DISTANCE", 0) || "0";
+    return `__turtle.forward(${dist});\n`;
+  };
+
+  // turtle_create → NO-OP in JS (display-only block)
+  javascriptGenerator.forBlock["turtle_create"] = function () {
+    // Turtle is already created in JS runtime
+    return "";
+  };
+
+  javascriptGenerator.forBlock["turtle_right"] = function (block) {
+    const angle =
+      javascriptGenerator.valueToCode(block, "ANGLE", 0) || "0";
+    return `__turtle.right(${angle});\n`;
+  };
+
+  javascriptGenerator.forBlock["turtle_left"] = function (block) {
+    const angle =
+      javascriptGenerator.valueToCode(block, "ANGLE", 0) || "0";
+    return `__turtle.left(${angle});\n`;
+  };
+  javascriptGenerator.forBlock["turtle_dot"] = function (block) {
+    const size =
+      javascriptGenerator.valueToCode(block, "SIZE", 0) || "10";
+    return `__turtle.dot(${size});\n`;
+  };
+  javascriptGenerator.forBlock["turtle_bgcolor"] = function (block) {
+    const color = block.getFieldValue("COLOR");
+    return `__turtle.bgcolor("${color}");\n`;
+  };
+  javascriptGenerator.forBlock["turtle_penup"] = () =>
+    "__turtle.penup();\n";
+
+  javascriptGenerator.forBlock["turtle_pendown"] = () =>
+    "__turtle.pendown();\n";
+
+}
 // Python Code Generators for Custom Blocks
 const definePythonGenerators = () => {
   /* =========================
@@ -2213,40 +2277,40 @@ const definePythonGenerators = () => {
   };
 
   pythonGenerator.forBlock['sprite_show'] = function (block) {
-  const sprite = block.getFieldValue("SPRITE"); // Laugh
-  const cam = block.getFieldValue("CAM");       // on / off
+    const sprite = block.getFieldValue("SPRITE"); // Laugh
+    const cam = block.getFieldValue("CAM");       // on / off
 
-  return `sprites.show("${sprite}", "${cam}")\n`;
-};
+    return `sprites.show("${sprite}", "${cam}")\n`;
+  };
 
   /* =========================
    FILE HANDLING GENERATORS
 ========================= */
 
-pythonGenerator.forBlock['file_upload'] = function () {
-  // Marker only – handled in JS
-  return "__UPLOAD_FILE__\n";
-};
+  pythonGenerator.forBlock['file_upload'] = function () {
+    // Marker only – handled in JS
+    return "__UPLOAD_FILE__\n";
+  };
 
-pythonGenerator.forBlock['file_open'] = function (block) {
-  const filename = block.getFieldValue("FILENAME");
-  const mode = block.getFieldValue("MODE");
-  return `file = open("${filename}", "${mode}")\n`;
-};
+  pythonGenerator.forBlock['file_open'] = function (block) {
+    const filename = block.getFieldValue("FILENAME");
+    const mode = block.getFieldValue("MODE");
+    return `file = open("${filename}", "${mode}")\n`;
+  };
 
-pythonGenerator.forBlock['file_read'] = function () {
-  return `print(file.read())\n`;
-};
+  pythonGenerator.forBlock['file_read'] = function () {
+    return `print(file.read())\n`;
+  };
 
-pythonGenerator.forBlock['file_write'] = function (block, gen) {
-  const text =
-    gen.valueToCode(block, "TEXT", gen.ORDER_NONE) || '""';
-  return `file.write(${text})\n`;
-};
+  pythonGenerator.forBlock['file_write'] = function (block, gen) {
+    const text =
+      gen.valueToCode(block, "TEXT", gen.ORDER_NONE) || '""';
+    return `file.write(${text})\n`;
+  };
 
-pythonGenerator.forBlock['file_close'] = function () {
-  return `file.close()\n`;
-};
+  pythonGenerator.forBlock['file_close'] = function () {
+    return `file.close()\n`;
+  };
 
   pythonGenerator.forBlock['serial_send'] = function (block, gen) {
     const text =
@@ -2342,6 +2406,17 @@ serial.send(${text})
     return [`"${text}"`, pythonGenerator.ORDER_ATOMIC];
   };
 
+  pythonGenerator.forBlock['turtle_move'] = function (block, generator) {
+    const varName = generator.nameDB_.getName(
+      block.getFieldValue('VAR'),
+      Blockly.Names.NameType.VARIABLE
+    );
+    const distance =
+      generator.valueToCode(block, 'DISTANCE', pythonGenerator.ORDER_NONE) || '0';
+
+    return `${varName}.forward(${distance})\n`;
+  };
+
   pythonGenerator.forBlock['number_literal'] = function (block) {
     return [block.getFieldValue("NUM"), pythonGenerator.ORDER_ATOMIC];
   };
@@ -2381,7 +2456,7 @@ serial.send(${text})
       Blockly.Names.NameType.VARIABLE
     );
 
-    return `${varName} = turtle.Turtle()\n`;
+    return `${varName} = _turtle.Turtle()\n`;
   };
 
 
@@ -3311,7 +3386,6 @@ serial.send(${text})
 
 };
 
-
 function BasicCodingPage() {
   const fileInputRef = useRef(null);
   const blocklyDiv = useRef(null);
@@ -3319,73 +3393,138 @@ function BasicCodingPage() {
   const [code, setCode] = useState('');
   const [view, setView] = useState('blocks');
   const [output, setOutput] = useState('');
-const searchParams = useSearchParams()
-const activityId = searchParams.get("activityId")
-const workspaceRef = useRef<Blockly.WorkspaceSvg | null>(null)
-function appendOutput(text: string) {
-  setOutput(prev => prev + text + "\n")
-}
-async function executeBlock(block: Blockly.Block) {
-  const variables = variablesRef.current
+  const searchParams = useSearchParams()
+  const activityId = searchParams.get("activityId")
+  const workspaceRef = useRef<Blockly.WorkspaceSvg | null>(null)
+  function appendOutput(text: string) {
+    setOutput(prev => prev + text + "\n")
+  }
+  async function executeBlock(block: Blockly.Block) {
+    const variables = variablesRef.current
 
-  /* ==========================
-     SET VARIABLE
-  ========================== */
-  if (block.type === "variables_set") {
-  const varId = block.getFieldValue("VAR")
-  const variable = block.workspace.getVariableById(varId)
-  const varName = variable?.name ?? varId
+    /* ==========================
+       SET VARIABLE
+    ========================== */
+    if (block.type === "variables_set") {
+      const varId = block.getFieldValue("VAR")
+      const variable = block.workspace.getVariableById(varId)
+      const varName = variable?.name ?? varId
 
-  const valueBlock = block.getInputTargetBlock("VALUE")
-  let value: any = null
+      const valueBlock = block.getInputTargetBlock("VALUE")
+      let value: any = null
 
-  if (valueBlock?.type === "text") {
-    value = valueBlock.getFieldValue("TEXT")
+      if (valueBlock?.type === "text") {
+        value = valueBlock.getFieldValue("TEXT")
+      }
+
+      if (valueBlock?.type === "input_prompt") {
+        value = await showInputPrompt(
+          valueBlock.getFieldValue("TEXT")
+        )
+      }
+
+      variables[varName] = value
+      appendConsole(`[DEBUG] ${varName} = ${value}`)
+    }
+
+    /* ==========================
+       PRINT
+    ========================== */
+    if (block.type === "text_print") {
+      const valueBlock = block.getInputTargetBlock("TEXT")
+
+      if (valueBlock?.type === "variables_get") {
+        const varId = valueBlock.getFieldValue("VAR")
+        const variable = block.workspace.getVariableById(varId)
+        const varName = variable?.name ?? varId
+
+        appendOutput(String(variables[varName] ?? ""))
+      }
+    }
+    /* ==========================
+   CREATE TURTLE
+========================== */
+    if (block.type === "turtle_create") {
+      const varId = block.getFieldValue("VAR");
+      const variable = block.workspace.getVariableById(varId);
+      const varName = variable?.name ?? varId;
+
+      // create canvas turtle
+      if (!turtleEngineRef.current) {
+        turtleEngineRef.current = createTurtle("turtleCanvas");
+        turtleEngineRef.current.reset();
+      }
+
+      // store reference in variables
+      variables[varName] = turtleEngineRef.current;
+
+      appendConsole(`[DEBUG] created turtle '${varName}'`);
+    }
+
+    /* ==========================
+       TURTLE BACKGROUND COLOR
+    ========================== */
+    if (block.type === "turtle_bgcolor") {
+      const color = block.getFieldValue("COLOR");
+
+      turtleEngineRef.current?.bgcolor(color);
+
+      appendConsole(`[DEBUG] set background color ${color}`);
+    }
+    /* ==========================
+       TURTLE FILL COLOR
+    ========================== */
+    if (block.type === "turtle_color") {
+      const varId = block.getFieldValue("VAR");
+      const variable = block.workspace.getVariableById(varId);
+      const varName = variable?.name ?? varId;
+
+      const color = block.getFieldValue("COLOR");
+
+      variables[varName]?.fillcolor(color);
+
+      appendConsole(`[DEBUG] ${varName}.fillcolor(${color})`);
+    }
+    /* ==========================
+       TURTLE DOT
+    ========================== */
+    if (block.type === "turtle_dot") {
+      const varId = block.getFieldValue("VAR");
+      const variable = block.workspace.getVariableById(varId);
+      const varName = variable?.name ?? varId;
+
+      const radiusBlock = block.getInputTargetBlock("RADIUS");
+      let radius = 10;
+
+      if (radiusBlock?.type === "math_number") {
+        radius = Number(radiusBlock.getFieldValue("NUM"));
+      }
+
+      variables[varName]?.dot(radius);
+
+      appendConsole(`[DEBUG] ${varName}.dot(${radius})`);
+    }
+
+
+    /* ==========================
+       NEXT BLOCK
+    ========================== */
+    const next = block.getNextBlock()
+    if (next) {
+      await executeBlock(next)
+    }
   }
 
-  if (valueBlock?.type === "input_prompt") {
-    value = await showInputPrompt(
-      valueBlock.getFieldValue("TEXT")
-    )
+  async function runWorkspace(workspace: Blockly.Workspace) {
+    variablesRef.current = {};
+    turtleEngineRef.current = null; // 🔴 IMPORTANT
+
+    const topBlocks = workspace.getTopBlocks(true);
+
+    for (const block of topBlocks) {
+      await executeBlock(block);
+    }
   }
-
-  variables[varName] = value
-  appendConsole(`[DEBUG] ${varName} = ${value}`)
-}
-
-  /* ==========================
-     PRINT
-  ========================== */
-  if (block.type === "text_print") {
-  const valueBlock = block.getInputTargetBlock("TEXT")
-
-  if (valueBlock?.type === "variables_get") {
-    const varId = valueBlock.getFieldValue("VAR")
-    const variable = block.workspace.getVariableById(varId)
-    const varName = variable?.name ?? varId
-
-    appendOutput(String(variables[varName] ?? ""))
-  }
-}
-
-  /* ==========================
-     NEXT BLOCK
-  ========================== */
-  const next = block.getNextBlock()
-  if (next) {
-    await executeBlock(next)
-  }
-}
-
-async function runWorkspace(workspace: Blockly.Workspace) {
-  variablesRef.current = {} // reset variables
-
-  const topBlocks = workspace.getTopBlocks(true)
-
-  for (const block of topBlocks) {
-    await executeBlock(block)
-  }
-}
 
   function getCanvasTextOutput() {
     let pre = canvasContainerRef.current.querySelector(".canvas-text-output");
@@ -3442,6 +3581,7 @@ async function runWorkspace(workspace: Blockly.Workspace) {
     <!-- Motion -->
     <category name="Motion" colour="90">
       <block type="turtle_forward" />
+      <block type="turtle_move" />
       <block type="turtle_backward" />
       <block type="turtle_right" />
       <block type="turtle_left" />
@@ -3642,181 +3782,181 @@ async function runWorkspace(workspace: Blockly.Workspace) {
 
 </xml>
 `, []);
-useEffect(() => {
-  if (!activityId || !workspaceRef.current) return
 
-  fetch(`/api/tutorials/activity/${activityId}/blocks`)
-    .then(res => res.json())
-    .then(blocks => {
-      loadBlocksIntoWorkspace(blocks)
-    })
-    .catch(console.error)
-}, [activityId])
+  useEffect(() => {
+    if (!activityId || !workspaceRef.current) return
 
-function loadBlocksIntoWorkspace(blocks: any[]) {
-  const workspace = workspaceRef.current
-  if (!workspace) return
+    fetch(`/api/tutorials/activity/${activityId}/blocks`)
+      .then(res => res.json())
+      .then(blocks => {
+        loadBlocksIntoWorkspace(blocks)
+      })
+      .catch(console.error)
+  }, [activityId])
 
-  workspace.clear()
+  function createBlocklyBlock(workspace, row) {
+  const cfg = row.block_config;
 
-  let previousBlock: Blockly.Block | null = null
+  switch (row.block_type) {
 
-  blocks.forEach((block) => {
-    let newBlock: Blockly.Block | null = null
-
-    /* ===============================
-       1️⃣ SET VARIABLE BLOCK
-    =============================== */
-    if (block.block_type === "SET_VARIABLE") {
-      newBlock = workspace.newBlock("variables_set")
-
-      newBlock.setFieldValue(
-        block.block_config.variable,
-        "VAR"
-      )
-
-      /* ---- STRING VALUE ---- */
-      if (block.block_config.type === "STRING") {
-        const stringBlock = workspace.newBlock("text")
-
-        stringBlock.setFieldValue(
-          block.block_config.value,
-          "TEXT"
-        )
-
-        stringBlock.initSvg()
-        stringBlock.render()
-
-        newBlock
-          .getInput("VALUE")
-          ?.connection?.connect(stringBlock.outputConnection)
+    /* =====================
+       CREATE TURTLE
+    ===================== */
+    case "SET_VARIABLE": {
+      if (cfg.type === "CREATE_TURTLE") {
+        const block = workspace.newBlock("turtle_create");
+        block.setFieldValue(cfg.variable, "VAR");
+        return block;
       }
+      return null;
+    }
 
-      /* ---- CREATE TURTLE ---- */
-      if (block.block_config.type === "CREATE_TURTLE") {
-        const turtleBlock = workspace.newBlock("turtle_create")
-
-        turtleBlock.initSvg()
-        turtleBlock.render()
-
-        newBlock
-          .getInput("VALUE")
-          ?.connection?.connect(turtleBlock.outputConnection)
+    /* =====================
+       BACKGROUND COLOR
+    ===================== */
+    case "TURTLE_SCREEN": {
+      if (cfg.action === "SET_BACKGROUND_COLOR") {
+        const block = workspace.newBlock("turtle_bgcolor");
+        block.setFieldValue(cfg.color, "COLOR"); // ✅ exact match
+        return block;
       }
+      return null;
     }
 
-    /* ===============================
-       2️⃣ PRINT BLOCK
-    =============================== */
-    if (block.block_type === "PRINT") {
-      newBlock = workspace.newBlock("text_print")
+    /* =====================
+       FILL COLOR
+    ===================== */
+    case "TURTLE_STYLE": {
+      if (cfg.action === "SET_FILL_COLOR") {
+        const block = workspace.newBlock("turtle_fill_color"); // ✅ FIX
+        block.setFieldValue(cfg.variable, "VAR");
 
-      const varBlock = workspace.newBlock("variables_get")
-      varBlock.setFieldValue(
-        block.block_config.variable,
-        "VAR"
-      )
+        const colorBlock = workspace.newBlock("colour_picker");
+        colorBlock.setFieldValue(cfg.color, "COLOUR");
 
-      varBlock.initSvg()
-      varBlock.render()
+        colorBlock.initSvg();
+        colorBlock.render();
 
-      newBlock
-        .getInput("TEXT")
-        ?.connection?.connect(varBlock.outputConnection)
+        block.getInput("COLOR")
+          ?.connection
+          ?.connect(colorBlock.outputConnection);
+
+        return block;
+      }
+      return null;
     }
 
-    /* ===============================
-       3️⃣ TURTLE MOVE (Draw a Line)
-    =============================== */
-    if (block.block_type === "TURTLE_MOVE") {
-      newBlock = workspace.newBlock("turtle_move")
+    /* =====================
+       DOT
+    ===================== */
+    case "TURTLE_DRAW": {
+      if (cfg.action === "DOT") {
+        const block = workspace.newBlock("turtle_dot");
+        block.setFieldValue(cfg.variable, "VAR");
 
-      newBlock.setFieldValue(
-        block.block_config.variable,
-        "VAR"
-      )
+        const num = workspace.newBlock("math_number");
+        num.setFieldValue(String(cfg.radius), "NUM");
 
-      newBlock.setFieldValue(
-        String(block.block_config.value),
-        "DISTANCE"
-      )
+        num.initSvg();
+        num.render();
+
+        block.getInput("SIZE")   // ✅ SIZE (not RADIUS)
+          ?.connection
+          ?.connect(num.outputConnection);
+
+        return block;
+      }
+      return null;
     }
 
-    if (!newBlock) return
-
-    newBlock.initSvg()
-    newBlock.render()
-
-    /* ===============================
-       CONNECT SEQUENCE
-    =============================== */
-    if (previousBlock) {
-      previousBlock.nextConnection
-        ?.connect(newBlock.previousConnection)
-    }
-
-    previousBlock = newBlock
-  })
+    default:
+      return null;
+  }
 }
 
+  function loadBlocksIntoWorkspace(blocks: any[]) {
+    const workspace = workspaceRef.current;
+    if (!workspace) return;
 
- useEffect(() => {
-  defineBlocks();
-  definePythonGenerators();
+    workspace.clear();
 
-  const workspace = Blockly.inject(blocklyDiv.current, {
-    toolbox: toolboxXml,
-    zoom: {
-      controls: true,
-      wheel: true,
-      startScale: 1.0,
-      maxScale: 3,
-      minScale: 0.3,
-      scaleSpeed: 1.2
-    },
-    trashcan: true
-  });
+    let previousBlock: Blockly.Block | null = null;
 
-  workspaceRef.current = workspace;
+    blocks.forEach(row => {
+      const newBlock = createBlocklyBlock(workspace, row);
+      if (!newBlock) return;
 
-  /* =========================
-     1️⃣ CODE GENERATION LISTENER
-  ========================= */
-  workspace.addChangeListener((event) => {
-    if (
-      event.type !== Blockly.Events.BLOCK_CREATE &&
-      event.type !== Blockly.Events.BLOCK_CHANGE &&
-      event.type !== Blockly.Events.BLOCK_DELETE &&
-      event.type !== Blockly.Events.BLOCK_MOVE
-    ) {
-      return;
-    }
+      newBlock.initSvg();
+      newBlock.render();
 
-    setCode(pythonGenerator.workspaceToCode(workspace));
-  });
+      if (previousBlock) {
+        previousBlock.nextConnection?.connect(
+          newBlock.previousConnection
+        );
+      }
 
-  /* =========================
-     2️⃣ FILE UPLOAD BLOCK HANDLER
-     (DOUBLE-CLICK SAFE)
-  ========================= */
-  workspace.addChangeListener((event) => {
-  if (
-    event.type === Blockly.Events.UI &&
-    event.element === "click"
-  ) {
-    const block = workspace.getBlockById(event.blockId);
-
-    if (block && block.type === "file_upload") {
-      fileInputRef.current?.click();
-    }
+      previousBlock = newBlock;
+    });
   }
-});
+
+  useEffect(() => {
+    defineBlocks();
+    definePythonGenerators();
+    defineJavascriptGenerators();
+
+    const workspace = Blockly.inject(blocklyDiv.current, {
+      toolbox: toolboxXml,
+      zoom: {
+        controls: true,
+        wheel: true,
+        startScale: 1.0,
+        maxScale: 3,
+        minScale: 0.3,
+        scaleSpeed: 1.2
+      },
+      trashcan: true
+    });
+
+    workspaceRef.current = workspace;
+
+    /* =========================
+       1️⃣ CODE GENERATION LISTENER
+    ========================= */
+    workspace.addChangeListener((event) => {
+      if (
+        event.type !== Blockly.Events.BLOCK_CREATE &&
+        event.type !== Blockly.Events.BLOCK_CHANGE &&
+        event.type !== Blockly.Events.BLOCK_DELETE &&
+        event.type !== Blockly.Events.BLOCK_MOVE
+      ) {
+        return;
+      }
+
+      setCode(pythonGenerator.workspaceToCode(workspace));
+    });
+
+    /* =========================
+       2️⃣ FILE UPLOAD BLOCK HANDLER
+       (DOUBLE-CLICK SAFE)
+    ========================= */
+    workspace.addChangeListener((event) => {
+      if (
+        event.type === Blockly.Events.UI &&
+        event.element === "click"
+      ) {
+        const block = workspace.getBlockById(event.blockId);
+
+        if (block && block.type === "file_upload") {
+          fileInputRef.current?.click();
+        }
+      }
+    });
 
 
-  return () => {
-    workspace.dispose();
-  };
-}, [toolboxXml]);
+    return () => {
+      workspace.dispose();
+    };
+  }, [toolboxXml]);
 
 
   function renderPlot(plot, labels) {
@@ -4079,72 +4219,72 @@ function loadBlocksIntoWorkspace(blocks: any[]) {
     });
   }
 
-function showSpriteOnly(spriteName) {
-  if (!canvasContainerRef.current) return;
+  function showSpriteOnly(spriteName) {
+    if (!canvasContainerRef.current) return;
 
-  canvasContainerRef.current.innerHTML = "";
+    canvasContainerRef.current.innerHTML = "";
 
-  const img = document.createElement("img");
-  img.src = `/Sprites/${spriteName}.png`;
-  img.style.maxWidth = "100%";
-  img.style.maxHeight = "100%";
-  img.style.objectFit = "contain";
-  img.style.display = "block";
-  img.style.margin = "auto";
+    const img = document.createElement("img");
+    img.src = `/Sprites/${spriteName}.png`;
+    img.style.maxWidth = "100%";
+    img.style.maxHeight = "100%";
+    img.style.objectFit = "contain";
+    img.style.display = "block";
+    img.style.margin = "auto";
 
-  canvasContainerRef.current.appendChild(img);
-}
-async function showSpriteWithWebcam(spriteName) {
-  if (!canvasContainerRef.current) return;
-
-  canvasContainerRef.current.innerHTML = "";
-
-  // Layout container
-  const wrapper = document.createElement("div");
-  wrapper.style.display = "flex";
-  wrapper.style.justifyContent = "space-between";
-  wrapper.style.alignItems = "center";
-  wrapper.style.width = "100%";
-  wrapper.style.height = "100%";
-  wrapper.style.gap = "20px";
-
-  // Webcam video
-  const video = document.createElement("video");
-  video.autoplay = true;
-  video.playsInline = true;
-  video.style.width = "48%";
-  video.style.borderRadius = "12px";
-  video.style.background = "#000";
-
-  // Emoji image
-  const img = document.createElement("img");
-  img.src = `/Sprites/${spriteName}.png`;
-  img.style.width = "48%";
-  img.style.objectFit = "contain";
-
-  wrapper.appendChild(video);
-  wrapper.appendChild(img);
-  canvasContainerRef.current.appendChild(wrapper);
-
-  try {
-    const stream = await navigator.mediaDevices.getUserMedia({
-      video: true,
-      audio: false
-    });
-    video.srcObject = stream;
-  } catch (err) {
-    console.error("Webcam error:", err);
-    alert("Webcam access denied");
+    canvasContainerRef.current.appendChild(img);
   }
-}
-function stopWebcam() {
-  const videos = document.querySelectorAll("video");
-  videos.forEach(v => {
-    if (v.srcObject) {
-      v.srcObject.getTracks().forEach(t => t.stop());
+  async function showSpriteWithWebcam(spriteName) {
+    if (!canvasContainerRef.current) return;
+
+    canvasContainerRef.current.innerHTML = "";
+
+    // Layout container
+    const wrapper = document.createElement("div");
+    wrapper.style.display = "flex";
+    wrapper.style.justifyContent = "space-between";
+    wrapper.style.alignItems = "center";
+    wrapper.style.width = "100%";
+    wrapper.style.height = "100%";
+    wrapper.style.gap = "20px";
+
+    // Webcam video
+    const video = document.createElement("video");
+    video.autoplay = true;
+    video.playsInline = true;
+    video.style.width = "48%";
+    video.style.borderRadius = "12px";
+    video.style.background = "#000";
+
+    // Emoji image
+    const img = document.createElement("img");
+    img.src = `/Sprites/${spriteName}.png`;
+    img.style.width = "48%";
+    img.style.objectFit = "contain";
+
+    wrapper.appendChild(video);
+    wrapper.appendChild(img);
+    canvasContainerRef.current.appendChild(wrapper);
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: true,
+        audio: false
+      });
+      video.srcObject = stream;
+    } catch (err) {
+      console.error("Webcam error:", err);
+      alert("Webcam access denied");
     }
-  });
-}
+  }
+  function stopWebcam() {
+    const videos = document.querySelectorAll("video");
+    videos.forEach(v => {
+      if (v.srcObject) {
+        v.srcObject.getTracks().forEach(t => t.stop());
+      }
+    });
+  }
 
   const runCode = () => {
     if (!Sk || typeof Sk.configure !== "function") {
@@ -4161,22 +4301,34 @@ function stopWebcam() {
     // Clear previous canvas
     canvasContainerRef.current.innerHTML = "";
 
-    if (usesTurtle) {
-      const turtleDiv = document.createElement("div");
-      turtleDiv.id = "turtleCanvas";
-      turtleDiv.style.width = "100%";
-      turtleDiv.style.height = "500px";
-      turtleDiv.style.border = "2px solid #5566AA";
-      turtleDiv.style.borderRadius = "8px";
-      turtleDiv.style.backgroundColor = "#ffffff";
-      turtleDiv.style.position = "relative";
-      canvasContainerRef.current.appendChild(turtleDiv);
+    // if (usesTurtle) {
+    //   const turtleDiv = document.createElement("div");
+    //   turtleDiv.id = "turtleCanvas";
+    //   turtleDiv.style.width = "100%";
+    //   turtleDiv.style.height = "500px";
+    //   turtleDiv.style.border = "2px solid #5566AA";
+    //   turtleDiv.style.borderRadius = "8px";
+    //   turtleDiv.style.backgroundColor = "#ffffff";
+    //   turtleDiv.style.position = "relative";
+    //   canvasContainerRef.current.appendChild(turtleDiv);
 
-      // Turtle graphics config MUST be before import turtle
-      Sk.TurtleGraphics = Sk.TurtleGraphics || {};
-      Sk.TurtleGraphics.target = "turtleCanvas";
-      Sk.TurtleGraphics.width = 800;
-      Sk.TurtleGraphics.height = 500;
+    //   // Turtle graphics config MUST be before import turtle
+    //   Sk.TurtleGraphics = Sk.TurtleGraphics || {};
+    //   Sk.TurtleGraphics.target = "turtleCanvas";
+    //   Sk.TurtleGraphics.width = 800;
+    //   Sk.TurtleGraphics.height = 500;
+    // }
+
+    if (usesTurtle) {
+      const canvas = document.createElement("canvas");
+      canvas.id = "turtleCanvas";
+      canvas.width = 800;
+      canvas.height = 500;
+      canvas.style.border = "2px solid #5566AA";
+      canvas.style.borderRadius = "8px";
+      canvas.style.backgroundColor = "#ffffff";
+
+      canvasContainerRef.current.appendChild(canvas);
     }
 
     let pendingPlot = null;
@@ -4189,24 +4341,24 @@ function stopWebcam() {
 
         const cleanText = text.trim();
         if (code.includes("__UPLOAD_FILE__")) {
-  fileInputRef.current.click();
-  return; // wait for upload
-}
+          fileInputRef.current.click();
+          return; // wait for upload
+        }
 
-/* =========================
-   🖼️ SPRITE HANDLER
-========================= */
-if (cleanText.startsWith("__SPRITE__:")) {
-  const raw = cleanText.replace("__SPRITE__:", "").trim();
-  const [spriteName, cam] = raw.split("|");
+        /* =========================
+           🖼️ SPRITE HANDLER
+        ========================= */
+        if (cleanText.startsWith("__SPRITE__:")) {
+          const raw = cleanText.replace("__SPRITE__:", "").trim();
+          const [spriteName, cam] = raw.split("|");
 
-  if (cam === "on") {
-    showSpriteWithWebcam(spriteName);
-  } else {
-    showSpriteOnly(spriteName);
-  }
-  return;
-}
+          if (cam === "on") {
+            showSpriteWithWebcam(spriteName);
+          } else {
+            showSpriteOnly(spriteName);
+          }
+          return;
+        }
 
         if (cleanText.startsWith("__SPEAK__:")) {
           const spokenText = cleanText.replace("__SPEAK__:", "").trim();
@@ -4304,13 +4456,13 @@ if (cleanText.startsWith("__SPRITE__:")) {
         ctx.fillRect(0, 0, canvas.width, canvas.height);
       }
     };
-const needsUpload = code.includes("__UPLOAD_FILE__");
-  const cleanedCode = code.replace(/__UPLOAD_FILE__/g, "");
+    const needsUpload = code.includes("__UPLOAD_FILE__");
+    const cleanedCode = code.replace(/__UPLOAD_FILE__/g, "");
 
-  if (needsUpload && !window.__fileUploaded) {
-    fileInputRef.current.click();
-    return;
-  }
+    if (needsUpload && !window.__fileUploaded) {
+      fileInputRef.current.click();
+      return;
+    }
     // 👇 Only inject turtle init if required
     let initCode = "";
     if (code.includes("playsound.say")) {
@@ -4322,14 +4474,14 @@ class playsound:
 `;
     }
 
-  if (code.includes("sprites.show")) {
-  initCode += `
+    if (code.includes("sprites.show")) {
+      initCode += `
 class sprites:
     @staticmethod
     def show(name, cam):
         print("__SPRITE__:" + str(name) + "|" + str(cam))
 `;
-}
+    }
 
     if (code.includes("serial")) {
       initCode += `
@@ -4343,12 +4495,12 @@ class serial:
       initCode += `import math\n`;
     }
 
-    if (usesTurtle) {
-      initCode += `
-import turtle
-_s = turtle.Screen()
-`;
-    }
+    //     if (usesTurtle) {
+    //       initCode += `
+    // import turtle
+    // _s = turtle.Screen()
+    // `;
+    //     }
     if (usesPygal) {
       initCode += `
 class _PygalBase:
@@ -4460,45 +4612,110 @@ plt = _FakePlt()
 `;
     }
 
-    const fullCode = initCode + code + cleanedCode;
+    const pythonDisplayCode = initCode + code; // 👀 shown only
+    setOutput("Python Code (display only):\n\n" + pythonDisplayCode);
 
-    console.log("[App] Generated code:\n", fullCode);
-    setOutput((prev) => prev + "Generated code:\n" + fullCode + "\n\n");
+    // 🐢 TURTLE → JAVASCRIPT CANVAS
+    if (usesTurtle) {
+      import("@/lib/turtleEngine").then(({ createTurtle }) => {
+        const turtle = createTurtle("turtleCanvas");
+        turtle.reset();
 
-    const myPromise = Sk.misceval.asyncToPromise(() => {
-      console.log("[App] Starting execution...");
-      return Sk.importMainWithBody("<stdin>", false, fullCode, true);
-    });
+        // Generate JS from Blockly (NOT Python)
+        const ws = workspaceRef.current;
+
+        if (!ws) {
+          setOutput("Blockly workspace not ready");
+          return;
+        }
+
+        const jsCode = javascriptGenerator.workspaceToCode(ws);
+
+
+        console.log("[TURTLE JS CODE]\n", jsCode);
+
+        try {
+          new Function("__turtle", jsCode)(turtle);
+          setOutput((prev) => prev + "\nTurtle executed successfully!");
+        } catch (e) {
+          console.error("Canvas turtle error", e);
+          setOutput((prev) => prev + "\nTurtle execution error");
+        }
+      });
+
+      return; // ⛔ DO NOT FALL THROUGH TO SKULPT
+    }
+    if (!usesTurtle) {
+      const fullCode = initCode + code + cleanedCode;
+
+      const myPromise = Sk.misceval.asyncToPromise(() => {
+        return Sk.importMainWithBody("<stdin>", false, fullCode, true);
+      });
+
+      myPromise.then(
+        () => {
+          setOutput((prev) => prev + "\nCode executed successfully!");
+        },
+        (err: any) => {
+          let errorMessage = "Unknown execution error";
+
+          if (err?.tp$str) errorMessage = err.tp$str();
+          if (err?.args?.v?.length) {
+            errorMessage += ": " + err.args.v.map((x: any) => x.v).join(", ");
+          }
+
+          setOutput((prev) => prev + "\nError: " + errorMessage);
+        }
+      );
+    }
 
     myPromise.then(
       () => {
         console.log("[App] Code executed successfully!");
         setOutput((prev) => prev + "\nCode executed successfully!");
       },
-      (err) => {
-        console.error("[App] Execution error:", err);
-        setOutput((prev) => prev + "\nError: " + err.toString());
+      (err: any) => {
+        console.error("[Skulpt RAW ERROR]", err);
+
+        let errorMessage = "Unknown execution error";
+
+        // Python exception name
+        if (err?.tp$str) {
+          errorMessage = err.tp$str();
+        }
+
+        // Python exception message
+        if (err?.args?.v?.length) {
+          errorMessage +=
+            ": " + err.args.v.map((x: any) => x.v).join(", ");
+        }
+
+        console.error("[Skulpt Parsed Error]", errorMessage);
+
+        setOutput((prev) => prev + "\nError: " + errorMessage);
       }
     );
-  };
-function handleFileUpload(e) {
-  const file = e.target.files[0];
-  if (!file) return;
 
-  const reader = new FileReader();
-
-  reader.onload = () => {
-    if (!Sk.builtinFiles) {
-      Sk.builtinFiles = { files: {} };
-    }
-
-    Sk.builtinFiles["files"][file.name] = reader.result;
-
-    alert(`File "${file.name}" uploaded successfully`);
   };
 
-  reader.readAsText(file);
-}
+  function handleFileUpload(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+
+    reader.onload = () => {
+      if (!Sk.builtinFiles) {
+        Sk.builtinFiles = { files: {} };
+      }
+
+      Sk.builtinFiles["files"][file.name] = reader.result;
+
+      alert(`File "${file.name}" uploaded successfully`);
+    };
+
+    reader.readAsText(file);
+  }
 
   const resetWorkspace = () => {
     if (workspaceRef.current) {
@@ -4514,145 +4731,145 @@ function handleFileUpload(e) {
 
   return (
     <>
-    <input
-      type="file"
-      ref={fileInputRef}
-      style={{ display: "none" }}
-      onChange={handleFileUpload}
-    />
-    <div style={{ width: '100vw', height: '100vh', display: 'flex', flexDirection: 'column', fontFamily: 'Arial, sans-serif' }}>
-      {/* Header */}
-      <div style={{ height: '60px', background: '#7C88CC', display: 'flex', alignItems: 'center', padding: '0 20px', gap: '10px' }}>
-        <button style={{ padding: '8px 16px', background: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>
-          ☰
-        </button>
-        <button onClick={resetWorkspace} style={{ padding: '8px 16px', background: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
-          🔄 Reset
-        </button>
-        <button onClick={runCode} style={{ padding: '8px 24px', background: '#4CAF50', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>
-          ▶ Run
-        </button>
-        <button
-  style={{ padding: '8px 24px', background: '#4CAF50', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
-  onClick={async () => {
-    if (!workspaceRef.current) return
-    setOutput("")  
-    await runWorkspace(workspaceRef.current)
-  }}
->
- ▶ Run tutorials
-</button>
+      <input
+        type="file"
+        ref={fileInputRef}
+        style={{ display: "none" }}
+        onChange={handleFileUpload}
+      />
+      <div style={{ width: '100vw', height: '100vh', display: 'flex', flexDirection: 'column', fontFamily: 'Arial, sans-serif' }}>
+        {/* Header */}
+        <div style={{ height: '60px', background: '#7C88CC', display: 'flex', alignItems: 'center', padding: '0 20px', gap: '10px' }}>
+          <button style={{ padding: '8px 16px', background: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>
+            ☰
+          </button>
+          <button onClick={resetWorkspace} style={{ padding: '8px 16px', background: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
+            🔄 Reset
+          </button>
+          <button onClick={runCode} style={{ padding: '8px 24px', background: '#4CAF50', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>
+            ▶ Run
+          </button>
+          <button
+            style={{ padding: '8px 24px', background: '#4CAF50', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
+            onClick={async () => {
+              if (!workspaceRef.current) return
+              setOutput("")
+              await runWorkspace(workspaceRef.current)
+            }}
+          >
+            ▶ Run tutorials
+          </button>
 
-        <div style={{ marginLeft: 'auto', display: 'flex', gap: '10px' }}>
-          <button
-            onClick={() => setView('blocks')}
-            style={{ padding: '8px 16px', background: view === 'blocks' ? '#fff' : '#9BA5D8', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
-            Blocks
-          </button>
-          <button
-            onClick={() => setView('code')}
-            style={{ padding: '8px 16px', background: view === 'code' ? '#fff' : '#9BA5D8', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
-            Code
-          </button>
-          <button
-            onClick={() => setView('canvas')}
-            style={{ padding: '8px 16px', background: view === 'canvas' ? '#fff' : '#9BA5D8', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
-            Canvas
-          </button>
+          <div style={{ marginLeft: 'auto', display: 'flex', gap: '10px' }}>
+            <button
+              onClick={() => setView('blocks')}
+              style={{ padding: '8px 16px', background: view === 'blocks' ? '#fff' : '#9BA5D8', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
+              Blocks
+            </button>
+            <button
+              onClick={() => setView('code')}
+              style={{ padding: '8px 16px', background: view === 'code' ? '#fff' : '#9BA5D8', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
+              Code
+            </button>
+            <button
+              onClick={() => setView('canvas')}
+              style={{ padding: '8px 16px', background: view === 'canvas' ? '#fff' : '#9BA5D8', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
+              Canvas
+            </button>
+          </div>
         </div>
-      </div>
 
-      {/* Main Content */}
-      <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
-        {/* Blockly Workspace - Sidebar + Editor (LEFT SIDE) */}
-        <div style={{
-          flex: view === 'blocks' ? 1 : 0.6,
-          display: view === 'canvas' ? 'none' : 'block',
-          minWidth: '400px',
-          height: '100%',
-          position: 'relative',
-          backgroundColor: '#fff'
-        }}>
-          <div ref={blocklyDiv} style={{ width: '100%', height: '100%', display: view === 'blocks' ? 'block' : 'none' }} />
-          {view === 'code' && (
-            <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column' }}>
-              <div style={{ padding: '10px', borderBottom: '1px solid #ccc', fontWeight: 'bold', background: '#ddd' }}>Generated Python Code</div>
-              <pre style={{ margin: 0, padding: '20px', flex: 1, overflow: 'auto', fontSize: '13px', fontFamily: 'monospace', whiteSpace: 'pre-wrap', wordWrap: 'break-word' }}>
-                {code || '# Drag blocks to generate code...'}
+        {/* Main Content */}
+        <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
+          {/* Blockly Workspace - Sidebar + Editor (LEFT SIDE) */}
+          <div style={{
+            flex: view === 'blocks' ? 1 : 0.6,
+            display: view === 'canvas' ? 'none' : 'block',
+            minWidth: '400px',
+            height: '100%',
+            position: 'relative',
+            backgroundColor: '#fff'
+          }}>
+            <div ref={blocklyDiv} style={{ width: '100%', height: '100%', display: view === 'blocks' ? 'block' : 'none' }} />
+            {view === 'code' && (
+              <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column' }}>
+                <div style={{ padding: '10px', borderBottom: '1px solid #ccc', fontWeight: 'bold', background: '#ddd' }}>Generated Python Code</div>
+                <pre style={{ margin: 0, padding: '20px', flex: 1, overflow: 'auto', fontSize: '13px', fontFamily: 'monospace', whiteSpace: 'pre-wrap', wordWrap: 'break-word' }}>
+                  {code || '# Drag blocks to generate code...'}
+                </pre>
+              </div>
+            )}
+          </div>
+
+          {/* Canvas/Output Area (RIGHT SIDE) */}
+          <div style={{
+            flex: view === 'blocks' ? 1 : (view === 'code' ? 1 : 1),
+            background: '#7C88CC',
+            display: view === 'canvas' || view === 'blocks' || view === 'code' ? 'flex' : 'none',
+            flexDirection: 'column',
+            padding: '20px',
+            overflow: 'auto',
+            borderLeft: view === 'blocks' || view === 'code' ? '2px solid #555' : 'none'
+          }}>
+            {/* Canvas Container */}
+            <div
+              ref={canvasContainerRef}
+              style={{
+                width: '100%',
+                flex: view === 'canvas' ? 0.8 : 0.6,
+                marginBottom: '20px',
+                background: '#ffffff',
+                borderRadius: '8px',
+                border: '2px solid #5566AA',
+                position: 'relative',
+                minHeight: '300px',
+                padding: '10px',
+                overflow: 'auto'
+              }}
+            >
+              {/* ✅ Canvas Output Overlay */}
+              <pre
+                style={{
+                  fontSize: '13px',
+                  whiteSpace: 'pre-wrap',
+                  wordWrap: 'break-word',
+                  color: '#000',
+                  margin: 0,
+                  fontFamily: 'monospace'
+                }}
+              >
+                {output || 'Canvas ready...'}
               </pre>
             </div>
-          )}
-        </div>
 
-        {/* Canvas/Output Area (RIGHT SIDE) */}
-        <div style={{
-          flex: view === 'blocks' ? 1 : (view === 'code' ? 1 : 1),
-          background: '#7C88CC',
-          display: view === 'canvas' || view === 'blocks' || view === 'code' ? 'flex' : 'none',
-          flexDirection: 'column',
-          padding: '20px',
-          overflow: 'auto',
-          borderLeft: view === 'blocks' || view === 'code' ? '2px solid #555' : 'none'
-        }}>
-          {/* Canvas Container */}
-          <div
-  ref={canvasContainerRef}
-  style={{
-    width: '100%',
-    flex: view === 'canvas' ? 0.8 : 0.6,
-    marginBottom: '20px',
-    background: '#ffffff',
-    borderRadius: '8px',
-    border: '2px solid #5566AA',
-    position: 'relative',
-    minHeight: '300px',
-    padding: '10px',
-    overflow: 'auto'
-  }}
->
-  {/* ✅ Canvas Output Overlay */}
-  <pre
-    style={{
-      fontSize: '13px',
-      whiteSpace: 'pre-wrap',
-      wordWrap: 'break-word',
-      color: '#000',
-      margin: 0,
-      fontFamily: 'monospace'
-    }}
-  >
-    {output || 'Canvas ready...'}
-  </pre>
-</div>
-
-          {/* Output Box */}
-          <div style={{
-            padding: '15px',
-            background: '#5566AA',
-            borderRadius: '8px',
-            color: 'white',
-            flex: view === 'canvas' ? 0.2 : 0.4,
-            overflow: 'auto',
-            display: 'flex',
-            flexDirection: 'column'
-          }}>
-            <div style={{ fontWeight: 'bold', marginBottom: '10px', color: '#ffffff', fontSize: '14px' }}>Output:</div>
-            <pre style={{
-              fontSize: '12px',
-              margin: 0,
-              whiteSpace: 'pre-wrap',
-              wordWrap: 'break-word',
+            {/* Output Box */}
+            <div style={{
+              padding: '15px',
+              background: '#5566AA',
+              borderRadius: '8px',
+              color: 'white',
+              flex: view === 'canvas' ? 0.2 : 0.4,
               overflow: 'auto',
-              color: '#ffffff',
-              flex: 1,
-              fontFamily: 'monospace'
+              display: 'flex',
+              flexDirection: 'column'
             }}>
-              {output || 'Ready to run...'}
-            </pre>
+              <div style={{ fontWeight: 'bold', marginBottom: '10px', color: '#ffffff', fontSize: '14px' }}>Output:</div>
+              <pre style={{
+                fontSize: '12px',
+                margin: 0,
+                whiteSpace: 'pre-wrap',
+                wordWrap: 'break-word',
+                overflow: 'auto',
+                color: '#ffffff',
+                flex: 1,
+                fontFamily: 'monospace'
+              }}>
+                {output || 'Ready to run...'}
+              </pre>
+            </div>
           </div>
         </div>
       </div>
-    </div>
     </>
   );
 }
