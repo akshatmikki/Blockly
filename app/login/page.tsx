@@ -42,16 +42,16 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4">
-      <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-8">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-50 via-white to-orange-50 px-4">
+      <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-8 border border-orange-100">
         {/* Logo */}
         <div className="flex justify-center mb-6">
           <Image
-            src="/images/image.png"
-            alt="STEMROBO"
+            src="/images/logo.jpg"
+            alt="Logo"
             width={220}
             height={60}
-            className="object-contain"
+            className="object-contain rounded-lg"
           />
         </div>
 
@@ -111,31 +111,42 @@ export default function LoginPage() {
           <div className="flex gap-3">
             <Button
               type="submit"
-              className="flex-1 h-12 bg-blue-600 hover:bg-blue-700"
+              className="flex-1 h-12 bg-orange-500 hover:bg-orange-600 cursor-pointer"
             >
               Login
             </Button>
             <Button
               type="button"
-              className="flex-1 h-12 bg-green-600 hover:bg-green-700"
+              className="flex-1 h-12 bg-green-600 hover:bg-green-700 cursor-pointer"
             >
               Callback
             </Button>
           </div>
-
+          <p className="text-sm text-center text-gray-600 mt-6">
+  Don't have an account already?{" "}
+  <a href="/sign_up" className="text-orange-600 hover:underline">
+    Sign up
+  </a>
+</p>
           {/* Divider */}
           <div className="flex items-center gap-4 py-4">
             <div className="flex-1 h-px bg-gray-300" />
             <span className="text-sm text-gray-500">or</span>
             <div className="flex-1 h-px bg-gray-300" />
           </div>
-
+<Button
+  type="button"
+  onClick={() => router.push("/admin_login")}
+  className="w-full h-12 flex items-center justify-center gap-2 cursor-pointer bg-purple-600 hover:bg-purple-700"
+>
+  Admin Login
+</Button>
           {/* Google Login */}
           <Button
             type="button"
             onClick={handleGoogleLogin}
             variant="outline"
-            className="w-full h-12 flex items-center justify-center gap-2"
+            className="w-full h-12 flex items-center justify-center gap-2 cursor-pointer"
           >
             <Image
               src="https://www.google.com/favicon.ico"
