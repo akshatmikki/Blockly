@@ -1,17 +1,12 @@
 import { Suspense } from "react";
-import dynamicImport from "next/dynamic";
+import BasicCodingPage from "./basic-coding-client";
 
 export const dynamic = "force-dynamic";
-
-const BasicCodingClient = dynamicImport(
-  () => import("./basic-coding-client"),
-  { ssr: false }
-);
 
 export default function Page() {
   return (
     <Suspense fallback={<div>Loading...</div>}>
-      <BasicCodingClient />
+      <BasicCodingPage />
     </Suspense>
   );
 }
