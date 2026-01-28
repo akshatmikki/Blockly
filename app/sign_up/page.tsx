@@ -46,8 +46,8 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4">
-      <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-8">
+ <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-50 via-white to-orange-50 px-4">
+      <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-8 border border-orange-100">
         {/* Logo */}
         <div className="flex justify-center mb-6">
           <Image
@@ -55,9 +55,11 @@ export default function SignupPage() {
             alt="AICONNECTO"
             width={220}
             height={60}
-            className="object-contain"
+            className="object-contain rounded-lg"
           />
         </div>
+
+
 
         <h1 className="text-2xl font-semibold text-center text-gray-800 mb-8">
           Create an Account
@@ -119,7 +121,7 @@ export default function SignupPage() {
 
           <Button
             type="submit"
-            className="w-full h-12 bg-blue-600 hover:bg-blue-700"
+            className="w-full h-12 bg-blue-600 hover:bg-blue-700 cursor-pointer"
             disabled={loading}
           >
             {loading ? "Creating account..." : "Sign Up"}
