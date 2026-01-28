@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const modules = [
@@ -49,6 +49,11 @@ export default function DashboardPage() {
       setProjects([]);
     }
   };
+const handleBackFromCreate = () => {
+  setShowModal(false);
+  setProjectName("");
+  setIsCreatingNewProject(false);
+};
 
   const loadTutorialCounts = async () => {
     try {
@@ -142,11 +147,10 @@ export default function DashboardPage() {
               </div>
 
               <Button
-                variant="outline"
-                className="border-white text-white mt-6"
+                className="mt-6 bg-white text-black hover:bg-gray-100 w-full"
                 onClick={() => {
                   setSelectedModule(module);
-                  setIsCreatingNewProject(false); // 👈 reset UI mode
+                  setIsCreatingNewProject(true);
                   setShowModal(true);
                 }}
               >
@@ -168,22 +172,34 @@ export default function DashboardPage() {
             {/* IF NO PROJECTS */}
             {/* CREATE MODE */}
             {projects.length === 0 || isCreatingNewProject ? (
-              <>
-                <input
-                  value={projectName}
-                  onChange={(e) => setProjectName(e.target.value)}
-                  placeholder="Project Name"
-                  className="w-full border px-3 py-2 rounded mb-4"
-                />
-                <Button
-                  onClick={createProjectAndRedirect}
-                  className="w-full"
-                  disabled={!projectName.trim()}
-                >
-                  Create & Continue
-                </Button>
-              </>
-            ) : (
+  <>
+    <input
+      value={projectName}
+      onChange={(e) => setProjectName(e.target.value)}
+      placeholder="Project Name"
+      className="w-full border px-3 py-2 rounded mb-4"
+    />
+
+    <div className="flex gap-3">
+      <Button
+        variant="outline"
+        className="flex items-center gap-2 w-1/2"
+        onClick={handleBackFromCreate}
+      >
+        <ArrowLeft className="w-4 h-4" />
+        Back
+      </Button>
+
+      <Button
+        onClick={createProjectAndRedirect}
+        className="w-1/2"
+        disabled={!projectName.trim()}
+      >
+        Create & Continue
+      </Button>
+    </div>
+  </>
+) : (
               <>
                 {projects.map((p) => (
                   <div

@@ -51,8 +51,8 @@ export default function SignupPage() {
         {/* Logo */}
         <div className="flex justify-center mb-6">
           <Image
-            src="/images/image.png"
-            alt="STEMROBO"
+            src="/images/logo.jpg"
+            alt="AICONNECTO"
             width={220}
             height={60}
             className="object-contain"
