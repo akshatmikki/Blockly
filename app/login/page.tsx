@@ -100,7 +100,7 @@ export default function LoginPage() {
           {/* Forgot password */}
           <div className="text-right">
             <a
-              href="#"
+              href="/admin_login"
               className="text-sm text-blue-600 hover:underline"
             >
               Forgot password?

@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef, useState, useMemo } from 'react';
+import { useEffect, useRef, useState, useMemo, Suspense } from 'react';
 import * as Blockly from 'blockly';
 import { pythonGenerator } from 'blockly/python';
 import 'blockly/msg/en';
@@ -4874,4 +4874,11 @@ plt = _FakePlt()
   );
 }
 
-export default BasicCodingPage;
+// Wrapper component with Suspense boundary
+export default function BasicCodingPageWrapper() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center h-screen">Loading...</div>}>
+      <BasicCodingPage />
+    </Suspense>
+  );
+}

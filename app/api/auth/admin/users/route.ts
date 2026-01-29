@@ -21,11 +21,15 @@ export async function GET() {
       "UserId",
       "Email",
       "Username",
+      "FirstName",
+      "LastName",
+      "PlainPassword",
       "Role",
       "IsActive",
-      "CreatedOn"
+      "CreatedOn",
+      "LastLogin"
     FROM "Identity"."Users"
-    WHERE "DeletedAt" IS NULL
+    WHERE "DeletedAt" IS NULL AND "IsActive" = TRUE
     ORDER BY "CreatedOn" DESC
   `);
 
