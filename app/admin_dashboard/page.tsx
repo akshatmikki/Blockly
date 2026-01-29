@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { PieChart, Pie, Cell, BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
-import { Trash2, KeyRound, LogOut, Edit, ChevronDown, ChevronUp, Upload, X, CheckCircle2, Eye, EyeOff } from "lucide-react";
+import { Trash2, KeyRound, LogOut, Edit, ChevronDown, ChevronUp, Upload, X, CheckCircle2, Eye, EyeOff, UserPen, Lock, UserX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import * as XLSX from "xlsx";
@@ -32,7 +32,7 @@ export default function AdminDashboard() {
   const [showPassword, setShowPassword] = useState<{ [key: number]: boolean }>({});
   const [modalType, setModalType] = useState<ModalType>(null);
   const [modalData, setModalData] = useState<any>(null);
-  const [editForm, setEditForm] = useState({ firstName: "", lastName: "", email: "" });
+  const [editForm, setEditForm] = useState({ firstName: "", lastName: "", email: "", username: "" });
   const [editFormError, setEditFormError] = useState("");
   const [resetPassword, setResetPassword] = useState("");
   const [confirmResetPassword, setConfirmResetPassword] = useState("");
@@ -159,9 +159,10 @@ export default function AdminDashboard() {
       firstName: user.FirstName || "",
       lastName: user.LastName || "",
       email: user.Email || "",
+      username: user.Username || "",
     });
     setEditFormError("");
-    setModalData({ userId: user.UserId, username: user.Username, originalEmail: user.Email });
+    setModalData({ userId: user.UserId, username: user.Username, originalEmail: user.Email, originalUsername: user.Username });
     setModalType("edit");
   };
 
@@ -169,6 +170,16 @@ export default function AdminDashboard() {
     // Validation checks
     if (!editForm.email || !validateEmail(editForm.email)) {
       setEditFormError("Please enter a valid email address");
+      return;
+    }
+
+    if (!editForm.username || editForm.username.trim().length < 3) {
+      setEditFormError("Username must be at least 3 characters");
+      return;
+    }
+
+    if (editForm.username.includes(' ')) {
+      setEditFormError("Username cannot contain spaces");
       return;
     }
 
@@ -193,6 +204,7 @@ export default function AdminDashboard() {
           FirstName: editForm.firstName.trim(),
           LastName: editForm.lastName.trim(),
           Email: editForm.email.trim(),
+          Username: editForm.username.trim(),
         }),
       });
 
@@ -440,7 +452,7 @@ export default function AdminDashboard() {
   const closeModal = () => {
     setModalType(null);
     setModalData(null);
-    setEditForm({ firstName: "", lastName: "", email: "" });
+    setEditForm({ firstName: "", lastName: "", email: "", username: "" });
     setEditFormError("");
     setResetPassword("");
     setConfirmResetPassword("");
@@ -501,6 +513,42 @@ export default function AdminDashboard() {
               </div>
               <div className="space-y-4">
                 <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Username</label>
+                  <input
+                    type="text"
+                    value={editForm.username}
+                    onChange={(e) => {
+                      setEditForm(prev => ({...prev, username: e.target.value}));
+                      if (e.target.value.trim().length > 0 && e.target.value.trim().length < 3) {
+                        setEditFormError("Username must be at least 3 characters");
+                      } else if (e.target.value.includes(' ')) {
+                        setEditFormError("Username cannot contain spaces");
+                      } else if (editFormError.includes("Username")) {
+                        setEditFormError("");
+                      }
+                    }}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                    placeholder="Username (min 3 characters, no spaces)"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                  <input
+                    type="email"
+                    value={editForm.email}
+                    onChange={(e) => {
+                      setEditForm(prev => ({...prev, email: e.target.value}));
+                      if (!validateEmail(e.target.value) && e.target.value.length > 0) {
+                        setEditFormError("Please enter a valid email address");
+                      } else if (editFormError === "Please enter a valid email address") {
+                        setEditFormError("");
+                      }
+                    }}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                    placeholder="Email"
+                  />
+                </div>
+                <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">First Name</label>
                   <input
                     type="text"
@@ -533,23 +581,6 @@ export default function AdminDashboard() {
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
                     placeholder="Last Name"
                   />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
-                  <input
-                    type="email"
-                    value={editForm.email}
-                    onChange={(e) => {
-                      setEditForm(prev => ({...prev, email: e.target.value}));
-                      if (!validateEmail(e.target.value) && e.target.value.length > 0) {
-                        setEditFormError("Please enter a valid email address");
-                      } else if (editFormError === "Please enter a valid email address") {
-                        setEditFormError("");
-                      }
-                    }}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-                    placeholder="Email"
-                  />
                   {editFormError && (
                     <p className="text-red-500 text-sm mt-1">{editFormError}</p>
                   )}
@@ -564,7 +595,7 @@ export default function AdminDashboard() {
                 </Button>
                 <Button
                   onClick={handleEditSubmit}
-                  disabled={!!editFormError || !editForm.firstName || !editForm.lastName || !editForm.email}
+                  disabled={!!editFormError || !editForm.firstName || !editForm.lastName || !editForm.email || !editForm.username}
                   className="flex-1 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white h-12 rounded-full font-semibold cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Save Changes
@@ -946,22 +977,24 @@ export default function AdminDashboard() {
                             className="bg-blue-500 hover:bg-blue-600 cursor-pointer p-2"
                             title="Edit User"
                           >
-                            <Edit size={16} />
+                            <UserPen size={16} />
                           </Button>
                           <Button
                             onClick={() => handleResetPasswordConfirm(user)}
                             className="bg-yellow-500 hover:bg-yellow-600 cursor-pointer p-2"
                             title="Reset Password"
                           >
-                            <KeyRound size={16} />
+                            <Lock size={16} />
                           </Button>
-                          <Button
-                            onClick={() => handleDeleteConfirm(user)}
-                            className="bg-red-500 hover:bg-red-600 cursor-pointer p-2"
-                            title="Delete User"
-                          >
-                            <Trash2 size={16} />
-                          </Button>
+                          {user.Role?.toLowerCase() !== "admin" && (
+                            <Button
+                              onClick={() => handleDeleteConfirm(user)}
+                              className="bg-red-500 hover:bg-red-600 cursor-pointer p-2"
+                              title="Delete User"
+                            >
+                              <UserX size={16} />
+                            </Button>
+                          )}
                         </div>
                       </td>
                     </tr>
