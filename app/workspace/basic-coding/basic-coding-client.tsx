@@ -3394,18 +3394,42 @@ function BasicCodingPage() {
   const [view, setView] = useState('blocks');
   const [output, setOutput] = useState('');
   const searchParams = useSearchParams()
-    const [activityId, setActivityId] = useState<string | null>(null);
+
+const projectId = searchParams?.get("projectId")
+const activityId = searchParams?.get("activityId")
+
+const mode = projectId
+  ? "PROJECT"
+  : activityId
+  ? "ACTIVITY"
+  : "INVALID"
+
 
   const workspaceRef = useRef<Blockly.WorkspaceSvg | null>(null)
   function appendOutput(text: string) {
     setOutput(prev => prev + text + "\n")
   }
 
-  useEffect(() => {
-    if (!searchParams) return;
-    setActivityId(searchParams.get("activityId"));
-  }, [searchParams]);
-  if (!activityId) return null;
+useEffect(() => {
+  if (!workspaceRef.current) return
+
+  // ACTIVITY MODE
+  if (mode === "ACTIVITY" && activityId) {
+    fetch(`/api/tutorials/activity/${activityId}/blocks`)
+      .then(res => res.json())
+      .then(loadBlocksIntoWorkspace)
+      .catch(console.error)
+  }
+
+  // PROJECT MODE
+  if (mode === "PROJECT" && projectId) {
+    fetch(`/api/project/${projectId}/blocks`)
+      .then(res => res.json())
+      .then(loadBlocksIntoWorkspace)
+      .catch(console.error)
+  }
+}, [mode, projectId, activityId])
+
   async function executeBlock(block: Blockly.Block) {
     const variables = variablesRef.current
 

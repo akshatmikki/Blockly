@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef, useState, useMemo, Suspense } from 'react';
+import { useEffect, useRef, useState, useMemo } from 'react';
 import * as Blockly from 'blockly';
 import { pythonGenerator } from 'blockly/python';
 import 'blockly/msg/en';
@@ -4730,155 +4730,10 @@ plt = _FakePlt()
   };
 
   return (
-    <>
-      <input
-        type="file"
-        ref={fileInputRef}
-        style={{ display: "none" }}
-        onChange={handleFileUpload}
-      />
-      <div style={{ width: '100vw', height: '100vh', display: 'flex', flexDirection: 'column', fontFamily: 'Arial, sans-serif' }}>
-        {/* Header */}
-        <div style={{ height: '60px', background: '#7C88CC', display: 'flex', alignItems: 'center', padding: '0 20px', gap: '10px' }}>
-          <button style={{ padding: '8px 16px', background: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>
-            ☰
-          </button>
-          <button onClick={resetWorkspace} style={{ padding: '8px 16px', background: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
-            🔄 Reset
-          </button>
-          <button onClick={runCode} style={{ padding: '8px 24px', background: '#4CAF50', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>
-            ▶ Run
-          </button>
-          <button
-            style={{ padding: '8px 24px', background: '#4CAF50', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
-            onClick={async () => {
-              if (!workspaceRef.current) return
-              setOutput("")
-              await runWorkspace(workspaceRef.current)
-            }}
-          >
-            ▶ Run tutorials
-          </button>
-
-          <div style={{ marginLeft: 'auto', display: 'flex', gap: '10px' }}>
-            <button
-              onClick={() => setView('blocks')}
-              style={{ padding: '8px 16px', background: view === 'blocks' ? '#fff' : '#9BA5D8', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
-              Blocks
-            </button>
-            <button
-              onClick={() => setView('code')}
-              style={{ padding: '8px 16px', background: view === 'code' ? '#fff' : '#9BA5D8', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
-              Code
-            </button>
-            <button
-              onClick={() => setView('canvas')}
-              style={{ padding: '8px 16px', background: view === 'canvas' ? '#fff' : '#9BA5D8', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
-              Canvas
-            </button>
-          </div>
-        </div>
-
-        {/* Main Content */}
-        <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
-          {/* Blockly Workspace - Sidebar + Editor (LEFT SIDE) */}
-          <div style={{
-            flex: view === 'blocks' ? 1 : 0.6,
-            display: view === 'canvas' ? 'none' : 'block',
-            minWidth: '400px',
-            height: '100%',
-            position: 'relative',
-            backgroundColor: '#fff'
-          }}>
-            <div ref={blocklyDiv} style={{ width: '100%', height: '100%', display: view === 'blocks' ? 'block' : 'none' }} />
-            {view === 'code' && (
-              <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column' }}>
-                <div style={{ padding: '10px', borderBottom: '1px solid #ccc', fontWeight: 'bold', background: '#ddd' }}>Generated Python Code</div>
-                <pre style={{ margin: 0, padding: '20px', flex: 1, overflow: 'auto', fontSize: '13px', fontFamily: 'monospace', whiteSpace: 'pre-wrap', wordWrap: 'break-word' }}>
-                  {code || '# Drag blocks to generate code...'}
-                </pre>
-              </div>
-            )}
-          </div>
-
-          {/* Canvas/Output Area (RIGHT SIDE) */}
-          <div style={{
-            flex: view === 'blocks' ? 1 : (view === 'code' ? 1 : 1),
-            background: '#7C88CC',
-            display: view === 'canvas' || view === 'blocks' || view === 'code' ? 'flex' : 'none',
-            flexDirection: 'column',
-            padding: '20px',
-            overflow: 'auto',
-            borderLeft: view === 'blocks' || view === 'code' ? '2px solid #555' : 'none'
-          }}>
-            {/* Canvas Container */}
-            <div
-              ref={canvasContainerRef}
-              style={{
-                width: '100%',
-                flex: view === 'canvas' ? 0.8 : 0.6,
-                marginBottom: '20px',
-                background: '#ffffff',
-                borderRadius: '8px',
-                border: '2px solid #5566AA',
-                position: 'relative',
-                minHeight: '300px',
-                padding: '10px',
-                overflow: 'auto'
-              }}
-            >
-              {/* ✅ Canvas Output Overlay */}
-              <pre
-                style={{
-                  fontSize: '13px',
-                  whiteSpace: 'pre-wrap',
-                  wordWrap: 'break-word',
-                  color: '#000',
-                  margin: 0,
-                  fontFamily: 'monospace'
-                }}
-              >
-                {output || 'Canvas ready...'}
-              </pre>
-            </div>
-
-            {/* Output Box */}
-            <div style={{
-              padding: '15px',
-              background: '#5566AA',
-              borderRadius: '8px',
-              color: 'white',
-              flex: view === 'canvas' ? 0.2 : 0.4,
-              overflow: 'auto',
-              display: 'flex',
-              flexDirection: 'column'
-            }}>
-              <div style={{ fontWeight: 'bold', marginBottom: '10px', color: '#ffffff', fontSize: '14px' }}>Output:</div>
-              <pre style={{
-                fontSize: '12px',
-                margin: 0,
-                whiteSpace: 'pre-wrap',
-                wordWrap: 'break-word',
-                overflow: 'auto',
-                color: '#ffffff',
-                flex: 1,
-                fontFamily: 'monospace'
-              }}>
-                {output || 'Ready to run...'}
-              </pre>
-            </div>
-          </div>
-        </div>
-      </div>
-    </>
-  );
-}
-
-// Wrapper component with Suspense boundary
-export default function BasicCodingPageWrapper() {
-  return (
-    <Suspense fallback={<div className="flex items-center justify-center h-screen">Loading...</div>}>
+    <Suspense fallback={<div>Loading...</div>}>
       <BasicCodingPage />
     </Suspense>
   );
 }
+
+export default BasicCodingPage;
