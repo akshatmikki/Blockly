@@ -3,8 +3,8 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { PieChart, Pie, Cell, BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
-import { Trash2, KeyRound, LogOut, Edit, ChevronDown, ChevronUp, Upload, X, CheckCircle2, Eye, EyeOff } from "lucide-react";
+import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
+import { LogOut, ChevronDown, ChevronUp, Upload, X, CheckCircle2, Eye, EyeOff, UserPen, Lock, UserX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import * as XLSX from "xlsx";
@@ -27,12 +27,11 @@ type ModalType = "edit" | "delete" | "reset" | "success" | "error" | "bulkUpload
 export default function AdminDashboard() {
   const router = useRouter();
   const [users, setUsers] = useState<User[]>([]);
-  const [timeRange, setTimeRange] = useState<"week" | "month" | "year">("week");
   const [expandedUserId, setExpandedUserId] = useState<number | null>(null);
   const [showPassword, setShowPassword] = useState<{ [key: number]: boolean }>({});
   const [modalType, setModalType] = useState<ModalType>(null);
   const [modalData, setModalData] = useState<any>(null);
-  const [editForm, setEditForm] = useState({ firstName: "", lastName: "", email: "" });
+  const [editForm, setEditForm] = useState({ firstName: "", lastName: "", email: "", username: "" });
   const [editFormError, setEditFormError] = useState("");
   const [resetPassword, setResetPassword] = useState("");
   const [confirmResetPassword, setConfirmResetPassword] = useState("");
@@ -96,49 +95,6 @@ export default function AdminDashboard() {
     { name: "Admins", value: adminCount, color: colors.orange },
   ];
 
-  // Mock login count data
-  const loginCountData = users.slice(0, 5).map((user, idx) => ({
-    name: user.Username || user.Email.split('@')[0],
-    logins: Math.floor(Math.random() * 50) + 10,
-  }));
-
-  // Mock online users data based on time range
-  const getOnlineUsersData = () => {
-    if (timeRange === "week") {
-      return [
-        { name: "Mon", users: 12 },
-        { name: "Tue", users: 19 },
-        { name: "Wed", users: 15 },
-        { name: "Thu", users: 25 },
-        { name: "Fri", users: 22 },
-        { name: "Sat", users: 18 },
-        { name: "Sun", users: 10 },
-      ];
-    } else if (timeRange === "month") {
-      return [
-        { name: "Week 1", users: 45 },
-        { name: "Week 2", users: 52 },
-        { name: "Week 3", users: 48 },
-        { name: "Week 4", users: 61 },
-      ];
-    } else {
-      return [
-        { name: "Jan", users: 120 },
-        { name: "Feb", users: 150 },
-        { name: "Mar", users: 180 },
-        { name: "Apr", users: 170 },
-        { name: "May", users: 200 },
-        { name: "Jun", users: 190 },
-        { name: "Jul", users: 210 },
-        { name: "Aug", users: 230 },
-        { name: "Sep", users: 220 },
-        { name: "Oct", users: 240 },
-        { name: "Nov", users: 250 },
-        { name: "Dec", users: 260 },
-      ];
-    }
-  };
-
   // Toggle password visibility
   const togglePasswordVisibility = (userId: number) => {
     setShowPassword(prev => ({
@@ -159,9 +115,10 @@ export default function AdminDashboard() {
       firstName: user.FirstName || "",
       lastName: user.LastName || "",
       email: user.Email || "",
+      username: user.Username || "",
     });
     setEditFormError("");
-    setModalData({ userId: user.UserId, username: user.Username, originalEmail: user.Email });
+    setModalData({ userId: user.UserId, username: user.Username, originalEmail: user.Email, originalUsername: user.Username });
     setModalType("edit");
   };
 
@@ -169,6 +126,16 @@ export default function AdminDashboard() {
     // Validation checks
     if (!editForm.email || !validateEmail(editForm.email)) {
       setEditFormError("Please enter a valid email address");
+      return;
+    }
+
+    if (!editForm.username || editForm.username.trim().length < 3) {
+      setEditFormError("Username must be at least 3 characters");
+      return;
+    }
+
+    if (editForm.username.includes(' ')) {
+      setEditFormError("Username cannot contain spaces");
       return;
     }
 
@@ -193,6 +160,7 @@ export default function AdminDashboard() {
           FirstName: editForm.firstName.trim(),
           LastName: editForm.lastName.trim(),
           Email: editForm.email.trim(),
+          Username: editForm.username.trim(),
         }),
       });
 
@@ -440,7 +408,7 @@ export default function AdminDashboard() {
   const closeModal = () => {
     setModalType(null);
     setModalData(null);
-    setEditForm({ firstName: "", lastName: "", email: "" });
+    setEditForm({ firstName: "", lastName: "", email: "", username: "" });
     setEditFormError("");
     setResetPassword("");
     setConfirmResetPassword("");
@@ -501,6 +469,42 @@ export default function AdminDashboard() {
               </div>
               <div className="space-y-4">
                 <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Username</label>
+                  <input
+                    type="text"
+                    value={editForm.username}
+                    onChange={(e) => {
+                      setEditForm(prev => ({...prev, username: e.target.value}));
+                      if (e.target.value.trim().length > 0 && e.target.value.trim().length < 3) {
+                        setEditFormError("Username must be at least 3 characters");
+                      } else if (e.target.value.includes(' ')) {
+                        setEditFormError("Username cannot contain spaces");
+                      } else if (editFormError.includes("Username")) {
+                        setEditFormError("");
+                      }
+                    }}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                    placeholder="Username (min 3 characters, no spaces)"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                  <input
+                    type="email"
+                    value={editForm.email}
+                    onChange={(e) => {
+                      setEditForm(prev => ({...prev, email: e.target.value}));
+                      if (!validateEmail(e.target.value) && e.target.value.length > 0) {
+                        setEditFormError("Please enter a valid email address");
+                      } else if (editFormError === "Please enter a valid email address") {
+                        setEditFormError("");
+                      }
+                    }}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                    placeholder="Email"
+                  />
+                </div>
+                <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">First Name</label>
                   <input
                     type="text"
@@ -533,23 +537,6 @@ export default function AdminDashboard() {
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
                     placeholder="Last Name"
                   />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
-                  <input
-                    type="email"
-                    value={editForm.email}
-                    onChange={(e) => {
-                      setEditForm(prev => ({...prev, email: e.target.value}));
-                      if (!validateEmail(e.target.value) && e.target.value.length > 0) {
-                        setEditFormError("Please enter a valid email address");
-                      } else if (editFormError === "Please enter a valid email address") {
-                        setEditFormError("");
-                      }
-                    }}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-                    placeholder="Email"
-                  />
                   {editFormError && (
                     <p className="text-red-500 text-sm mt-1">{editFormError}</p>
                   )}
@@ -564,7 +551,7 @@ export default function AdminDashboard() {
                 </Button>
                 <Button
                   onClick={handleEditSubmit}
-                  disabled={!!editFormError || !editForm.firstName || !editForm.lastName || !editForm.email}
+                  disabled={!!editFormError || !editForm.firstName || !editForm.lastName || !editForm.email || !editForm.username}
                   className="flex-1 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white h-12 rounded-full font-semibold cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Save Changes
@@ -820,76 +807,6 @@ export default function AdminDashboard() {
               </PieChart>
             </ResponsiveContainer>
           </div>
-
-          {/* Bar Chart - Login Counts */}
-          <div className="bg-white rounded-2xl shadow-lg p-6 border-t-4" style={{borderColor: colors.blue}}>
-            <h2 className="text-xl font-bold text-gray-800 mb-4">User Login Frequency</h2>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={loginCountData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                <XAxis dataKey="name" stroke="#666" />
-                <YAxis stroke="#666" />
-                <Tooltip />
-                <Bar dataKey="logins" fill={colors.blue} radius={[8, 8, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-
-        {/* Line Chart - Users Online Over Time */}
-        <div className="bg-white rounded-2xl shadow-lg p-6 border-t-4 mb-8" style={{borderColor: colors.orange}}>
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-bold text-gray-800">Users Online</h2>
-            <div className="flex gap-2">
-              <Button
-                onClick={() => setTimeRange("week")}
-                className={`cursor-pointer ${
-                  timeRange === "week"
-                    ? "bg-orange-500 hover:bg-orange-600"
-                    : "bg-gray-200 hover:bg-gray-300 text-gray-700"
-                }`}
-              >
-                Week
-              </Button>
-              <Button
-                onClick={() => setTimeRange("month")}
-                className={`cursor-pointer ${
-                  timeRange === "month"
-                    ? "bg-orange-500 hover:bg-orange-600"
-                    : "bg-gray-200 hover:bg-gray-300 text-gray-700"
-                }`}
-              >
-                Month
-              </Button>
-              <Button
-                onClick={() => setTimeRange("year")}
-                className={`cursor-pointer ${
-                  timeRange === "year"
-                    ? "bg-orange-500 hover:bg-orange-600"
-                    : "bg-gray-200 hover:bg-gray-300 text-gray-700"
-                }`}
-              >
-                Year
-              </Button>
-            </div>
-          </div>
-          <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={getOnlineUsersData()}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-              <XAxis dataKey="name" stroke="#666" />
-              <YAxis stroke="#666" />
-              <Tooltip />
-              <Legend />
-              <Line
-                type="monotone"
-                dataKey="users"
-                stroke={colors.orange}
-                strokeWidth={3}
-                dot={{ fill: colors.orange, r: 5 }}
-                activeDot={{ r: 7 }}
-              />
-            </LineChart>
-          </ResponsiveContainer>
         </div>
 
         {/* Users Table */}
@@ -946,22 +863,24 @@ export default function AdminDashboard() {
                             className="bg-blue-500 hover:bg-blue-600 cursor-pointer p-2"
                             title="Edit User"
                           >
-                            <Edit size={16} />
+                            <UserPen size={16} />
                           </Button>
                           <Button
                             onClick={() => handleResetPasswordConfirm(user)}
                             className="bg-yellow-500 hover:bg-yellow-600 cursor-pointer p-2"
                             title="Reset Password"
                           >
-                            <KeyRound size={16} />
+                            <Lock size={16} />
                           </Button>
-                          <Button
-                            onClick={() => handleDeleteConfirm(user)}
-                            className="bg-red-500 hover:bg-red-600 cursor-pointer p-2"
-                            title="Delete User"
-                          >
-                            <Trash2 size={16} />
-                          </Button>
+                          {user.Role?.toLowerCase() !== "admin" && (
+                            <Button
+                              onClick={() => handleDeleteConfirm(user)}
+                              className="bg-red-500 hover:bg-red-600 cursor-pointer p-2"
+                              title="Delete User"
+                            >
+                              <UserX size={16} />
+                            </Button>
+                          )}
                         </div>
                       </td>
                     </tr>
