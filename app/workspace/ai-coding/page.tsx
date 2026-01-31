@@ -4157,15 +4157,14 @@ function AICodingPage() {
   <!-- DATA TYPES TAB -->
   <category name="Data Types" colour="200">
     <!-- String -->
-    <category name="String" colour="160">
-      <block type="text_input" />
-    </category>
+      <category name="String" colour="160">
+    <block type="string_literal" />
+  </category>
 
-    <!-- Number -->
-    <category name="Number" colour="230">
-      <block type="math_number" />
-      
-    </category>
+  <!-- Number -->
+  <category name="Integer" colour="230">
+    <block type="number_literal" />
+  </category>
 
     <!-- Boolean -->
     <category name="Boolean" colour="270">
