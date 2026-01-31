@@ -160,7 +160,7 @@ export default function DashboardPage() {
       {/* Header */}
       <header className="bg-gradient-to-r from-blue-950 to-blue-900 text-white px-6 py-4 flex justify-between">
         <h1 className="text-2xl font-light">
-          AI Connect | <span className="font-normal">User Dashboard</span>
+          AIConnecto | <span className="font-normal">User Dashboard</span>
         </h1>
         <div className="relative">
           <div

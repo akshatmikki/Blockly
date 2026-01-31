@@ -4081,7 +4081,48 @@ function BasicCodingPage() {
     });
 
     workspaceRef.current = workspace;
+const preventToolboxScroll = () => {
+      // Find the flyout (block drawer) element
+      const flyout = blocklyDiv.current?.querySelector('.blocklyFlyout');
+      const toolboxDiv = blocklyDiv.current?.querySelector('.blocklyToolboxDiv');
+      
+      // Prevent wheel events on flyout from propagating to workspace
+      if (flyout) {
+        flyout.addEventListener('wheel', (e) => {
+          e.stopPropagation();
+        }, { passive: true });
+      }
+      
+      // Prevent wheel events on toolbox from propagating to workspace
+      if (toolboxDiv) {
+        toolboxDiv.addEventListener('wheel', (e) => {
+          e.stopPropagation();
+        }, { passive: true });
+      }
+      
+      // Also prevent touch scroll propagation on mobile
+      if (flyout) {
+        flyout.addEventListener('touchmove', (e) => {
+          e.stopPropagation();
+        }, { passive: true });
+      }
+      
+      if (toolboxDiv) {
+        toolboxDiv.addEventListener('touchmove', (e) => {
+          e.stopPropagation();
+        }, { passive: true });
+      }
+    };
 
+    // Apply the fix after a short delay to ensure Blockly is fully rendered
+    setTimeout(preventToolboxScroll, 100);
+
+    // Also reapply when toolbox opens (category clicked)
+    workspace.addChangeListener((event: any) => {
+      if (event.type === Blockly.Events.TOOLBOX_ITEM_SELECT) {
+        setTimeout(preventToolboxScroll, 50);
+      }
+    });
     /* =========================
        1️⃣ CODE GENERATION LISTENER
     ========================= */
