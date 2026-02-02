@@ -2472,10 +2472,10 @@ serial.send(${text})
     return [block.getFieldValue("BOOL"), pythonGenerator.ORDER_ATOMIC];
   };
   pythonGenerator.forBlock['print_simple'] = function (block, gen) {
-  const value =
-    gen.valueToCode(block, "VALUE", gen.ORDER_NONE) || "";
-  return `print(${value})\n`;
-};
+    const value =
+      gen.valueToCode(block, "VALUE", gen.ORDER_NONE) || "";
+    return `print(${value})\n`;
+  };
 
   pythonGenerator.forBlock['print_sep'] = function (block, gen) {
     const value =
@@ -2617,17 +2617,17 @@ serial.send(${text})
     return [varName, pythonGenerator.ORDER_ATOMIC];
   };
 
-pythonGenerator.forBlock['variables_set'] = function (block, generator) {
-  const varName = generator.nameDB_.getName(
-    block.getFieldValue('VAR'),
-    Blockly.Names.NameType.VARIABLE
-  );
+  pythonGenerator.forBlock['variables_set'] = function (block, generator) {
+    const varName = generator.nameDB_.getName(
+      block.getFieldValue('VAR'),
+      Blockly.Names.NameType.VARIABLE
+    );
 
-  const arg0 =
-    generator.valueToCode(block, 'VALUE', pythonGenerator.ORDER_NONE) || 'None';
+    const arg0 =
+      generator.valueToCode(block, 'VALUE', pythonGenerator.ORDER_NONE) || 'None';
 
-  return `${varName} = ${arg0}\n`;
-};
+    return `${varName} = ${arg0}\n`;
+  };
 
 
   // Input blocks
@@ -3877,165 +3877,165 @@ function BasicCodingPage() {
       .catch(console.error)
   }, [activityId])
 
- function createBlocklyBlock(workspace, row) {
-  const cfg = row.block_config;
+  function createBlocklyBlock(workspace, row) {
+    const cfg = row.block_config;
 
-  switch (row.block_type) {
+    switch (row.block_type) {
 
-    /* =====================
-       SET VARIABLE
-    ===================== */
-    case "SET_VARIABLE": {
+      /* =====================
+         SET VARIABLE
+      ===================== */
+      case "SET_VARIABLE": {
 
-      // CREATE TURTLE
-      if (cfg.type === "CREATE_TURTLE") {
-        const block = workspace.newBlock("turtle_create");
-        block.setFieldValue(cfg.variable, "VAR");
-        return block;
+        // CREATE TURTLE
+        if (cfg.type === "CREATE_TURTLE") {
+          const block = workspace.newBlock("turtle_create");
+          block.setFieldValue(cfg.variable, "VAR");
+          return block;
+        }
+
+        // INPUT → variable
+        if (cfg.value?.type === "INPUT") {
+          const block = workspace.newBlock("variables_set");
+          block.setFieldValue(cfg.variable, "VAR");
+
+          const inputBlock = workspace.newBlock("text_prompt");
+          inputBlock.setFieldValue(cfg.value.prompt, "TEXT");
+
+          inputBlock.initSvg();
+          inputBlock.render();
+
+          block.getInput("VALUE")
+            ?.connection
+            ?.connect(inputBlock.outputConnection);
+
+          return block;
+        }
+
+        // STRING → variable
+        if (cfg.type === "STRING") {
+          const block = workspace.newBlock("variables_set");
+          block.setFieldValue(cfg.variable, "VAR");
+
+          const textBlock = workspace.newBlock("text");
+          textBlock.setFieldValue(cfg.value, "TEXT");
+
+          textBlock.initSvg();
+          textBlock.render();
+
+          block.getInput("VALUE")
+            ?.connection
+            ?.connect(textBlock.outputConnection);
+
+          return block;
+        }
+
+        return null;
       }
 
-      // INPUT → variable
-      if (cfg.value?.type === "INPUT") {
-        const block = workspace.newBlock("variables_set");
-        block.setFieldValue(cfg.variable, "VAR");
+      /* =====================
+         PRINT
+      ===================== */
+      case "PRINT": {
+        const block = workspace.newBlock("text_print");
 
-        const inputBlock = workspace.newBlock("text_prompt");
-        inputBlock.setFieldValue(cfg.value.prompt, "TEXT");
+        const varBlock = workspace.newBlock("variables_get");
+        varBlock.setFieldValue(cfg.variable, "VAR");
 
-        inputBlock.initSvg();
-        inputBlock.render();
+        varBlock.initSvg();
+        varBlock.render();
 
-        block.getInput("VALUE")
+        block.getInput("TEXT")
           ?.connection
-          ?.connect(inputBlock.outputConnection);
+          ?.connect(varBlock.outputConnection);
 
         return block;
       }
 
-      // STRING → variable
-      if (cfg.type === "STRING") {
-        const block = workspace.newBlock("variables_set");
+      /* =====================
+         TURTLE MOVE
+      ===================== */
+      case "TURTLE_MOVE": {
+        const block = workspace.newBlock("turtle_move");
+
         block.setFieldValue(cfg.variable, "VAR");
-
-        const textBlock = workspace.newBlock("text");
-        textBlock.setFieldValue(cfg.value, "TEXT");
-
-        textBlock.initSvg();
-        textBlock.render();
-
-        block.getInput("VALUE")
-          ?.connection
-          ?.connect(textBlock.outputConnection);
-
-        return block;
-      }
-
-      return null;
-    }
-
-    /* =====================
-       PRINT
-    ===================== */
-    case "PRINT": {
-      const block = workspace.newBlock("text_print");
-
-      const varBlock = workspace.newBlock("variables_get");
-      varBlock.setFieldValue(cfg.variable, "VAR");
-
-      varBlock.initSvg();
-      varBlock.render();
-
-      block.getInput("TEXT")
-        ?.connection
-        ?.connect(varBlock.outputConnection);
-
-      return block;
-    }
-
-    /* =====================
-       TURTLE MOVE
-    ===================== */
-   case "TURTLE_MOVE": {
-  const block = workspace.newBlock("turtle_move");
-
-  block.setFieldValue(cfg.variable, "VAR");
-  block.setFieldValue(cfg.direction, "DIRECTION");
-
-  const num = workspace.newBlock("math_number");
-  num.setFieldValue(String(cfg.value), "NUM");
-
-  num.initSvg();
-  num.render();
-
-  block.getInput("DISTANCE")
-    ?.connection
-    ?.connect(num.outputConnection);
-
-  return block;
-}
-
-    /* =====================
-       BACKGROUND COLOR
-    ===================== */
-    case "TURTLE_SCREEN": {
-      if (cfg.action === "SET_BACKGROUND_COLOR") {
-        const block = workspace.newBlock("turtle_bgcolor");
-        block.setFieldValue(cfg.color, "COLOR");
-        return block;
-      }
-      return null;
-    }
-
-    /* =====================
-       FILL COLOR
-    ===================== */
-    case "TURTLE_STYLE": {
-      if (cfg.action === "SET_FILL_COLOR") {
-        const block = workspace.newBlock("turtle_fill_color");
-        block.setFieldValue(cfg.variable, "VAR");
-
-        const colorBlock = workspace.newBlock("colour_picker");
-        colorBlock.setFieldValue(cfg.color, "COLOUR");
-
-        colorBlock.initSvg();
-        colorBlock.render();
-
-        block.getInput("COLOR")
-          ?.connection
-          ?.connect(colorBlock.outputConnection);
-
-        return block;
-      }
-      return null;
-    }
-
-    /* =====================
-       DOT
-    ===================== */
-    case "TURTLE_DRAW": {
-      if (cfg.action === "DOT") {
-        const block = workspace.newBlock("turtle_dot");
-        block.setFieldValue(cfg.variable, "VAR");
+        block.setFieldValue(cfg.direction, "DIRECTION");
 
         const num = workspace.newBlock("math_number");
-        num.setFieldValue(String(cfg.radius), "NUM");
+        num.setFieldValue(String(cfg.value), "NUM");
 
         num.initSvg();
         num.render();
 
-        block.getInput("SIZE")
+        block.getInput("DISTANCE")
           ?.connection
           ?.connect(num.outputConnection);
 
         return block;
       }
-      return null;
-    }
 
-    default:
-      return null;
+      /* =====================
+         BACKGROUND COLOR
+      ===================== */
+      case "TURTLE_SCREEN": {
+        if (cfg.action === "SET_BACKGROUND_COLOR") {
+          const block = workspace.newBlock("turtle_bgcolor");
+          block.setFieldValue(cfg.color, "COLOR");
+          return block;
+        }
+        return null;
+      }
+
+      /* =====================
+         FILL COLOR
+      ===================== */
+      case "TURTLE_STYLE": {
+        if (cfg.action === "SET_FILL_COLOR") {
+          const block = workspace.newBlock("turtle_fill_color");
+          block.setFieldValue(cfg.variable, "VAR");
+
+          const colorBlock = workspace.newBlock("colour_picker");
+          colorBlock.setFieldValue(cfg.color, "COLOUR");
+
+          colorBlock.initSvg();
+          colorBlock.render();
+
+          block.getInput("COLOR")
+            ?.connection
+            ?.connect(colorBlock.outputConnection);
+
+          return block;
+        }
+        return null;
+      }
+
+      /* =====================
+         DOT
+      ===================== */
+      case "TURTLE_DRAW": {
+        if (cfg.action === "DOT") {
+          const block = workspace.newBlock("turtle_dot");
+          block.setFieldValue(cfg.variable, "VAR");
+
+          const num = workspace.newBlock("math_number");
+          num.setFieldValue(String(cfg.radius), "NUM");
+
+          num.initSvg();
+          num.render();
+
+          block.getInput("SIZE")
+            ?.connection
+            ?.connect(num.outputConnection);
+
+          return block;
+        }
+        return null;
+      }
+
+      default:
+        return null;
+    }
   }
-}
 
   function loadBlocksIntoWorkspace(blocks: any[]) {
     const workspace = workspaceRef.current;
@@ -4081,32 +4081,32 @@ function BasicCodingPage() {
     });
 
     workspaceRef.current = workspace;
-const preventToolboxScroll = () => {
+    const preventToolboxScroll = () => {
       // Find the flyout (block drawer) element
       const flyout = blocklyDiv.current?.querySelector('.blocklyFlyout');
       const toolboxDiv = blocklyDiv.current?.querySelector('.blocklyToolboxDiv');
-      
+
       // Prevent wheel events on flyout from propagating to workspace
       if (flyout) {
         flyout.addEventListener('wheel', (e) => {
           e.stopPropagation();
         }, { passive: true });
       }
-      
+
       // Prevent wheel events on toolbox from propagating to workspace
       if (toolboxDiv) {
         toolboxDiv.addEventListener('wheel', (e) => {
           e.stopPropagation();
         }, { passive: true });
       }
-      
+
       // Also prevent touch scroll propagation on mobile
       if (flyout) {
         flyout.addEventListener('touchmove', (e) => {
           e.stopPropagation();
         }, { passive: true });
       }
-      
+
       if (toolboxDiv) {
         toolboxDiv.addEventListener('touchmove', (e) => {
           e.stopPropagation();
@@ -4167,8 +4167,12 @@ const preventToolboxScroll = () => {
     canvasContainerRef.current.innerHTML = "";
 
     const canvas = document.createElement("canvas");
-    canvas.width = 700;
-    canvas.height = 450;
+    const container = canvasContainerRef.current;
+
+    const rect = container.getBoundingClientRect();
+
+    canvas.width = rect.width;
+    canvas.height = Math.min(450, rect.height);
     canvas.style.border = "2px solid #ccc";
     canvasContainerRef.current.appendChild(canvas);
 
@@ -4905,209 +4909,209 @@ plt = _FakePlt()
   };
 
   return (
-  <>
-    <input
-      type="file"
-      ref={fileInputRef}
-      style={{ display: "none" }}
-      onChange={handleFileUpload}
-    />
-
-    <div
-      style={{
-        width: "100vw",
-        height: "100vh",
-        display: "flex",
-        flexDirection: "column",
-        fontFamily: "Arial, sans-serif"
-      }}
-    >
-      {/* Header */}
+    <>
+      <input
+        type="file"
+        ref={fileInputRef}
+        style={{ display: "none" }}
+        onChange={handleFileUpload}
+      />
       <div
         style={{
-          height: "60px",
-          background: "#7C88CC",
+          width: "100%",
+          height: "100vh",
           display: "flex",
-          alignItems: "center",
-          padding: "0 20px",
-          gap: "10px"
+          flexDirection: "column",
+          fontFamily: "Arial, sans-serif",
+          overflow: "hidden"
         }}
       >
-        <button style={{ padding: "8px 16px", background: "#fff", border: "none", borderRadius: "4px", fontWeight: "bold" }}>
-          ☰
-        </button>
-
-        <button onClick={resetWorkspace} style={{ padding: "8px 16px", background: "#fff", border: "none", borderRadius: "4px" }}>
-          🔄 Reset
-        </button>
-
-        <button
-          onClick={runCode}
-          style={{
-            padding: "8px 24px",
-            background: "#4CAF50",
-            color: "#fff",
-            border: "none",
-            borderRadius: "4px",
-            fontWeight: "bold"
-          }}
-        >
-          ▶ Run
-        </button>
-
-        <button
-          onClick={async () => {
-            if (!workspaceRef.current) return;
-            setOutput("");
-            await runWorkspace(workspaceRef.current);
-          }}
-          style={{
-            padding: "8px 24px",
-            background: "#4CAF50",
-            color: "#fff",
-            border: "none",
-            borderRadius: "4px",
-            fontWeight: "bold"
-          }}
-        >
-          ▶ Run tutorials
-        </button>
-
-        <div style={{ marginLeft: "auto", display: "flex", gap: "10px" }}>
-          {["blocks", "code", "canvas"].map(v => (
-            <button
-              key={v}
-              onClick={() => setView(v as any)}
-              style={{
-                padding: "8px 16px",
-                background: view === v ? "#fff" : "#9BA5D8",
-                border: "none",
-                borderRadius: "4px",
-                cursor: "pointer"
-              }}
-            >
-              {v.charAt(0).toUpperCase() + v.slice(1)}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Main Content */}
-      <div style={{ flex: 1, display: "flex", overflow: "hidden" }}>
-        {/* LEFT – Blockly */}
+        {/* Header */}
         <div
           style={{
-            flex: view === "blocks" ? 1 : 0.6,
-            display: view === "canvas" ? "none" : "block",
-            minWidth: "400px",
-            height: "100%",
-            background: "#fff",
-            position: "relative",
-            overflow: "hidden"
+            height: "60px",
+            background: "#7C88CC",
+            display: "flex",
+            alignItems: "center",
+            padding: "0 20px",
+            gap: "10px"
           }}
         >
-          <div
-            ref={blocklyDiv}
-            style={{
-              width: "100%",
-              height: "100%",
-              display: view === "blocks" ? "block" : "none"
-            }}
-          />
+          <button style={{ padding: "8px 16px", background: "#fff", border: "none", borderRadius: "4px", fontWeight: "bold" }}>
+            ☰
+          </button>
 
-          {view === "code" && (
-            <div style={{ height: "100%", display: "flex", flexDirection: "column" }}>
-              <div style={{ padding: "10px", background: "#ddd", fontWeight: "bold" }}>
-                Generated Python Code
+          <button onClick={resetWorkspace} style={{ padding: "8px 16px", background: "#fff", border: "none", borderRadius: "4px" }}>
+            🔄 Reset
+          </button>
+
+          <button
+            onClick={runCode}
+            style={{
+              padding: "8px 24px",
+              background: "#4CAF50",
+              color: "#fff",
+              border: "none",
+              borderRadius: "4px",
+              fontWeight: "bold"
+            }}
+          >
+            ▶ Run
+          </button>
+
+          <button
+            onClick={async () => {
+              if (!workspaceRef.current) return;
+              setOutput("");
+              await runWorkspace(workspaceRef.current);
+            }}
+            style={{
+              padding: "8px 24px",
+              background: "#4CAF50",
+              color: "#fff",
+              border: "none",
+              borderRadius: "4px",
+              fontWeight: "bold"
+            }}
+          >
+            ▶ Run tutorials
+          </button>
+
+          <div style={{ marginLeft: "auto", display: "flex", gap: "10px" }}>
+            {["blocks", "code", "canvas"].map(v => (
+              <button
+                key={v}
+                onClick={() => setView(v as any)}
+                style={{
+                  padding: "8px 16px",
+                  background: view === v ? "#fff" : "#9BA5D8",
+                  border: "none",
+                  borderRadius: "4px",
+                  cursor: "pointer"
+                }}
+              >
+                {v.charAt(0).toUpperCase() + v.slice(1)}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Main Content */}
+        <div style={{ flex: 1, display: "flex", overflow: "hidden" }}>
+          {/* LEFT – Blockly */}
+          <div
+            style={{
+              flex: view === "blocks" ? 1 : 0.6,
+              display: view === "canvas" ? "none" : "block",
+              minWidth: "400px",
+              height: "100%",
+              background: "#fff",
+              position: "relative",
+              overflow: "hidden"
+            }}
+          >
+            <div
+              ref={blocklyDiv}
+              style={{
+                width: "100%",
+                height: "100%",
+                display: view === "blocks" ? "block" : "none"
+              }}
+            />
+
+            {view === "code" && (
+              <div style={{ height: "100%", display: "flex", flexDirection: "column" }}>
+                <div style={{ padding: "10px", background: "#ddd", fontWeight: "bold" }}>
+                  Generated Python Code
+                </div>
+
+                <pre
+                  style={{
+                    flex: 1,
+                    margin: 0,
+                    padding: "20px",
+                    overflowY: "auto",
+                    fontSize: "13px",
+                    fontFamily: "monospace",
+                    whiteSpace: "pre-wrap"
+                  }}
+                >
+                  {code || "# Drag blocks to generate code..."}
+                </pre>
               </div>
+            )}
+          </div>
+
+          {/* RIGHT – Canvas + Output */}
+          <div
+            style={{
+              flex: 1,
+              background: "#7C88CC",
+              display: "flex",
+              flexDirection: "column",
+              padding: "20px",
+              overflow: "hidden",
+              borderLeft: view !== "canvas" ? "2px solid #555" : "none"
+            }}
+          >
+            {/* Canvas */}
+            <div
+              ref={canvasContainerRef}
+              style={{
+                flex: view === "canvas" ? 0.8 : 0.6,
+                background: "#fff",
+                borderRadius: "8px",
+                border: "2px solid #5566AA",
+                padding: "10px",
+                overflow: "hidden",
+                marginBottom: "20px"
+              }}
+            >
+              <pre
+                style={{
+                  margin: 0,
+                  fontSize: "13px",
+                  fontFamily: "monospace",
+                  whiteSpace: "pre-wrap",
+                  overflowY: "auto",
+                  maxHeight: "100%"
+                }}
+              />
+            </div>
+
+            {/* Output */}
+            <div
+              style={{
+                flex: view === "canvas" ? 0.2 : 0.4,
+                background: "#5566AA",
+                borderRadius: "8px",
+                padding: "15px",
+                display: "flex",
+                flexDirection: "column",
+                overflow: "hidden",
+                color: "#fff"
+              }}
+            >
+              <div style={{ fontWeight: "bold", marginBottom: "10px" }}>Output:</div>
 
               <pre
                 style={{
                   flex: 1,
                   margin: 0,
-                  padding: "20px",
-                  overflowY: "auto",
-                  fontSize: "13px",
+                  fontSize: "12px",
                   fontFamily: "monospace",
-                  whiteSpace: "pre-wrap"
+                  whiteSpace: "pre-wrap",
+                  overflowY: "auto"
                 }}
               >
-                {code || "# Drag blocks to generate code..."}
+                {output || "Ready to run..."}
               </pre>
             </div>
-          )}
-        </div>
-
-        {/* RIGHT – Canvas + Output */}
-        <div
-          style={{
-            flex: 1,
-            background: "#7C88CC",
-            display: "flex",
-            flexDirection: "column",
-            padding: "20px",
-            overflow: "hidden",
-            borderLeft: view !== "canvas" ? "2px solid #555" : "none"
-          }}
-        >
-          {/* Canvas */}
-          <div
-            ref={canvasContainerRef}
-            style={{
-              flex: view === "canvas" ? 0.8 : 0.6,
-              background: "#fff",
-              borderRadius: "8px",
-              border: "2px solid #5566AA",
-              padding: "10px",
-              overflow: "hidden",
-              marginBottom: "20px"
-            }}
-          >
-            <pre
-              style={{
-                margin: 0,
-                fontSize: "13px",
-                fontFamily: "monospace",
-                whiteSpace: "pre-wrap",
-                overflowY: "auto",
-                maxHeight: "100%"
-              }}
-            />
-          </div>
-
-          {/* Output */}
-          <div
-            style={{
-              flex: view === "canvas" ? 0.2 : 0.4,
-              background: "#5566AA",
-              borderRadius: "8px",
-              padding: "15px",
-              display: "flex",
-              flexDirection: "column",
-              overflow: "hidden",
-              color: "#fff"
-            }}
-          >
-            <div style={{ fontWeight: "bold", marginBottom: "10px" }}>Output:</div>
-
-            <pre
-              style={{
-                flex: 1,
-                margin: 0,
-                fontSize: "12px",
-                fontFamily: "monospace",
-                whiteSpace: "pre-wrap",
-                overflowY: "auto"
-              }}
-            >
-              {output || "Ready to run..."}
-            </pre>
           </div>
         </div>
       </div>
-    </div>
-  </>
-);
+    </>
+  );
 
 }
 
