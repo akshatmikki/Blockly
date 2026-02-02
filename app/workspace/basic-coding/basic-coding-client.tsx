@@ -2153,7 +2153,7 @@ const defineBlocks = () => {
         .appendField(new Blockly.FieldNumber(0, -Infinity, Infinity, 1), 'VALUE');
 
       this.setOutput(true, 'Number');
-      this.setColour(230);
+      this.setColour(120);
       this.setTooltip('Integer number');
       this.setHelpUrl('');
     }
