@@ -7,7 +7,97 @@ import 'blockly/blocks';
 import Sk from 'skulpt';
 import Script from "next/script";
 import 'skulpt/dist/skulpt-stdlib.js';
+import * as faceapi from "face-api.js";
 
+async function runFaceDetection() {
+
+  // 1️⃣ Load models ONCE
+  if (!(window as any).__FACE_MODELS_LOADED__) {
+    const MODEL_URL = "/models";
+
+    await Promise.all([
+      faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
+      faceapi.nets.faceLandmark68TinyNet.loadFromUri(MODEL_URL),
+      faceapi.nets.faceExpressionNet.loadFromUri(MODEL_URL),
+      faceapi.nets.ageGenderNet.loadFromUri(MODEL_URL),
+    ]);
+
+    (window as any).__FACE_MODELS_LOADED__ = true;
+  }
+
+  // 2️⃣ Prepare image
+  const img = new Image();
+  img.src = (window as any).FACIAL_IMAGE_DATA.image;
+  await img.decode();
+
+  // 3️⃣ Detector options
+  const detectorOptions = new faceapi.TinyFaceDetectorOptions({
+    inputSize: 416,
+    scoreThreshold: 0.5,
+  });
+
+  console.log("Starting face detection...");
+
+  // 4️⃣ Detection (TINY PIPELINE ONLY)
+  const detections = await faceapi
+    .detectAllFaces(img, detectorOptions)
+    .withFaceLandmarks(true)
+    .withFaceExpressions()
+    .withAgeAndGender();
+
+  (window as any).facialDetections = detections;
+
+  console.log("Face detection completed:", detections.length);
+}
+
+
+class FieldImagePicker extends Blockly.Field {
+  constructor() {
+    super("📷");
+    this.inputEl = null;
+  }
+
+  initView() {
+    super.initView();
+    this.getSvgRoot()?.addEventListener("click", () => {
+      this.openFileDialog();
+    });
+  }
+
+  
+
+  openFileDialog() {
+    if (!this.inputEl) {
+      const input = document.createElement("input");
+      input.type = "file";
+      input.accept = "image/*";
+      input.capture = "environment";
+      input.style.display = "none";
+
+      input.onchange = () => {
+        const file = input.files?.[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+       reader.onload = async () => {
+  (window as any).FACIAL_IMAGE_DATA.image = reader.result;
+
+  // reset ONLY because image changed
+  (window as any).facialDetections = null;
+
+  await runFaceDetection();
+};
+
+        reader.readAsDataURL(file);
+      };
+
+      document.body.appendChild(input);
+      this.inputEl = input;
+    }
+
+    this.inputEl.click(); // user-initiated
+  }
+}
 // Custom Blockly Blocks Definitions
 const defineBlocks = () => {
   /* =========================
@@ -93,11 +183,11 @@ Blockly.Blocks['teachable_predict_audio'] = {
 /* =========================
    FACIAL FEATURE BLOCKS
 ========================= */
-
 Blockly.Blocks['facial_load_image'] = {
   init: function () {
     this.appendDummyInput()
-      .appendField("Load Image");
+      .appendField("Load Image")
+      .appendField(new FieldImagePicker(), "IMAGE");
     this.setPreviousStatement(true);
     this.setNextStatement(true);
     this.setColour(160);
@@ -120,6 +210,7 @@ Blockly.Blocks['facial_get_count'] = {
     this.setColour(160);
   }
 };
+
 
 Blockly.Blocks['facial_get_gender'] = {
   init: function () {
@@ -2970,13 +3061,14 @@ pythonGenerator.forBlock['teachable_predict_audio'] = function () {
 ========================= */
 
 pythonGenerator.forBlock['facial_load_image'] = function () {
-  return `print("__FACIAL_LOAD_IMAGE__")\n`;
+  return ""; // ← intentionally empty
 };
 
-pythonGenerator.forBlock['facial_get_count'] = function (block) {
-  const feature = block.getFieldValue("FEATURE");
-  return `print("__FACIAL_GET_COUNT__:${feature}")\n`;
+pythonGenerator.forBlock['facial_get_count'] = function () {
+  const faceCount = window.__FACE_COUNT__ ?? 0;
+  return `print("__FACIAL_GET_COUNT__:${faceCount}")\n`;
 };
+
 
 pythonGenerator.forBlock['facial_get_gender'] = function (block) {
   const gender = block.getFieldValue("GENDER");
@@ -4065,7 +4157,39 @@ function AICodingPage() {
   const [code, setCode] = useState('');
   const [view, setView] = useState('blocks');
   const [output, setOutput] = useState('');
+ useEffect(() => {
+    // 1️⃣ Init global image store
+    (window as any).FACIAL_IMAGE_DATA ??= {
+      image: null,
+      source: null
+    };
 
+    // 2️⃣ Register Blockly field ONCE
+    if (!(window as any).__FIELD_IMAGE_PICKER_REGISTERED__) {
+      Blockly.fieldRegistry.register("field_image_picker", FieldImagePicker);
+      (window as any).__FIELD_IMAGE_PICKER_REGISTERED__ = true;
+    }
+
+    // 3️⃣ Register Skulpt builtin ONCE
+  Sk.builtins.__facial_get_count__ = new Sk.builtin.func((feature) => {
+  const f = Sk.ffi.remapToJs(feature);
+  const detections = (window as any).facialDetections || [];
+
+  let count = 0;
+  if (f === "face") count = detections.length;
+  else if (f === "eye") count = detections.length * 2;
+  else if (f === "nose") count = detections.length;
+  else if (f === "smile") {
+    detections.forEach(d => {
+      if (d.expressions?.happy > 0.5) count++;
+    });
+  }
+
+  return Sk.ffi.remapToPy(count);
+});
+
+
+  }, []);
   function getCanvasTextOutput() {
     let pre = canvasContainerRef.current.querySelector(".canvas-text-output");
 
@@ -6070,26 +6194,7 @@ function saveCVImage(name, outputCallback) {
       }
     }
 
-    Sk.builtins.__facial_get_count__ = new Sk.builtin.func((feature) => {
-      const f = Sk.ffi.remapToJs(feature);
-      if (!facialDetections || facialDetections.length === 0) return Sk.ffi.remapToPy(0);
-
-      let count = 0;
-      if (f === "face") {
-        count = facialDetections.length;
-      } else if (f === "eye") {
-        facialDetections.forEach(d => {
-          if (d.landmarks) count += 2; // each face has 2 eyes
-        });
-      } else if (f === "nose") {
-        count = facialDetections.length; // each face has 1 nose
-      } else if (f === "smile") {
-        facialDetections.forEach(d => {
-          if (d.expressions && d.expressions.happy > 0.5) count++;
-        });
-      }
-      return Sk.ffi.remapToPy(count);
-    });
+  
 
     Sk.builtins.__facial_get_gender__ = new Sk.builtin.func((gender) => {
       const g = Sk.ffi.remapToJs(gender);
@@ -6258,34 +6363,32 @@ if (cleanText === "__FACIAL_LOAD_IMAGE__") {
   return;
 }
 
-if (cleanText.startsWith("__FACIAL_GET_COUNT__:")) {
-  const feature = cleanText.split(":")[1];
-  let count = 0;
+async function handleSkulptOutput(cleanText: string) {
+  if (cleanText.startsWith("__FACIAL_GET_COUNT__:")) {
+    const feature = cleanText.split(":")[1];
 
-  if (!facialDetections || facialDetections.length === 0) {
-    setOutput(prev => prev + `\n${feature} count: 0`);
-    return;
+    const detections = (window as any).facialDetections;
+
+    if (!detections) {
+      setOutput(prev => prev + "\nNo detection results available");
+      return;
+    }
+
+    let count = 0;
+
+    if (feature === "face") count = detections.length;
+    else if (feature === "eye") count = detections.length * 2;
+    else if (feature === "nose") count = detections.length;
+    else if (feature === "smile") {
+      detections.forEach(d => {
+        if (d.expressions?.happy > 0.5) count++;
+      });
+    }
+
+    setOutput(prev => prev + `\n${feature} count: ${count}`);
   }
-
-  if (feature === "face") {
-    count = facialDetections.length;
-  } else if (feature === "eye") {
-    facialDetections.forEach(d => {
-      if (d.landmarks) count += 2;
-    });
-  } else if (feature === "nose") {
-    facialDetections.forEach(d => {
-      if (d.landmarks) count += 1;
-    });
-  } else if (feature === "smile") {
-    facialDetections.forEach(d => {
-      if (d.expressions && d.expressions.happy > 0.5) count++;
-    });
-  }
-
-  setOutput(prev => prev + `\n${feature} count: ${count}`);
-  return;
 }
+
 
 if (cleanText.startsWith("__FACIAL_GET_GENDER__:")) {
   const gender = cleanText.split(":")[1];
