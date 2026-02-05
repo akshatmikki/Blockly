@@ -3514,12 +3514,14 @@ useEffect(() => {
 function getBlocks() {
   // ACTIVITY MODE
    if (mode === "ACTIVITY" && activityId) {
-    fetch(`https://admin.urest.in:8089/api/tutorial/${activityId}/blocks`)
+    fetch(`/api/tutorials/activity/${activityId}/blocks`)
       .then(res => res.json())
-      .then((rows) => {
-        const normalized = rows.map((row: any) => ({
+    .then((rows) => {
+      const normalized = rows
+        .sort((a: any, b: any) => a.block_order - b.block_order)
+        .map((row: any) => ({
           block_type: row.block_type,
-          block_config: row.block_config,
+          block_config: row.block_config, // already an object ✅
         }));
 
         loadBlocksIntoWorkspace(normalized);
