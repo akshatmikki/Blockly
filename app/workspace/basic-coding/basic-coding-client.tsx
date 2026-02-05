@@ -1686,7 +1686,7 @@ const defineBlocks = () => {
   Blockly.Blocks['colour_picker'] = {
     init: function () {
       this.appendDummyInput()
-        .appendField("Select Color")
+        .appendField("Select Colour")
         .appendField(
           new Blockly.FieldDropdown([
             ["Red", "#ff0000"],
@@ -2137,21 +2137,28 @@ const defineBlocks = () => {
     init: function () {
       this.appendDummyInput()
         .appendField('"')
-        .appendField(new Blockly.FieldTextInput(""), "TEXT")
+        .appendField(new Blockly.FieldTextInput('text'), 'VALUE')
         .appendField('"');
-      this.setOutput(true, "String");
-      this.setColour(30);
+
+      this.setOutput(true, 'String');
+      this.setColour(160);
+      this.setTooltip('String value');
+      this.setHelpUrl('');
     }
   };
 
   Blockly.Blocks['number_literal'] = {
     init: function () {
       this.appendDummyInput()
-        .appendField(new Blockly.FieldNumber(0), "NUM");
-      this.setOutput(true, "Number");
-      this.setColour(30);
+        .appendField(new Blockly.FieldNumber(0, -Infinity, Infinity, 1), 'VALUE');
+
+      this.setOutput(true, 'Number');
+      this.setColour(120);
+      this.setTooltip('Integer number');
+      this.setHelpUrl('');
     }
   };
+
 
   Blockly.Blocks['boolean_literal'] = {
     init: function () {
@@ -2220,50 +2227,89 @@ const defineBlocks = () => {
 };
 
 const defineJavascriptGenerators = () => {
-  javascriptGenerator.forBlock["turtle_color"] = function (block) {
-    const color = block.getFieldValue("COLOR");
-    return `__turtle.fillcolor("${color}");\n`;
-  };
 
-  javascriptGenerator.forBlock["turtle_forward"] = function (block) {
-    const dist =
-      javascriptGenerator.valueToCode(block, "DISTANCE", 0) || "0";
-    return `__turtle.forward(${dist});\n`;
-  };
-
-  // turtle_create → NO-OP in JS (display-only block)
+  /* ==========================
+     CREATE TURTLE (NO-OP)
+  ========================== */
   javascriptGenerator.forBlock["turtle_create"] = function () {
-    // Turtle is already created in JS runtime
     return "";
   };
 
+  /* ==========================
+     MOVE (forward/backward)
+  ========================== */
+  javascriptGenerator.forBlock["turtle_move"] = function (block) {
+    const distance =
+      javascriptGenerator.valueToCode(block, "DISTANCE", 0) || "0";
+
+    const direction = block.getFieldValue("DIRECTION");
+
+    if (direction === "FORWARD") {
+      return `__turtle.forward(${distance});\n`;
+    }
+
+    if (direction === "BACKWARD") {
+      return `__turtle.backward(${distance});\n`;
+    }
+
+    return "";
+  };
+
+  /* ==========================
+     TURN RIGHT
+  ========================== */
   javascriptGenerator.forBlock["turtle_right"] = function (block) {
     const angle =
       javascriptGenerator.valueToCode(block, "ANGLE", 0) || "0";
     return `__turtle.right(${angle});\n`;
   };
 
+  /* ==========================
+     TURN LEFT
+  ========================== */
   javascriptGenerator.forBlock["turtle_left"] = function (block) {
     const angle =
       javascriptGenerator.valueToCode(block, "ANGLE", 0) || "0";
     return `__turtle.left(${angle});\n`;
   };
+
+  /* ==========================
+     DOT
+  ========================== */
   javascriptGenerator.forBlock["turtle_dot"] = function (block) {
     const size =
       javascriptGenerator.valueToCode(block, "SIZE", 0) || "10";
     return `__turtle.dot(${size});\n`;
   };
+
+  /* ==========================
+     BACKGROUND COLOR
+  ========================== */
   javascriptGenerator.forBlock["turtle_bgcolor"] = function (block) {
     const color = block.getFieldValue("COLOR");
     return `__turtle.bgcolor("${color}");\n`;
   };
+
+  /* ==========================
+     FILL COLOR
+  ========================== */
+  javascriptGenerator.forBlock["turtle_fill_color"] = function (block) {
+    const color =
+      javascriptGenerator.valueToCode(block, "COLOR", 0) || '"black"';
+
+    return `__turtle.fillcolor(${color});\n`;
+  };
+
+  /* ==========================
+     PEN UP / DOWN
+  ========================== */
   javascriptGenerator.forBlock["turtle_penup"] = () =>
     "__turtle.penup();\n";
 
   javascriptGenerator.forBlock["turtle_pendown"] = () =>
     "__turtle.pendown();\n";
+};
 
-}
 // Python Code Generators for Custom Blocks
 const definePythonGenerators = () => {
   /* =========================
@@ -2402,7 +2448,7 @@ serial.send(${text})
   };
 
   pythonGenerator.forBlock['string_literal'] = function (block) {
-    const text = block.getFieldValue("TEXT");
+    const text = block.getFieldValue("VALUE");
     return [`"${text}"`, pythonGenerator.ORDER_ATOMIC];
   };
 
@@ -2418,7 +2464,8 @@ serial.send(${text})
   };
 
   pythonGenerator.forBlock['number_literal'] = function (block) {
-    return [block.getFieldValue("NUM"), pythonGenerator.ORDER_ATOMIC];
+    const value = parseInt(block.getFieldValue("NUM"), 10);
+    return [value.toString(), pythonGenerator.ORDER_ATOMIC];
   };
 
   pythonGenerator.forBlock['boolean_literal'] = function (block) {
@@ -2571,11 +2618,17 @@ serial.send(${text})
   };
 
   pythonGenerator.forBlock['variables_set'] = function (block, generator) {
-    const varName = generator.nameDB_.getName(block.getFieldValue('VAR'), Blockly.Names.NameType.VARIABLE);
-    const arg0 = generator.valueToCode(block, 'VALUE', pythonGenerator.ORDER_ATOMIC) || '0';
-    const code = `print(f"[DEBUG] Setting variable ${varName} = {${arg0}}")\n${varName} = ${arg0}\nprint("[DEBUG] Variable set")\n`;
-    return code;
+    const varName = generator.nameDB_.getName(
+      block.getFieldValue('VAR'),
+      Blockly.Names.NameType.VARIABLE
+    );
+
+    const arg0 =
+      generator.valueToCode(block, 'VALUE', pythonGenerator.ORDER_NONE) || 'None';
+
+    return `${varName} = ${arg0}\n`;
   };
+
 
   // Input blocks
   pythonGenerator.forBlock['text'] = function (block, generator) {
@@ -3395,14 +3448,14 @@ function BasicCodingPage() {
   const [output, setOutput] = useState('');
   const searchParams = useSearchParams()
 
-const projectId = searchParams?.get("projectId")
-const activityId = searchParams?.get("activityId")
+  const projectId = searchParams?.get("projectId")
+  const activityId = searchParams?.get("activityId")
 
-const mode = projectId
-  ? "PROJECT"
-  : activityId
-  ? "ACTIVITY"
-  : "INVALID"
+  const mode = projectId
+    ? "PROJECT"
+    : activityId
+      ? "ACTIVITY"
+      : "INVALID"
 
 
   const workspaceRef = useRef<Blockly.WorkspaceSvg | null>(null)
@@ -3410,25 +3463,25 @@ const mode = projectId
     setOutput(prev => prev + text + "\n")
   }
 
-useEffect(() => {
-  if (!workspaceRef.current) return
+  useEffect(() => {
+    if (!workspaceRef.current) return
 
-  // ACTIVITY MODE
-  if (mode === "ACTIVITY" && activityId) {
-    fetch(`/api/tutorials/activity/${activityId}/blocks`)
-      .then(res => res.json())
-      .then(loadBlocksIntoWorkspace)
-      .catch(console.error)
-  }
+    // ACTIVITY MODE
+    if (mode === "ACTIVITY" && activityId) {
+      fetch(`/api/tutorials/activity/${activityId}/blocks`)
+        .then(res => res.json())
+        .then(loadBlocksIntoWorkspace)
+        .catch(console.error)
+    }
 
-  // PROJECT MODE
-  if (mode === "PROJECT" && projectId) {
-    fetch(`/api/project/${projectId}/blocks`)
-      .then(res => res.json())
-      .then(loadBlocksIntoWorkspace)
-      .catch(console.error)
-  }
-}, [mode, projectId, activityId])
+    // PROJECT MODE
+    if (mode === "PROJECT" && projectId) {
+      fetch(`/api/project/${projectId}/blocks`)
+        .then(res => res.json())
+        .then(loadBlocksIntoWorkspace)
+        .catch(console.error)
+    }
+  }, [mode, projectId, activityId])
 
   async function executeBlock(block: Blockly.Block) {
     const variables = variablesRef.current
@@ -3650,14 +3703,13 @@ useEffect(() => {
   <category name="Data Types" colour="200">
     <!-- String -->
     <category name="String" colour="160">
-      <block type="text_input" />
-    </category>
+    <block type="string_literal" />
+  </category>
 
-    <!-- Number -->
-    <category name="Number" colour="230">
-      <block type="math_number" />
-      
-    </category>
+  <!-- Number -->
+  <category name="Integer" colour="230">
+    <block type="number_literal" />
+  </category>
 
     <!-- Boolean -->
     <category name="Boolean" colour="270">
@@ -3826,84 +3878,164 @@ useEffect(() => {
   }, [activityId])
 
   function createBlocklyBlock(workspace, row) {
-  const cfg = row.block_config;
+    const cfg = row.block_config;
 
-  switch (row.block_type) {
+    switch (row.block_type) {
 
-    /* =====================
-       CREATE TURTLE
-    ===================== */
-    case "SET_VARIABLE": {
-      if (cfg.type === "CREATE_TURTLE") {
-        const block = workspace.newBlock("turtle_create");
-        block.setFieldValue(cfg.variable, "VAR");
-        return block;
+      /* =====================
+         SET VARIABLE
+      ===================== */
+      case "SET_VARIABLE": {
+
+        // CREATE TURTLE
+        if (cfg.type === "CREATE_TURTLE") {
+          const block = workspace.newBlock("turtle_create");
+          block.setFieldValue(cfg.variable, "VAR");
+          return block;
+        }
+
+        // INPUT → variable
+        if (cfg.value?.type === "INPUT") {
+          const block = workspace.newBlock("variables_set");
+          block.setFieldValue(cfg.variable, "VAR");
+
+          const inputBlock = workspace.newBlock("text_prompt");
+          inputBlock.setFieldValue(cfg.value.prompt, "TEXT");
+
+          inputBlock.initSvg();
+          inputBlock.render();
+
+          block.getInput("VALUE")
+            ?.connection
+            ?.connect(inputBlock.outputConnection);
+
+          return block;
+        }
+
+        // STRING → variable
+        if (cfg.type === "STRING") {
+          const block = workspace.newBlock("variables_set");
+          block.setFieldValue(cfg.variable, "VAR");
+
+          const textBlock = workspace.newBlock("text");
+          textBlock.setFieldValue(cfg.value, "TEXT");
+
+          textBlock.initSvg();
+          textBlock.render();
+
+          block.getInput("VALUE")
+            ?.connection
+            ?.connect(textBlock.outputConnection);
+
+          return block;
+        }
+
+        return null;
       }
-      return null;
-    }
 
-    /* =====================
-       BACKGROUND COLOR
-    ===================== */
-    case "TURTLE_SCREEN": {
-      if (cfg.action === "SET_BACKGROUND_COLOR") {
-        const block = workspace.newBlock("turtle_bgcolor");
-        block.setFieldValue(cfg.color, "COLOR"); // ✅ exact match
-        return block;
-      }
-      return null;
-    }
+      /* =====================
+         PRINT
+      ===================== */
+      case "PRINT": {
+        const block = workspace.newBlock("text_print");
 
-    /* =====================
-       FILL COLOR
-    ===================== */
-    case "TURTLE_STYLE": {
-      if (cfg.action === "SET_FILL_COLOR") {
-        const block = workspace.newBlock("turtle_fill_color"); // ✅ FIX
-        block.setFieldValue(cfg.variable, "VAR");
+        const varBlock = workspace.newBlock("variables_get");
+        varBlock.setFieldValue(cfg.variable, "VAR");
 
-        const colorBlock = workspace.newBlock("colour_picker");
-        colorBlock.setFieldValue(cfg.color, "COLOUR");
+        varBlock.initSvg();
+        varBlock.render();
 
-        colorBlock.initSvg();
-        colorBlock.render();
-
-        block.getInput("COLOR")
+        block.getInput("TEXT")
           ?.connection
-          ?.connect(colorBlock.outputConnection);
+          ?.connect(varBlock.outputConnection);
 
         return block;
       }
-      return null;
-    }
 
-    /* =====================
-       DOT
-    ===================== */
-    case "TURTLE_DRAW": {
-      if (cfg.action === "DOT") {
-        const block = workspace.newBlock("turtle_dot");
+      /* =====================
+         TURTLE MOVE
+      ===================== */
+      case "TURTLE_MOVE": {
+        const block = workspace.newBlock("turtle_move");
+
         block.setFieldValue(cfg.variable, "VAR");
+        block.setFieldValue(cfg.direction, "DIRECTION");
 
         const num = workspace.newBlock("math_number");
-        num.setFieldValue(String(cfg.radius), "NUM");
+        num.setFieldValue(String(cfg.value), "NUM");
 
         num.initSvg();
         num.render();
 
-        block.getInput("SIZE")   // ✅ SIZE (not RADIUS)
+        block.getInput("DISTANCE")
           ?.connection
           ?.connect(num.outputConnection);
 
         return block;
       }
-      return null;
-    }
 
-    default:
-      return null;
+      /* =====================
+         BACKGROUND COLOR
+      ===================== */
+      case "TURTLE_SCREEN": {
+        if (cfg.action === "SET_BACKGROUND_COLOR") {
+          const block = workspace.newBlock("turtle_bgcolor");
+          block.setFieldValue(cfg.color, "COLOR");
+          return block;
+        }
+        return null;
+      }
+
+      /* =====================
+         FILL COLOR
+      ===================== */
+      case "TURTLE_STYLE": {
+        if (cfg.action === "SET_FILL_COLOR") {
+          const block = workspace.newBlock("turtle_fill_color");
+          block.setFieldValue(cfg.variable, "VAR");
+
+          const colorBlock = workspace.newBlock("colour_picker");
+          colorBlock.setFieldValue(cfg.color, "COLOUR");
+
+          colorBlock.initSvg();
+          colorBlock.render();
+
+          block.getInput("COLOR")
+            ?.connection
+            ?.connect(colorBlock.outputConnection);
+
+          return block;
+        }
+        return null;
+      }
+
+      /* =====================
+         DOT
+      ===================== */
+      case "TURTLE_DRAW": {
+        if (cfg.action === "DOT") {
+          const block = workspace.newBlock("turtle_dot");
+          block.setFieldValue(cfg.variable, "VAR");
+
+          const num = workspace.newBlock("math_number");
+          num.setFieldValue(String(cfg.radius), "NUM");
+
+          num.initSvg();
+          num.render();
+
+          block.getInput("SIZE")
+            ?.connection
+            ?.connect(num.outputConnection);
+
+          return block;
+        }
+        return null;
+      }
+
+      default:
+        return null;
+    }
   }
-}
 
   function loadBlocksIntoWorkspace(blocks: any[]) {
     const workspace = workspaceRef.current;
@@ -3949,7 +4081,48 @@ useEffect(() => {
     });
 
     workspaceRef.current = workspace;
+    const preventToolboxScroll = () => {
+      // Find the flyout (block drawer) element
+      const flyout = blocklyDiv.current?.querySelector('.blocklyFlyout');
+      const toolboxDiv = blocklyDiv.current?.querySelector('.blocklyToolboxDiv');
 
+      // Prevent wheel events on flyout from propagating to workspace
+      if (flyout) {
+        flyout.addEventListener('wheel', (e) => {
+          e.stopPropagation();
+        }, { passive: true });
+      }
+
+      // Prevent wheel events on toolbox from propagating to workspace
+      if (toolboxDiv) {
+        toolboxDiv.addEventListener('wheel', (e) => {
+          e.stopPropagation();
+        }, { passive: true });
+      }
+
+      // Also prevent touch scroll propagation on mobile
+      if (flyout) {
+        flyout.addEventListener('touchmove', (e) => {
+          e.stopPropagation();
+        }, { passive: true });
+      }
+
+      if (toolboxDiv) {
+        toolboxDiv.addEventListener('touchmove', (e) => {
+          e.stopPropagation();
+        }, { passive: true });
+      }
+    };
+
+    // Apply the fix after a short delay to ensure Blockly is fully rendered
+    setTimeout(preventToolboxScroll, 100);
+
+    // Also reapply when toolbox opens (category clicked)
+    workspace.addChangeListener((event: any) => {
+      if (event.type === Blockly.Events.TOOLBOX_ITEM_SELECT) {
+        setTimeout(preventToolboxScroll, 50);
+      }
+    });
     /* =========================
        1️⃣ CODE GENERATION LISTENER
     ========================= */
@@ -3994,8 +4167,12 @@ useEffect(() => {
     canvasContainerRef.current.innerHTML = "";
 
     const canvas = document.createElement("canvas");
-    canvas.width = 700;
-    canvas.height = 450;
+    const container = canvasContainerRef.current;
+
+    const rect = container.getBoundingClientRect();
+
+    canvas.width = rect.width;
+    canvas.height = Math.min(450, rect.height);
     canvas.style.border = "2px solid #ccc";
     canvasContainerRef.current.appendChild(canvas);
 
@@ -4644,7 +4821,6 @@ plt = _FakePlt()
     }
 
     const pythonDisplayCode = initCode + code; // 👀 shown only
-    setOutput("Python Code (display only):\n\n" + pythonDisplayCode);
 
     // 🐢 TURTLE → JAVASCRIPT CANVAS
     if (usesTurtle) {
@@ -4663,7 +4839,6 @@ plt = _FakePlt()
         const jsCode = javascriptGenerator.workspaceToCode(ws);
 
 
-        console.log("[TURTLE JS CODE]\n", jsCode);
 
         try {
           new Function("__turtle", jsCode)(turtle);
@@ -4677,7 +4852,7 @@ plt = _FakePlt()
       return; // ⛔ DO NOT FALL THROUGH TO SKULPT
     }
     if (!usesTurtle) {
-      const fullCode = initCode + code + cleanedCode;
+      const fullCode = initCode + cleanedCode;
 
       const myPromise = Sk.misceval.asyncToPromise(() => {
         return Sk.importMainWithBody("<stdin>", false, fullCode, true);
@@ -4699,33 +4874,6 @@ plt = _FakePlt()
         }
       );
     }
-
-    myPromise.then(
-      () => {
-        console.log("[App] Code executed successfully!");
-        setOutput((prev) => prev + "\nCode executed successfully!");
-      },
-      (err: any) => {
-        console.error("[Skulpt RAW ERROR]", err);
-
-        let errorMessage = "Unknown execution error";
-
-        // Python exception name
-        if (err?.tp$str) {
-          errorMessage = err.tp$str();
-        }
-
-        // Python exception message
-        if (err?.args?.v?.length) {
-          errorMessage +=
-            ": " + err.args.v.map((x: any) => x.v).join(", ");
-        }
-
-        console.error("[Skulpt Parsed Error]", errorMessage);
-
-        setOutput((prev) => prev + "\nError: " + errorMessage);
-      }
-    );
 
   };
 
@@ -4768,134 +4916,195 @@ plt = _FakePlt()
         style={{ display: "none" }}
         onChange={handleFileUpload}
       />
-      <div style={{ width: '100vw', height: '100vh', display: 'flex', flexDirection: 'column', fontFamily: 'Arial, sans-serif' }}>
+      <div
+        style={{
+          width: "100%",
+          height: "100vh",
+          display: "flex",
+          flexDirection: "column",
+          fontFamily: "Arial, sans-serif",
+          overflow: "hidden"
+        }}
+      >
         {/* Header */}
-        <div style={{ height: '60px', background: '#7C88CC', display: 'flex', alignItems: 'center', padding: '0 20px', gap: '10px' }}>
-          <button style={{ padding: '8px 16px', background: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>
+        <div
+          style={{
+            height: "60px",
+            background: "#7C88CC",
+            display: "flex",
+            alignItems: "center",
+            padding: "0 20px",
+            gap: "10px"
+          }}
+        >
+          <button style={{ padding: "8px 16px", background: "#fff", border: "none", borderRadius: "4px", fontWeight: "bold" }}>
             ☰
           </button>
-          <button onClick={resetWorkspace} style={{ padding: '8px 16px', background: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
+
+          <button onClick={resetWorkspace} style={{ padding: "8px 16px", background: "#fff", border: "none", borderRadius: "4px" }}>
             🔄 Reset
           </button>
-          <button onClick={runCode} style={{ padding: '8px 24px', background: '#4CAF50', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>
+
+          <button
+            onClick={runCode}
+            style={{
+              padding: "8px 24px",
+              background: "#4CAF50",
+              color: "#fff",
+              border: "none",
+              borderRadius: "4px",
+              fontWeight: "bold"
+            }}
+          >
             ▶ Run
           </button>
+
           <button
-            style={{ padding: '8px 24px', background: '#4CAF50', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
             onClick={async () => {
-              if (!workspaceRef.current) return
-              setOutput("")
-              await runWorkspace(workspaceRef.current)
+              if (!workspaceRef.current) return;
+              setOutput("");
+              await runWorkspace(workspaceRef.current);
+            }}
+            style={{
+              padding: "8px 24px",
+              background: "#4CAF50",
+              color: "#fff",
+              border: "none",
+              borderRadius: "4px",
+              fontWeight: "bold"
             }}
           >
             ▶ Run tutorials
           </button>
 
-          <div style={{ marginLeft: 'auto', display: 'flex', gap: '10px' }}>
-            <button
-              onClick={() => setView('blocks')}
-              style={{ padding: '8px 16px', background: view === 'blocks' ? '#fff' : '#9BA5D8', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
-              Blocks
-            </button>
-            <button
-              onClick={() => setView('code')}
-              style={{ padding: '8px 16px', background: view === 'code' ? '#fff' : '#9BA5D8', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
-              Code
-            </button>
-            <button
-              onClick={() => setView('canvas')}
-              style={{ padding: '8px 16px', background: view === 'canvas' ? '#fff' : '#9BA5D8', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
-              Canvas
-            </button>
+          <div style={{ marginLeft: "auto", display: "flex", gap: "10px" }}>
+            {["blocks", "code", "canvas"].map(v => (
+              <button
+                key={v}
+                onClick={() => setView(v as any)}
+                style={{
+                  padding: "8px 16px",
+                  background: view === v ? "#fff" : "#9BA5D8",
+                  border: "none",
+                  borderRadius: "4px",
+                  cursor: "pointer"
+                }}
+              >
+                {v.charAt(0).toUpperCase() + v.slice(1)}
+              </button>
+            ))}
           </div>
         </div>
 
         {/* Main Content */}
-        <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
-          {/* Blockly Workspace - Sidebar + Editor (LEFT SIDE) */}
-          <div style={{
-            flex: view === 'blocks' ? 1 : 0.6,
-            display: view === 'canvas' ? 'none' : 'block',
-            minWidth: '400px',
-            height: '100%',
-            position: 'relative',
-            backgroundColor: '#fff'
-          }}>
-            <div ref={blocklyDiv} style={{ width: '100%', height: '100%', display: view === 'blocks' ? 'block' : 'none' }} />
-            {view === 'code' && (
-              <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column' }}>
-                <div style={{ padding: '10px', borderBottom: '1px solid #ccc', fontWeight: 'bold', background: '#ddd' }}>Generated Python Code</div>
-                <pre style={{ margin: 0, padding: '20px', flex: 1, overflow: 'auto', fontSize: '13px', fontFamily: 'monospace', whiteSpace: 'pre-wrap', wordWrap: 'break-word' }}>
-                  {code || '# Drag blocks to generate code...'}
+        <div style={{ flex: 1, display: "flex", overflow: "hidden" }}>
+          {/* LEFT – Blockly */}
+          <div
+            style={{
+              flex: view === "blocks" ? 1 : 0.6,
+              display: view === "canvas" ? "none" : "block",
+              minWidth: "400px",
+              height: "100%",
+              background: "#fff",
+              position: "relative",
+              overflow: "hidden"
+            }}
+          >
+            <div
+              ref={blocklyDiv}
+              style={{
+                width: "100%",
+                height: "100%",
+                display: view === "blocks" ? "block" : "none"
+              }}
+            />
+
+            {view === "code" && (
+              <div style={{ height: "100%", display: "flex", flexDirection: "column" }}>
+                <div style={{ padding: "10px", background: "#ddd", fontWeight: "bold" }}>
+                  Generated Python Code
+                </div>
+
+                <pre
+                  style={{
+                    flex: 1,
+                    margin: 0,
+                    padding: "20px",
+                    overflowY: "auto",
+                    fontSize: "13px",
+                    fontFamily: "monospace",
+                    whiteSpace: "pre-wrap"
+                  }}
+                >
+                  {code || "# Drag blocks to generate code..."}
                 </pre>
               </div>
             )}
           </div>
 
-          {/* Canvas/Output Area (RIGHT SIDE) */}
-          <div style={{
-            flex: view === 'blocks' ? 1 : (view === 'code' ? 1 : 1),
-            background: '#7C88CC',
-            display: view === 'canvas' || view === 'blocks' || view === 'code' ? 'flex' : 'none',
-            flexDirection: 'column',
-            padding: '20px',
-            overflow: 'auto',
-            borderLeft: view === 'blocks' || view === 'code' ? '2px solid #555' : 'none'
-          }}>
-            {/* Canvas Container */}
+          {/* RIGHT – Canvas + Output */}
+          <div
+            style={{
+              flex: 1,
+              background: "#7C88CC",
+              display: "flex",
+              flexDirection: "column",
+              padding: "20px",
+              overflow: "hidden",
+              borderLeft: view !== "canvas" ? "2px solid #555" : "none"
+            }}
+          >
+            {/* Canvas */}
             <div
               ref={canvasContainerRef}
               style={{
-                width: '100%',
-                flex: view === 'canvas' ? 0.8 : 0.6,
-                marginBottom: '20px',
-                background: '#ffffff',
-                borderRadius: '8px',
-                border: '2px solid #5566AA',
-                position: 'relative',
-                minHeight: '300px',
-                padding: '10px',
-                overflow: 'auto'
+                flex: view === "canvas" ? 0.8 : 0.6,
+                background: "#fff",
+                borderRadius: "8px",
+                border: "2px solid #5566AA",
+                padding: "10px",
+                overflow: "hidden",
+                marginBottom: "20px"
               }}
             >
-              {/* ✅ Canvas Output Overlay */}
               <pre
                 style={{
-                  fontSize: '13px',
-                  whiteSpace: 'pre-wrap',
-                  wordWrap: 'break-word',
-                  color: '#000',
                   margin: 0,
-                  fontFamily: 'monospace'
+                  fontSize: "13px",
+                  fontFamily: "monospace",
+                  whiteSpace: "pre-wrap",
+                  overflowY: "auto",
+                  maxHeight: "100%"
                 }}
-              >
-                {output || 'Canvas ready...'}
-              </pre>
+              />
             </div>
 
-            {/* Output Box */}
-            <div style={{
-              padding: '15px',
-              background: '#5566AA',
-              borderRadius: '8px',
-              color: 'white',
-              flex: view === 'canvas' ? 0.2 : 0.4,
-              overflow: 'auto',
-              display: 'flex',
-              flexDirection: 'column'
-            }}>
-              <div style={{ fontWeight: 'bold', marginBottom: '10px', color: '#ffffff', fontSize: '14px' }}>Output:</div>
-              <pre style={{
-                fontSize: '12px',
-                margin: 0,
-                whiteSpace: 'pre-wrap',
-                wordWrap: 'break-word',
-                overflow: 'auto',
-                color: '#ffffff',
-                flex: 1,
-                fontFamily: 'monospace'
-              }}>
-                {output || 'Ready to run...'}
+            {/* Output */}
+            <div
+              style={{
+                flex: view === "canvas" ? 0.2 : 0.4,
+                background: "#5566AA",
+                borderRadius: "8px",
+                padding: "15px",
+                display: "flex",
+                flexDirection: "column",
+                overflow: "hidden",
+                color: "#fff"
+              }}
+            >
+              <div style={{ fontWeight: "bold", marginBottom: "10px" }}>Output:</div>
+
+              <pre
+                style={{
+                  flex: 1,
+                  margin: 0,
+                  fontSize: "12px",
+                  fontFamily: "monospace",
+                  whiteSpace: "pre-wrap",
+                  overflowY: "auto"
+                }}
+              >
+                {output || "Ready to run..."}
               </pre>
             </div>
           </div>
@@ -4903,6 +5112,7 @@ plt = _FakePlt()
       </div>
     </>
   );
+
 }
 
 export default BasicCodingPage;
