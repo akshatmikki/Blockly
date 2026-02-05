@@ -3481,38 +3481,30 @@ const blocklyDivRef = useRef<HTMLDivElement | null>(null);
     setOutput(prev => prev + text + "\n")
   }
 
-useEffect(() => {
-  DBG("Inject effect fired");
+<div
+  ref={(node) => {
+    if (!node) return;
+    if (blocklyDivRef.current) return;
 
-  if (!blocklyDivRef.current) {
-    console.warn("🟡 blocklyDivRef missing");
-    return;
-  }
+    blocklyDivRef.current = node;
 
-  if (workspaceRef.current) {
-    DBG("Workspace already exists — skipping inject");
-    return;
-  }
+    DBG("Blockly div mounted");
 
-  const workspace = Blockly.inject(blocklyDivRef.current, {
-    toolbox,
-    trashcan: true,
-    scrollbars: true,
-  });
+    const workspace = Blockly.inject(node, {
+      toolbox,
+      trashcan: true,
+      scrollbars: true,
+    });
 
-  workspaceRef.current = workspace;
+    workspaceRef.current = workspace;
 
-  DBG("Workspace injected", {
-    rendered: workspace.rendered,
-    id: workspace.id
-  });
-
-  requestAnimationFrame(() => {
-    Blockly.svgResize(workspace);
-    DBG("svgResize called");
-  });
-}, []);
-
+    requestAnimationFrame(() => {
+      Blockly.svgResize(workspace);
+      DBG("svgResize called");
+    });
+  }}
+  style={{ width: "100%", height: "100%" }}
+/>
 
 useEffect(() => {
   DBG("Loader useEffect fired", { mode, activityId, projectId });
