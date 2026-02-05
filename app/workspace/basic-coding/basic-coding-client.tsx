@@ -3484,11 +3484,9 @@ const blocklyDivRef = useRef<HTMLDivElement | null>(null);
 <div
   ref={(node) => {
     if (!node) return;
-    if (blocklyDivRef.current) return;
+    if (workspaceRef.current) return;
 
-    blocklyDivRef.current = node;
-
-    DBG("Blockly div mounted");
+    DBG("🟢 Blockly div mounted");
 
     const workspace = Blockly.inject(node, {
       toolbox,
@@ -3498,10 +3496,18 @@ const blocklyDivRef = useRef<HTMLDivElement | null>(null);
 
     workspaceRef.current = workspace;
 
-    requestAnimationFrame(() => {
-      Blockly.svgResize(workspace);
-      DBG("svgResize called");
+    Blockly.svgResize(workspace);
+
+    DBG("🟢 Workspace injected", {
+      rendered: workspace.rendered,
+      id: workspace.id,
     });
+
+    // ✅ Load blocks immediately AFTER inject
+    const blocks = getBlocks();
+    if (blocks.length) {
+      loadBlocksIntoWorkspace(blocks);
+    }
   }}
   style={{ width: "100%", height: "100%" }}
 />
