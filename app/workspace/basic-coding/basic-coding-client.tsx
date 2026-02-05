@@ -15,10 +15,6 @@ const turtleEngineRef = { current: null as any };
 
 const variablesRef = { current: {} as Record<string, any> }
 
-function DBG(label: string, data?: any) {
-  console.log(`🔵 [${label}]`, data || "");
-}
-
 
 function appendConsole(text: string) {
   console.log(text)
@@ -2475,7 +2471,7 @@ serial.send(${text})
     if (direction === 'BACKWARD') {
       return `${varName}.backward(${distance})\n`;
     }
-
+    
     return `${varName}.forward(${distance})\n`;
   };
 
@@ -3457,14 +3453,15 @@ serial.send(${text})
 
 function BasicCodingPage() {
   const fileInputRef = useRef(null);
+  const blocklyDiv = useRef(null);
   const canvasContainerRef = useRef(null);
   const [code, setCode] = useState('');
   const [view, setView] = useState('blocks');
   const [output, setOutput] = useState('');
+  const [debugLogs, setDebugLogs] = useState<string[]>([]);
+  const [showDebug, setShowDebug] = useState(true);
   const searchParams = useSearchParams()
-  const workspaceRef = useRef<Blockly.WorkspaceSvg | null>(null);
-  const blocklyDivRef = useRef<HTMLDivElement | null>(null);
-  const [workspaceReady, setWorkspaceReady] = useState(false);
+
   const projectId = searchParams?.get("projectId")
   const activityId = searchParams?.get("activityId")
 
@@ -3475,126 +3472,52 @@ function BasicCodingPage() {
       : "INVALID"
 
 
+  const workspaceRef = useRef<Blockly.WorkspaceSvg | null>(null)
+  
+  function debugLog(message: string, data?: any) {
+    const timestamp = new Date().toLocaleTimeString();
+    const logMessage = `[${timestamp}] ${message}`;
+    console.log(logMessage, data || '');
+    setDebugLogs(prev => [...prev.slice(-20), logMessage + (data ? ` ${JSON.stringify(data)}` : '')]);
+  }
 
   function appendOutput(text: string) {
     setOutput(prev => prev + text + "\n")
   }
 
- <div
-  ref={(node) => {
-    if (!node) {
-      blocklyDivRef.current = null;
-      return;
-    }
-    blocklyDivRef.current = node;
-  }}
-  style={{ width: "100%", height: "100%" }}
-/>
-useEffect(() => {
-  const node = blocklyDivRef.current;
-
-  if (!node) {
-    DBG("⏳ Blockly div not ready");
-    return;
-  }
-
-  if (workspaceRef.current) {
-    DBG("ℹ️ Workspace already exists");
-    return;
-  }
-
-  DBG("🚀 Injecting Blockly");
-
- const workspace = Blockly.inject(node, {
-  toolbox: toolboxXml,   // ✅ THIS is the fix
-  trashcan: true,
-  scrollbars: true,
-});
-
-  workspaceRef.current = workspace;
-
-  setWorkspaceReady(true);
-  DBG("🎯 Workspace ready");
-
-  requestAnimationFrame(() => {
-    Blockly.svgResize(workspace);
-  });
-
-  return () => {
-    DBG("🧹 Disposing workspace");
-    workspace.dispose();
-    workspaceRef.current = null;
-    setWorkspaceReady(false);
-  };
-}, []);
-
-  const stableActivityId = activityId ?? null;
-  const stableProjectId = projectId ?? null;
-
   useEffect(() => {
-    DBG("Loader useEffect fired", {
-      mode,
-      activityId: stableActivityId,
-      projectId: stableProjectId,
-      workspaceReady,
-      blocklyDiv: !!blocklyDivRef.current,
-      workspace: !!workspaceRef.current,
-    });
+    if (!workspaceRef.current) return
 
-    if (!workspaceReady) {
-      DBG("⏳ Waiting for workspaceReady");
-      return;
-    }
-
-    const workspace = workspaceRef.current;
-    if (!workspace) {
-      DBG("❌ workspaceReady but workspace missing");
-      return;
-    }
-
-    loadBlocksIntoWorkspace(getBlocks());
-  }, [workspaceReady, mode, stableActivityId, stableProjectId]);
-
-  function getBlocks() {
-    DBG("getBlocks called", { mode, activityId, projectId });
-
+    // ACTIVITY MODE
     if (mode === "ACTIVITY" && activityId) {
-      const rows = [
-        {
-          blockType: "SET_VARIABLE",
-          blockOrder: 1,
-          blockConfig:
-            "{\"value\": {\"type\": \"INPUT\", \"prompt\": \"How are you?\"}, \"variable\": \"A\"}"
-        },
-        {
-          blockType: "PRINT",
-          blockOrder: 2,
-          blockConfig: "{\"variable\": \"A\"}"
-        }
-      ];
-
-      DBG("Raw mock rows", rows);
-
-      const normalized = rows
-        .sort((a, b) => a.blockOrder - b.blockOrder)
-        .map(row => ({
-          block_type: row.blockType,
-          block_config: JSON.parse(row.blockConfig),
-        }));
-
-      DBG("Normalized blocks", normalized);
-
-      return normalized;
+      debugLog(`Fetching blocks for activity ${activityId}`);
+      fetch(`/api/tutorials/activity/${activityId}/blocks`)
+        .then(res => {
+          debugLog('API response received', { status: res.status });
+          return res.json();
+        })
+        .then(loadBlocksIntoWorkspace)
+        .catch(err => {
+          debugLog('ERROR fetching blocks', err);
+          console.error(err);
+        })
     }
 
+    // PROJECT MODE
     if (mode === "PROJECT" && projectId) {
-      DBG("PROJECT mode — no blocks yet");
-      return [];
+      debugLog(`Fetching blocks for project ${projectId}`);
+      fetch(`/api/project/${projectId}/blocks`)
+        .then(res => {
+          debugLog('API response received', { status: res.status });
+          return res.json();
+        })
+        .then(loadBlocksIntoWorkspace)
+        .catch(err => {
+          debugLog('ERROR fetching blocks', err);
+          console.error(err);
+        })
     }
-
-    DBG("No matching mode — returning empty");
-    return [];
-  }
+  }, [mode, projectId, activityId])
 
   async function executeBlock(block: Blockly.Block) {
     const variables = variablesRef.current
@@ -4007,20 +3930,17 @@ useEffect(() => {
     return variable.getId();
   }
 
-  function createBlocklyBlock(WorkspaceSvg, row) {
-    DBG("createBlocklyBlock called", row);
-
-    const cfg = typeof row.block_config === "string"
-      ? JSON.parse(row.block_config)
+  function createBlocklyBlock(workspace, row) {
+    // Parse block_config if it's a string (from database)
+    const cfg = typeof row.block_config === 'string' 
+      ? JSON.parse(row.block_config) 
       : row.block_config;
 
+    // Add validation
     if (!cfg) {
-      console.error("❌ block_config missing", row);
+      console.error('block_config is null or undefined for block:', row);
       return null;
     }
-
-    DBG(`Block type switch → ${row.block_type}`, cfg);
-
 
     switch (row.block_type) {
 
@@ -4031,19 +3951,19 @@ useEffect(() => {
 
         // CREATE TURTLE
         if (cfg.type === "CREATE_TURTLE") {
-          const varId = ensureVariable(WorkspaceSvg, cfg.variable);
-          const block = WorkspaceSvg.newBlock("turtle_create");
+          const varId = ensureVariable(workspace, cfg.variable);
+          const block = workspace.newBlock("turtle_create");
           block.setFieldValue(varId, "VAR");
           return block;
         }
 
         // INPUT → variable
         if (cfg.value?.type === "INPUT") {
-          const varId = ensureVariable(WorkspaceSvg, cfg.variable);
-          const block = WorkspaceSvg.newBlock("variables_set");
+          const varId = ensureVariable(workspace, cfg.variable);
+          const block = workspace.newBlock("variables_set");
           block.setFieldValue(varId, "VAR");
 
-          const inputBlock = WorkspaceSvg.newBlock("text_prompt");
+          const inputBlock = workspace.newBlock("text_prompt");
           inputBlock.setFieldValue(cfg.value.prompt, "TEXT");
 
           inputBlock.initSvg();
@@ -4058,11 +3978,11 @@ useEffect(() => {
 
         // STRING → variable
         if (cfg.type === "STRING") {
-          const varId = ensureVariable(WorkspaceSvg, cfg.variable);
-          const block = WorkspaceSvg.newBlock("variables_set");
+          const varId = ensureVariable(workspace, cfg.variable);
+          const block = workspace.newBlock("variables_set");
           block.setFieldValue(varId, "VAR");
 
-          const textBlock = WorkspaceSvg.newBlock("text");
+          const textBlock = workspace.newBlock("text");
           textBlock.setFieldValue(cfg.value, "TEXT");
 
           textBlock.initSvg();
@@ -4082,10 +4002,10 @@ useEffect(() => {
          PRINT
       ===================== */
       case "PRINT": {
-        const varId = ensureVariable(WorkspaceSvg, cfg.variable);
-        const block = WorkspaceSvg.newBlock("text_print");
+        const varId = ensureVariable(workspace, cfg.variable);
+        const block = workspace.newBlock("text_print");
 
-        const varBlock = WorkspaceSvg.newBlock("variables_get");
+        const varBlock = workspace.newBlock("variables_get");
         varBlock.setFieldValue(varId, "VAR");
 
         varBlock.initSvg();
@@ -4102,13 +4022,13 @@ useEffect(() => {
          TURTLE MOVE
       ===================== */
       case "TURTLE_MOVE": {
-        const varId = ensureVariable(WorkspaceSvg, cfg.variable);
-        const block = WorkspaceSvg.newBlock("turtle_move");
+        const varId = ensureVariable(workspace, cfg.variable);
+        const block = workspace.newBlock("turtle_move");
 
         block.setFieldValue(varId, "VAR");
         block.setFieldValue(cfg.direction, "DIRECTION");
 
-        const num = WorkspaceSvg.newBlock("math_number");
+        const num = workspace.newBlock("math_number");
         num.setFieldValue(String(cfg.value), "NUM");
 
         num.initSvg();
@@ -4126,7 +4046,7 @@ useEffect(() => {
       ===================== */
       case "TURTLE_SCREEN": {
         if (cfg.action === "SET_BACKGROUND_COLOR") {
-          const block = WorkspaceSvg.newBlock("turtle_bgcolor");
+          const block = workspace.newBlock("turtle_bgcolor");
           const hexColor = mapColorToHex(cfg.color);
           block.setFieldValue(hexColor, "COLOR");
           return block;
@@ -4139,11 +4059,11 @@ useEffect(() => {
       ===================== */
       case "TURTLE_STYLE": {
         if (cfg.action === "SET_FILL_COLOR") {
-          const varId = ensureVariable(WorkspaceSvg, cfg.variable);
-          const block = WorkspaceSvg.newBlock("turtle_fill_color");
+          const varId = ensureVariable(workspace, cfg.variable);
+          const block = workspace.newBlock("turtle_fill_color");
           block.setFieldValue(varId, "VAR");
 
-          const colorBlock = WorkspaceSvg.newBlock("colour_picker");
+          const colorBlock = workspace.newBlock("colour_picker");
           const hexColor = mapColorToHex(cfg.color);
           colorBlock.setFieldValue(hexColor, "COLOUR");
 
@@ -4164,11 +4084,11 @@ useEffect(() => {
       ===================== */
       case "TURTLE_DRAW": {
         if (cfg.action === "DOT") {
-          const varId = ensureVariable(WorkspaceSvg, cfg.variable);
-          const block = WorkspaceSvg.newBlock("turtle_dot");
+          const varId = ensureVariable(workspace, cfg.variable);
+          const block = workspace.newBlock("turtle_dot");
           block.setFieldValue(varId, "VAR");
 
-          const num = WorkspaceSvg.newBlock("math_number");
+          const num = workspace.newBlock("math_number");
           num.setFieldValue(String(cfg.radius), "NUM");
 
           num.initSvg();
@@ -4190,65 +4110,37 @@ useEffect(() => {
   }
 
   function loadBlocksIntoWorkspace(blocks: any[]) {
-    DBG("loadBlocksIntoWorkspace called with", blocks);
-    DBG("🚀 START loadBlocksIntoWorkspace", {
-      blockCount: blocks.length,
-      ts: performance.now(),
-    });
-
-    if (!blocks || blocks.length === 0) {
-      console.warn("🟡 No blocks provided — skipping workspace.clear()");
-      return;
-    }
-
+    debugLog('Loading blocks into workspace', { count: blocks.length, blocks });
     const workspace = workspaceRef.current;
-
-    DBG("Workspace instance", {
-      exists: !!workspace,
-      rendered: workspace?.rendered,
-      type: workspace?.constructor?.name
-    });
-
     if (!workspace) {
-      console.error("❌ Workspace missing");
+      debugLog('ERROR: Workspace not available');
       return;
     }
 
-    if (!(workspace instanceof Blockly.WorkspaceSvg)) {
-      console.error("❌ HEADLESS WORKSPACE — ABORTING");
-      return;
-    }
-
-    // workspace.clear(); // intentionally disabled
-
-    DBG("Creating variables pass");
-
+    workspace.clear();
 
     // First pass: Create all variables that will be needed
+    debugLog('First pass: Creating variables');
     blocks.forEach((row) => {
-      const cfg = typeof row.block_config === 'string'
-        ? JSON.parse(row.block_config)
+      const cfg = typeof row.block_config === 'string' 
+        ? JSON.parse(row.block_config) 
         : row.block_config;
-
+      
       if (cfg?.variable) {
         ensureVariable(workspace, cfg.variable);
+        debugLog(`Created variable: ${cfg.variable}`);
       }
     });
 
     let previousBlock: Blockly.Block | null = null;
 
     // Second pass: Create all blocks
+    debugLog('Second pass: Creating blocks');
     blocks.forEach((row, index) => {
-      console.log(`Processing block ${index}:`, row);
-      console.log(
-        "Workspace instance:",
-        workspaceRef.current,
-        workspaceRef.current?.constructor.name
-      );
-
+      debugLog(`Processing block ${index}`, { type: row.block_type, config: row.block_config });
       const newBlock = createBlocklyBlock(workspace, row);
       if (!newBlock) {
-        console.warn(`Block ${index} (type: ${row.block_type}) returned null`, row);
+        debugLog(`WARN: Block ${index} (type: ${row.block_type}) returned null`);
         return;
       }
 
@@ -4263,12 +4155,8 @@ useEffect(() => {
 
       previousBlock = newBlock;
     });
-
-    console.log('Finished loading blocks');
-    DBG("✅ END loadBlocksIntoWorkspace", {
-      ts: performance.now(),
-    });
-
+    
+    debugLog('✅ Finished loading blocks successfully');
   }
 
   useEffect(() => {
@@ -4276,12 +4164,7 @@ useEffect(() => {
     definePythonGenerators();
     defineJavascriptGenerators();
 
-    if (!blocklyDivRef.current) {
-      console.error("Blockly div not mounted");
-      return;
-    }
-
-    const workspace = Blockly.inject(blocklyDivRef.current, {
+    const workspace = Blockly.inject(blocklyDiv.current, {
       toolbox: toolboxXml,
       zoom: {
         controls: true,
@@ -4297,8 +4180,8 @@ useEffect(() => {
     workspaceRef.current = workspace;
     const preventToolboxScroll = () => {
       // Find the flyout (block drawer) element
-      const flyout = blocklyDivRef.current?.querySelector('.blocklyFlyout');
-      const toolboxDiv = blocklyDivRef.current?.querySelector('.blocklyToolboxDiv');
+      const flyout = blocklyDiv.current?.querySelector('.blocklyFlyout');
+      const toolboxDiv = blocklyDiv.current?.querySelector('.blocklyToolboxDiv');
 
       // Prevent wheel events on flyout from propagating to workspace
       if (flyout) {
@@ -5124,6 +5007,115 @@ plt = _FakePlt()
 
   return (
     <>
+      {/* Debug Panel */}
+      {showDebug && (
+        <div style={{
+          position: 'fixed',
+          top: '10px',
+          right: '10px',
+          width: '400px',
+          maxHeight: '80vh',
+          background: '#1e1e1e',
+          border: '2px solid #4CAF50',
+          borderRadius: '8px',
+          zIndex: 9999,
+          display: 'flex',
+          flexDirection: 'column',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.3)'
+        }}>
+          <div style={{
+            padding: '10px',
+            background: '#4CAF50',
+            color: 'white',
+            fontWeight: 'bold',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            borderRadius: '6px 6px 0 0'
+          }}>
+            <span>🔍 Debug Console</span>
+            <div>
+              <button
+                onClick={() => setDebugLogs([])}
+                style={{
+                  background: '#fff',
+                  border: 'none',
+                  borderRadius: '4px',
+                  padding: '4px 8px',
+                  cursor: 'pointer',
+                  marginRight: '8px',
+                  fontSize: '12px'
+                }}
+              >
+                Clear
+              </button>
+              <button
+                onClick={() => setShowDebug(false)}
+                style={{
+                  background: '#ff4444',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  padding: '4px 8px',
+                  cursor: 'pointer',
+                  fontSize: '12px'
+                }}
+              >
+                ✕
+              </button>
+            </div>
+          </div>
+          <div style={{
+            padding: '10px',
+            overflowY: 'auto',
+            flex: 1,
+            fontFamily: 'monospace',
+            fontSize: '12px',
+            color: '#00ff00',
+            background: '#1e1e1e'
+          }}>
+            {debugLogs.length === 0 ? (
+              <div style={{ color: '#888' }}>No logs yet...</div>
+            ) : (
+              debugLogs.map((log, i) => (
+                <div key={i} style={{
+                  marginBottom: '4px',
+                  borderBottom: '1px solid #333',
+                  paddingBottom: '4px',
+                  wordWrap: 'break-word'
+                }}>
+                  {log}
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      )}
+      
+      {/* Toggle Debug Button (when hidden) */}
+      {!showDebug && (
+        <button
+          onClick={() => setShowDebug(true)}
+          style={{
+            position: 'fixed',
+            top: '10px',
+            right: '10px',
+            zIndex: 9999,
+            background: '#4CAF50',
+            color: 'white',
+            border: 'none',
+            borderRadius: '50%',
+            width: '50px',
+            height: '50px',
+            fontSize: '20px',
+            cursor: 'pointer',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.3)'
+          }}
+        >
+          🔍
+        </button>
+      )}
+
       <input
         type="file"
         ref={fileInputRef}
@@ -5225,7 +5217,7 @@ plt = _FakePlt()
             }}
           >
             <div
-              ref={blocklyDivRef}
+              ref={blocklyDiv}
               style={{
                 width: "100%",
                 height: "100%",
