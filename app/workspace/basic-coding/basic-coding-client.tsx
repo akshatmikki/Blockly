@@ -3513,26 +3513,33 @@ useEffect(() => {
 
 function getBlocks() {
   // ACTIVITY MODE
-  if (mode === "ACTIVITY" && activityId) {
-    const data = [
-      {
-        blockType: "SET_VARIABLE",
-        blockOrder: 1,
-        blockConfig:
-          "{\"value\":{\"type\":\"INPUT\",\"prompt\":\"How are you?\"},\"variable\":\"A\"}"
-      },
-      {
-        blockType: "PRINT",
-        blockOrder: 2,
-        blockConfig: "{\"variable\":\"A\"}"
-      }
-    ];
+   if (mode === "ACTIVITY" && activityId) {
+  const rows = [
+    {
+      blockType: "SET_VARIABLE",
+      blockOrder: 1,
+      blockConfig:
+        "{\"value\": {\"type\": \"INPUT\", \"prompt\": \"How are you?\"}, \"variable\": \"A\"}"
+    },
+    {
+      blockType: "PRINT",
+      blockOrder: 2,
+      blockConfig: "{\"variable\": \"A\"}"
+    }
+  ];
 
-    return data.map(row => ({
+  const normalized = rows
+    .sort((a: any, b: any) => a.blockOrder - b.blockOrder)
+    .map((row: any) => ({
       block_type: row.blockType,
-      block_config: row.blockConfig,
+      block_config:
+        typeof row.blockConfig === "string"
+          ? JSON.parse(row.blockConfig)
+          : row.blockConfig,
     }));
-  }
+
+  loadBlocksIntoWorkspace(normalized);
+}
 
   // PROJECT MODE
   if (mode === "PROJECT" && projectId) {
@@ -4134,20 +4141,25 @@ function getBlocks() {
   }
 
   function loadBlocksIntoWorkspace(blocks: any[]) {
-    console.log('Loading blocks into workspace:', blocks);
- const workspace = workspaceRef.current;
+  if (!blocks || blocks.length === 0) {
+    console.warn("No blocks provided — skipping workspace.clear()");
+    return;
+  }
 
-if (!workspace) {
-  console.error("Workspace missing");
-  return;
-}
+  console.log("Loading blocks into workspace:", blocks);
 
-if (!(workspace instanceof Blockly.WorkspaceSvg)) {
-  console.error("HEADLESS WORKSPACE — ABORTING");
-  return;
-}
+  const workspace = workspaceRef.current;
+  if (!workspace) {
+    console.error("Workspace missing");
+    return;
+  }
 
-    workspace.clear();
+  if (!(workspace instanceof Blockly.WorkspaceSvg)) {
+    console.error("HEADLESS WORKSPACE — ABORTING");
+    return;
+  }
+
+  //workspace.clear();
 
     // First pass: Create all variables that will be needed
     blocks.forEach((row) => {
