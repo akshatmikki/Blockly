@@ -3489,12 +3489,20 @@ const [workspaceReady, setWorkspaceReady] = useState(false);
 
     blocklyDivRef.current = node;
     DBG("Blockly div mounted");
+DBG("Attempting Blockly.inject", {
+  hasExisting: !!blocklyDivRef.current,
+  nodeConnected: node.isConnected,
+});
 
     const workspace = Blockly.inject(node, {
       toolbox,
       trashcan: true,
       scrollbars: true,
     });
+    DBG("Blockly.inject DONE", {
+  workspaceId: workspace.id,
+  isRendered: workspace.rendered,
+});
 
     workspaceRef.current = workspace;
 
@@ -3529,8 +3537,6 @@ useEffect(() => {
 
   loadBlocksIntoWorkspace(getBlocks());
 }, [mode, stableActivityId, stableProjectId]);
-
-
 
 function getBlocks() {
   DBG("getBlocks called", { mode, activityId, projectId });
@@ -4168,6 +4174,10 @@ function createBlocklyBlock(WorkspaceSvg, row) {
 
  function loadBlocksIntoWorkspace(blocks: any[]) {
   DBG("loadBlocksIntoWorkspace called with", blocks);
+DBG("🚀 START loadBlocksIntoWorkspace", {
+  blockCount: blocks.length,
+  ts: performance.now(),
+});
 
   if (!blocks || blocks.length === 0) {
     console.warn("🟡 No blocks provided — skipping workspace.clear()");
@@ -4238,6 +4248,10 @@ function createBlocklyBlock(WorkspaceSvg, row) {
     });
     
     console.log('Finished loading blocks');
+    DBG("✅ END loadBlocksIntoWorkspace", {
+  ts: performance.now(),
+});
+
   }
 
   useEffect(() => {
