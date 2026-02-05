@@ -3514,7 +3514,7 @@ useEffect(() => {
 function getBlocks() {
   // ACTIVITY MODE
    if (mode === "ACTIVITY" && activityId) {
-    fetch(`/api/tutorials/activity/${activityId}/blocks`)
+    fetch(`https://admin.urest.in:8089/api/tutorial/${activityId}/blocks`)
       .then(res => res.json())
       .then((rows) => {
         const normalized = rows.map((row: any) => ({
