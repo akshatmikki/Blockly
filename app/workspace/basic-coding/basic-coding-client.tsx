@@ -15,6 +15,10 @@ const turtleEngineRef = { current: null as any };
 
 const variablesRef = { current: {} as Record<string, any> }
 
+function DBG(label: string, data?: any) {
+  console.log(`🔵 [${label}]`, data || "");
+}
+
 
 function appendConsole(text: string) {
   console.log(text)
@@ -3478,8 +3482,17 @@ const blocklyDivRef = useRef<HTMLDivElement | null>(null);
   }
 
 useEffect(() => {
-  if (!blocklyDivRef.current) return;
-  if (workspaceRef.current) return; // StrictMode guard
+  DBG("Inject effect fired");
+
+  if (!blocklyDivRef.current) {
+    console.warn("🟡 blocklyDivRef missing");
+    return;
+  }
+
+  if (workspaceRef.current) {
+    DBG("Workspace already exists — skipping inject");
+    return;
+  }
 
   const workspace = Blockly.inject(blocklyDivRef.current, {
     toolbox,
@@ -3489,19 +3502,36 @@ useEffect(() => {
 
   workspaceRef.current = workspace;
 
+  DBG("Workspace injected", {
+    rendered: workspace.rendered,
+    id: workspace.id
+  });
+
   requestAnimationFrame(() => {
     Blockly.svgResize(workspace);
+    DBG("svgResize called");
   });
 }, []);
 
 
 useEffect(() => {
+  DBG("Loader useEffect fired", { mode, activityId, projectId });
+
   const workspace = workspaceRef.current;
-  if (!workspace) return;
+
+  if (!workspace) {
+    console.warn("🟡 Workspace not ready yet");
+    return;
+  }
+
+  DBG("Workspace state", {
+    rendered: workspace.rendered,
+    blockCount: workspace.getAllBlocks(false).length
+  });
 
   if (!workspace.rendered) {
+    DBG("Workspace not rendered yet → retry next frame");
     requestAnimationFrame(() => {
-      // try again on next frame
       loadBlocksIntoWorkspace(getBlocks());
     });
     return;
@@ -3511,42 +3541,45 @@ useEffect(() => {
 
 }, [mode, activityId, projectId]);
 
+
 function getBlocks() {
-  // ACTIVITY MODE
-   if (mode === "ACTIVITY" && activityId) {
-  const rows = [
-    {
-      blockType: "SET_VARIABLE",
-      blockOrder: 1,
-      blockConfig:
-        "{\"value\": {\"type\": \"INPUT\", \"prompt\": \"How are you?\"}, \"variable\": \"A\"}"
-    },
-    {
-      blockType: "PRINT",
-      blockOrder: 2,
-      blockConfig: "{\"variable\": \"A\"}"
-    }
-  ];
+  DBG("getBlocks called", { mode, activityId, projectId });
 
-  const normalized = rows
-    .sort((a: any, b: any) => a.blockOrder - b.blockOrder)
-    .map((row: any) => ({
-      block_type: row.blockType,
-      block_config:
-        typeof row.blockConfig === "string"
-          ? JSON.parse(row.blockConfig)
-          : row.blockConfig,
-    }));
+  if (mode === "ACTIVITY" && activityId) {
+    const rows = [
+      {
+        blockType: "SET_VARIABLE",
+        blockOrder: 1,
+        blockConfig:
+          "{\"value\": {\"type\": \"INPUT\", \"prompt\": \"How are you?\"}, \"variable\": \"A\"}"
+      },
+      {
+        blockType: "PRINT",
+        blockOrder: 2,
+        blockConfig: "{\"variable\": \"A\"}"
+      }
+    ];
 
-  loadBlocksIntoWorkspace(normalized);
-}
+    DBG("Raw mock rows", rows);
 
-  // PROJECT MODE
+    const normalized = rows
+      .sort((a, b) => a.blockOrder - b.blockOrder)
+      .map(row => ({
+        block_type: row.blockType,
+        block_config: JSON.parse(row.blockConfig),
+      }));
+
+    DBG("Normalized blocks", normalized);
+
+    return normalized;
+  }
+
   if (mode === "PROJECT" && projectId) {
-    // return empty for now, API handled elsewhere
+    DBG("PROJECT mode — no blocks yet");
     return [];
   }
 
+  DBG("No matching mode — returning empty");
   return [];
 }
 
@@ -3961,17 +3994,20 @@ function getBlocks() {
     return variable.getId();
   }
 
-  function createBlocklyBlock(WorkspaceSvg, row) {
-    // Parse block_config if it's a string (from database)
-    const cfg = typeof row.block_config === 'string' 
-      ? JSON.parse(row.block_config) 
-      : row.block_config;
+function createBlocklyBlock(WorkspaceSvg, row) {
+  DBG("createBlocklyBlock called", row);
 
-    // Add validation
-    if (!cfg) {
-      console.error('block_config is null or undefined for block:', row);
-      return null;
-    }
+  const cfg = typeof row.block_config === "string"
+    ? JSON.parse(row.block_config)
+    : row.block_config;
+
+  if (!cfg) {
+    console.error("❌ block_config missing", row);
+    return null;
+  }
+
+  DBG(`Block type switch → ${row.block_type}`, cfg);
+
 
     switch (row.block_type) {
 
@@ -4140,26 +4176,36 @@ function getBlocks() {
     }
   }
 
-  function loadBlocksIntoWorkspace(blocks: any[]) {
+ function loadBlocksIntoWorkspace(blocks: any[]) {
+  DBG("loadBlocksIntoWorkspace called with", blocks);
+
   if (!blocks || blocks.length === 0) {
-    console.warn("No blocks provided — skipping workspace.clear()");
+    console.warn("🟡 No blocks provided — skipping workspace.clear()");
     return;
   }
 
-  console.log("Loading blocks into workspace:", blocks);
-
   const workspace = workspaceRef.current;
+
+  DBG("Workspace instance", {
+    exists: !!workspace,
+    rendered: workspace?.rendered,
+    type: workspace?.constructor?.name
+  });
+
   if (!workspace) {
-    console.error("Workspace missing");
+    console.error("❌ Workspace missing");
     return;
   }
 
   if (!(workspace instanceof Blockly.WorkspaceSvg)) {
-    console.error("HEADLESS WORKSPACE — ABORTING");
+    console.error("❌ HEADLESS WORKSPACE — ABORTING");
     return;
   }
 
-  //workspace.clear();
+  // workspace.clear(); // intentionally disabled
+
+  DBG("Creating variables pass");
+
 
     // First pass: Create all variables that will be needed
     blocks.forEach((row) => {
