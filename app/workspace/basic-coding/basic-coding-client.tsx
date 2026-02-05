@@ -3465,6 +3465,7 @@ function BasicCodingPage() {
   const searchParams = useSearchParams()
 const workspaceRef = useRef<Blockly.WorkspaceSvg | null>(null);
 const blocklyDivRef = useRef<HTMLDivElement | null>(null);
+const [workspaceReady, setWorkspaceReady] = useState(false);
 
   const projectId = searchParams?.get("projectId")
   const activityId = searchParams?.get("activityId")
@@ -3484,9 +3485,10 @@ const blocklyDivRef = useRef<HTMLDivElement | null>(null);
 <div
   ref={(node) => {
     if (!node) return;
-    if (workspaceRef.current) return;
+    if (blocklyDivRef.current) return;
 
-    DBG("🟢 Blockly div mounted");
+    blocklyDivRef.current = node;
+    DBG("Blockly div mounted");
 
     const workspace = Blockly.inject(node, {
       toolbox,
@@ -3496,39 +3498,29 @@ const blocklyDivRef = useRef<HTMLDivElement | null>(null);
 
     workspaceRef.current = workspace;
 
-    Blockly.svgResize(workspace);
-
-    DBG("🟢 Workspace injected", {
-      rendered: workspace.rendered,
-      id: workspace.id,
+    requestAnimationFrame(() => {
+      Blockly.svgResize(workspace);
+      setWorkspaceReady(true); // 🔥 THIS IS THE KEY
+      DBG("Workspace ready");
     });
-
-    // ✅ Load blocks immediately AFTER inject
-    const blocks = getBlocks();
-    if (blocks.length) {
-      loadBlocksIntoWorkspace(blocks);
-    }
   }}
   style={{ width: "100%", height: "100%" }}
 />
 
+const stableActivityId = activityId ?? null;
+const stableProjectId = projectId ?? null;
+
 useEffect(() => {
-  DBG("Loader useEffect fired", { mode, activityId, projectId });
-
-  const workspace = workspaceRef.current;
-
-  if (!workspace) {
-    console.warn("🟡 Workspace not ready yet");
-    return;
-  }
-
-  DBG("Workspace state", {
-    rendered: workspace.rendered,
-    blockCount: workspace.getAllBlocks(false).length
+  DBG("Loader useEffect fired", {
+    mode,
+    activityId: stableActivityId,
+    projectId: stableProjectId,
   });
 
+  const workspace = workspaceRef.current;
+  if (!workspace) return;
+
   if (!workspace.rendered) {
-    DBG("Workspace not rendered yet → retry next frame");
     requestAnimationFrame(() => {
       loadBlocksIntoWorkspace(getBlocks());
     });
@@ -3536,8 +3528,8 @@ useEffect(() => {
   }
 
   loadBlocksIntoWorkspace(getBlocks());
+}, [mode, stableActivityId, stableProjectId]);
 
-}, [mode, activityId, projectId]);
 
 
 function getBlocks() {
