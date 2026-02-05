@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
+import { PieChart, Pie, Cell, BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { LogOut, ChevronDown, ChevronUp, Upload, X, CheckCircle2, Eye, EyeOff, UserPen, Lock, UserX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,6 +27,7 @@ type ModalType = "edit" | "delete" | "reset" | "success" | "error" | "bulkUpload
 export default function AdminDashboard() {
   const router = useRouter();
   const [users, setUsers] = useState<User[]>([]);
+  const [timeRange, setTimeRange] = useState<"week" | "month" | "year">("week");
   const [expandedUserId, setExpandedUserId] = useState<number | null>(null);
   const [showPassword, setShowPassword] = useState<{ [key: number]: boolean }>({});
   const [modalType, setModalType] = useState<ModalType>(null);
@@ -94,6 +95,72 @@ export default function AdminDashboard() {
     { name: "Regular Users", value: regularUserCount, color: colors.blue },
     { name: "Admins", value: adminCount, color: colors.orange },
   ];
+
+  // Login count data - based on actual LastLogin field
+  const loginCountData = users
+    .filter(u => u.LastLogin) // Only users who have logged in
+    .sort((a, b) => {
+      const dateA = a.LastLogin ? new Date(a.LastLogin).getTime() : 0;
+      const dateB = b.LastLogin ? new Date(b.LastLogin).getTime() : 0;
+      return dateB - dateA; // Most recent first
+    })
+    .slice(0, 5) // Top 5 most recent users
+    .map(user => ({
+      name: user.Username || user.Email.split('@')[0],
+      logins: user.LastLogin ? 1 : 0, // This represents they have logged in
+    }));
+
+  // Users created over time based on CreatedOn date
+  const getOnlineUsersData = () => {
+    const now = new Date();
+
+    if (timeRange === "week") {
+      // Last 7 days
+      const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+      const weekData = Array.from({ length: 7 }, (_, i) => {
+        const date = new Date(now);
+        date.setDate(date.getDate() - (6 - i));
+        const dayName = days[date.getDay()];
+        const count = users.filter(u => {
+          if (!u.CreatedOn) return false;
+          const createdDate = new Date(u.CreatedOn);
+          return createdDate.toDateString() === date.toDateString();
+        }).length;
+        return { name: dayName, users: count };
+      });
+      return weekData;
+    } else if (timeRange === "month") {
+      // Last 4 weeks
+      return Array.from({ length: 4 }, (_, i) => {
+        const weekStart = new Date(now);
+        weekStart.setDate(weekStart.getDate() - ((3 - i) * 7));
+        const weekEnd = new Date(weekStart);
+        weekEnd.setDate(weekEnd.getDate() + 6);
+
+        const count = users.filter(u => {
+          if (!u.CreatedOn) return false;
+          const createdDate = new Date(u.CreatedOn);
+          return createdDate >= weekStart && createdDate <= weekEnd;
+        }).length;
+
+        return { name: `Week ${i + 1}`, users: count };
+      });
+    } else {
+      // Last 12 months
+      const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+      return Array.from({ length: 12 }, (_, i) => {
+        const monthDate = new Date(now.getFullYear(), now.getMonth() - (11 - i), 1);
+        const monthName = months[monthDate.getMonth()];
+        const count = users.filter(u => {
+          if (!u.CreatedOn) return false;
+          const createdDate = new Date(u.CreatedOn);
+          return createdDate.getMonth() === monthDate.getMonth() &&
+                 createdDate.getFullYear() === monthDate.getFullYear();
+        }).length;
+        return { name: monthName, users: count };
+      });
+    }
+  };
 
   // Toggle password visibility
   const togglePasswordVisibility = (userId: number) => {
@@ -807,6 +874,76 @@ export default function AdminDashboard() {
               </PieChart>
             </ResponsiveContainer>
           </div>
+
+          {/* Bar Chart - Recent Login Activity */}
+          <div className="bg-white rounded-2xl shadow-lg p-6 border-t-4" style={{borderColor: colors.blue}}>
+            <h2 className="text-xl font-bold text-gray-800 mb-4">Recent Login Activity</h2>
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={loginCountData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                <XAxis dataKey="name" stroke="#666" />
+                <YAxis stroke="#666" />
+                <Tooltip />
+                <Bar dataKey="logins" fill={colors.blue} radius={[8, 8, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        {/* Line Chart - User Registration Over Time */}
+        <div className="bg-white rounded-2xl shadow-lg p-6 border-t-4 mb-8" style={{borderColor: colors.orange}}>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-bold text-gray-800">User Registrations Over Time</h2>
+            <div className="flex gap-2">
+              <Button
+                onClick={() => setTimeRange("week")}
+                className={`cursor-pointer ${
+                  timeRange === "week"
+                    ? "bg-orange-500 hover:bg-orange-600"
+                    : "bg-gray-200 hover:bg-gray-300 text-gray-700"
+                }`}
+              >
+                Week
+              </Button>
+              <Button
+                onClick={() => setTimeRange("month")}
+                className={`cursor-pointer ${
+                  timeRange === "month"
+                    ? "bg-orange-500 hover:bg-orange-600"
+                    : "bg-gray-200 hover:bg-gray-300 text-gray-700"
+                }`}
+              >
+                Month
+              </Button>
+              <Button
+                onClick={() => setTimeRange("year")}
+                className={`cursor-pointer ${
+                  timeRange === "year"
+                    ? "bg-orange-500 hover:bg-orange-600"
+                    : "bg-gray-200 hover:bg-gray-300 text-gray-700"
+                }`}
+              >
+                Year
+              </Button>
+            </div>
+          </div>
+          <ResponsiveContainer width="100%" height={300}>
+            <LineChart data={getOnlineUsersData()}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+              <XAxis dataKey="name" stroke="#666" />
+              <YAxis stroke="#666" />
+              <Tooltip />
+              <Legend />
+              <Line
+                type="monotone"
+                dataKey="users"
+                stroke={colors.orange}
+                strokeWidth={3}
+                dot={{ fill: colors.orange, r: 5 }}
+                activeDot={{ r: 7 }}
+              />
+            </LineChart>
+          </ResponsiveContainer>
         </div>
 
         {/* Users Table */}
