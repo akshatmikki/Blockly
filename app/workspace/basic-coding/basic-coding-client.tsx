@@ -3457,7 +3457,6 @@ serial.send(${text})
 
 function BasicCodingPage() {
   const fileInputRef = useRef(null);
-  const blocklyDiv = useRef(null);
   const canvasContainerRef = useRef(null);
   const [code, setCode] = useState('');
   const [view, setView] = useState('blocks');
@@ -3481,46 +3480,53 @@ function BasicCodingPage() {
     setOutput(prev => prev + text + "\n")
   }
 
-  <div
-    ref={(node) => {
-      if (!node) return;
+ <div
+  ref={(node) => {
+    if (!node) {
+      blocklyDivRef.current = null;
+      return;
+    }
+    blocklyDivRef.current = node;
+  }}
+  style={{ width: "100%", height: "100%" }}
+/>
+useEffect(() => {
+  const node = blocklyDivRef.current;
 
-      // Allow div ref always
-      blocklyDivRef.current = node;
+  if (!node) {
+    DBG("⏳ Blockly div not ready");
+    return;
+  }
 
-      // Guard ONLY on workspace
-      if (workspaceRef.current) {
-        DBG("⛔ Workspace already exists — skipping inject");
-        return;
-      }
+  if (workspaceRef.current) {
+    DBG("ℹ️ Workspace already exists");
+    return;
+  }
 
-      DBG("🧩 Blockly div mounted", {
-        nodeConnected: node.isConnected,
-      });
+  DBG("🚀 Injecting Blockly");
 
-      DBG("Attempting Blockly.inject");
+ const workspace = Blockly.inject(node, {
+  toolbox: toolboxXml,   // ✅ THIS is the fix
+  trashcan: true,
+  scrollbars: true,
+});
 
-      const workspace = Blockly.inject(node, {
-        toolbox,
-        trashcan: true,
-        scrollbars: true,
-      });
+  workspaceRef.current = workspace;
 
-      DBG("Blockly.inject DONE", {
-        workspaceId: workspace.id,
-        isRendered: workspace.rendered,
-      });
+  setWorkspaceReady(true);
+  DBG("🎯 Workspace ready");
 
-      workspaceRef.current = workspace;
+  requestAnimationFrame(() => {
+    Blockly.svgResize(workspace);
+  });
 
-      requestAnimationFrame(() => {
-        Blockly.svgResize(workspace);
-        setWorkspaceReady(true);
-        DBG("🎯 Workspace ready");
-      });
-    }}
-    style={{ width: "100%", height: "100%" }}
-  />
+  return () => {
+    DBG("🧹 Disposing workspace");
+    workspace.dispose();
+    workspaceRef.current = null;
+    setWorkspaceReady(false);
+  };
+}, []);
 
   const stableActivityId = activityId ?? null;
   const stableProjectId = projectId ?? null;
@@ -4270,7 +4276,12 @@ function BasicCodingPage() {
     definePythonGenerators();
     defineJavascriptGenerators();
 
-    const workspace = Blockly.inject(blocklyDiv.current, {
+    if (!blocklyDivRef.current) {
+      console.error("Blockly div not mounted");
+      return;
+    }
+
+    const workspace = Blockly.inject(blocklyDivRef.current, {
       toolbox: toolboxXml,
       zoom: {
         controls: true,
@@ -4286,8 +4297,8 @@ function BasicCodingPage() {
     workspaceRef.current = workspace;
     const preventToolboxScroll = () => {
       // Find the flyout (block drawer) element
-      const flyout = blocklyDiv.current?.querySelector('.blocklyFlyout');
-      const toolboxDiv = blocklyDiv.current?.querySelector('.blocklyToolboxDiv');
+      const flyout = blocklyDivRef.current?.querySelector('.blocklyFlyout');
+      const toolboxDiv = blocklyDivRef.current?.querySelector('.blocklyToolboxDiv');
 
       // Prevent wheel events on flyout from propagating to workspace
       if (flyout) {
@@ -5214,7 +5225,7 @@ plt = _FakePlt()
             }}
           >
             <div
-              ref={blocklyDiv}
+              ref={blocklyDivRef}
               style={{
                 width: "100%",
                 height: "100%",
