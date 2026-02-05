@@ -2475,7 +2475,7 @@ serial.send(${text})
     if (direction === 'BACKWARD') {
       return `${varName}.backward(${distance})\n`;
     }
-    
+
     return `${varName}.forward(${distance})\n`;
   };
 
@@ -3463,10 +3463,9 @@ function BasicCodingPage() {
   const [view, setView] = useState('blocks');
   const [output, setOutput] = useState('');
   const searchParams = useSearchParams()
-const workspaceRef = useRef<Blockly.WorkspaceSvg | null>(null);
-const blocklyDivRef = useRef<HTMLDivElement | null>(null);
-const [workspaceReady, setWorkspaceReady] = useState(false);
-
+  const workspaceRef = useRef<Blockly.WorkspaceSvg | null>(null);
+  const blocklyDivRef = useRef<HTMLDivElement | null>(null);
+  const [workspaceReady, setWorkspaceReady] = useState(false);
   const projectId = searchParams?.get("projectId")
   const activityId = searchParams?.get("activityId")
 
@@ -3482,106 +3481,114 @@ const [workspaceReady, setWorkspaceReady] = useState(false);
     setOutput(prev => prev + text + "\n")
   }
 
-<div
-  ref={(node) => {
-    if (!node) return;
-    if (blocklyDivRef.current) return;
+  <div
+    ref={(node) => {
+      if (!node) return;
 
-    blocklyDivRef.current = node;
-    DBG("Blockly div mounted");
-DBG("Attempting Blockly.inject", {
-  hasExisting: !!blocklyDivRef.current,
-  nodeConnected: node.isConnected,
-});
+      // Allow div ref always
+      blocklyDivRef.current = node;
 
-    const workspace = Blockly.inject(node, {
-      toolbox,
-      trashcan: true,
-      scrollbars: true,
-    });
-    DBG("Blockly.inject DONE", {
-  workspaceId: workspace.id,
-  isRendered: workspace.rendered,
-});
-
-    workspaceRef.current = workspace;
-
-    requestAnimationFrame(() => {
-      Blockly.svgResize(workspace);
-      setWorkspaceReady(true); // 🔥 THIS IS THE KEY
-      DBG("Workspace ready");
-    });
-  }}
-  style={{ width: "100%", height: "100%" }}
-/>
-
-const stableActivityId = activityId ?? null;
-const stableProjectId = projectId ?? null;
-
-useEffect(() => {
-  DBG("Loader useEffect fired", {
-    mode,
-    activityId: stableActivityId,
-    projectId: stableProjectId,
-  });
-DBG("WorkspaceRef check", {
-  workspaceExists: !!workspaceRef.current,
-  blocklyDivExists: !!blocklyDivRef.current,
-});
-
-  const workspace = workspaceRef.current;
-  if (!workspace) return;
-
-  if (!workspace.rendered) {
-    requestAnimationFrame(() => {
-      loadBlocksIntoWorkspace(getBlocks());
-    });
-    return;
-  }
-
-  loadBlocksIntoWorkspace(getBlocks());
-}, [mode, stableActivityId, stableProjectId]);
-
-function getBlocks() {
-  DBG("getBlocks called", { mode, activityId, projectId });
-
-  if (mode === "ACTIVITY" && activityId) {
-    const rows = [
-      {
-        blockType: "SET_VARIABLE",
-        blockOrder: 1,
-        blockConfig:
-          "{\"value\": {\"type\": \"INPUT\", \"prompt\": \"How are you?\"}, \"variable\": \"A\"}"
-      },
-      {
-        blockType: "PRINT",
-        blockOrder: 2,
-        blockConfig: "{\"variable\": \"A\"}"
+      // Guard ONLY on workspace
+      if (workspaceRef.current) {
+        DBG("⛔ Workspace already exists — skipping inject");
+        return;
       }
-    ];
 
-    DBG("Raw mock rows", rows);
+      DBG("🧩 Blockly div mounted", {
+        nodeConnected: node.isConnected,
+      });
 
-    const normalized = rows
-      .sort((a, b) => a.blockOrder - b.blockOrder)
-      .map(row => ({
-        block_type: row.blockType,
-        block_config: JSON.parse(row.blockConfig),
-      }));
+      DBG("Attempting Blockly.inject");
 
-    DBG("Normalized blocks", normalized);
+      const workspace = Blockly.inject(node, {
+        toolbox,
+        trashcan: true,
+        scrollbars: true,
+      });
 
-    return normalized;
-  }
+      DBG("Blockly.inject DONE", {
+        workspaceId: workspace.id,
+        isRendered: workspace.rendered,
+      });
 
-  if (mode === "PROJECT" && projectId) {
-    DBG("PROJECT mode — no blocks yet");
+      workspaceRef.current = workspace;
+
+      requestAnimationFrame(() => {
+        Blockly.svgResize(workspace);
+        setWorkspaceReady(true);
+        DBG("🎯 Workspace ready");
+      });
+    }}
+    style={{ width: "100%", height: "100%" }}
+  />
+
+  const stableActivityId = activityId ?? null;
+  const stableProjectId = projectId ?? null;
+
+  useEffect(() => {
+    DBG("Loader useEffect fired", {
+      mode,
+      activityId: stableActivityId,
+      projectId: stableProjectId,
+      workspaceReady,
+      blocklyDiv: !!blocklyDivRef.current,
+      workspace: !!workspaceRef.current,
+    });
+
+    if (!workspaceReady) {
+      DBG("⏳ Waiting for workspaceReady");
+      return;
+    }
+
+    const workspace = workspaceRef.current;
+    if (!workspace) {
+      DBG("❌ workspaceReady but workspace missing");
+      return;
+    }
+
+    loadBlocksIntoWorkspace(getBlocks());
+  }, [workspaceReady, mode, stableActivityId, stableProjectId]);
+
+  function getBlocks() {
+    DBG("getBlocks called", { mode, activityId, projectId });
+
+    if (mode === "ACTIVITY" && activityId) {
+      const rows = [
+        {
+          blockType: "SET_VARIABLE",
+          blockOrder: 1,
+          blockConfig:
+            "{\"value\": {\"type\": \"INPUT\", \"prompt\": \"How are you?\"}, \"variable\": \"A\"}"
+        },
+        {
+          blockType: "PRINT",
+          blockOrder: 2,
+          blockConfig: "{\"variable\": \"A\"}"
+        }
+      ];
+
+      DBG("Raw mock rows", rows);
+
+      const normalized = rows
+        .sort((a, b) => a.blockOrder - b.blockOrder)
+        .map(row => ({
+          block_type: row.blockType,
+          block_config: JSON.parse(row.blockConfig),
+        }));
+
+      DBG("Normalized blocks", normalized);
+
+      return normalized;
+    }
+
+    if (mode === "PROJECT" && projectId) {
+      DBG("PROJECT mode — no blocks yet");
+      return [];
+    }
+
+    DBG("No matching mode — returning empty");
     return [];
   }
-
-  DBG("No matching mode — returning empty");
-  return [];
-}
 
   async function executeBlock(block: Blockly.Block) {
     const variables = variablesRef.current
@@ -3994,19 +4001,19 @@ function getBlocks() {
     return variable.getId();
   }
 
-function createBlocklyBlock(WorkspaceSvg, row) {
-  DBG("createBlocklyBlock called", row);
+  function createBlocklyBlock(WorkspaceSvg, row) {
+    DBG("createBlocklyBlock called", row);
 
-  const cfg = typeof row.block_config === "string"
-    ? JSON.parse(row.block_config)
-    : row.block_config;
+    const cfg = typeof row.block_config === "string"
+      ? JSON.parse(row.block_config)
+      : row.block_config;
 
-  if (!cfg) {
-    console.error("❌ block_config missing", row);
-    return null;
-  }
+    if (!cfg) {
+      console.error("❌ block_config missing", row);
+      return null;
+    }
 
-  DBG(`Block type switch → ${row.block_type}`, cfg);
+    DBG(`Block type switch → ${row.block_type}`, cfg);
 
 
     switch (row.block_type) {
@@ -4176,47 +4183,47 @@ function createBlocklyBlock(WorkspaceSvg, row) {
     }
   }
 
- function loadBlocksIntoWorkspace(blocks: any[]) {
-  DBG("loadBlocksIntoWorkspace called with", blocks);
-DBG("🚀 START loadBlocksIntoWorkspace", {
-  blockCount: blocks.length,
-  ts: performance.now(),
-});
+  function loadBlocksIntoWorkspace(blocks: any[]) {
+    DBG("loadBlocksIntoWorkspace called with", blocks);
+    DBG("🚀 START loadBlocksIntoWorkspace", {
+      blockCount: blocks.length,
+      ts: performance.now(),
+    });
 
-  if (!blocks || blocks.length === 0) {
-    console.warn("🟡 No blocks provided — skipping workspace.clear()");
-    return;
-  }
+    if (!blocks || blocks.length === 0) {
+      console.warn("🟡 No blocks provided — skipping workspace.clear()");
+      return;
+    }
 
-  const workspace = workspaceRef.current;
+    const workspace = workspaceRef.current;
 
-  DBG("Workspace instance", {
-    exists: !!workspace,
-    rendered: workspace?.rendered,
-    type: workspace?.constructor?.name
-  });
+    DBG("Workspace instance", {
+      exists: !!workspace,
+      rendered: workspace?.rendered,
+      type: workspace?.constructor?.name
+    });
 
-  if (!workspace) {
-    console.error("❌ Workspace missing");
-    return;
-  }
+    if (!workspace) {
+      console.error("❌ Workspace missing");
+      return;
+    }
 
-  if (!(workspace instanceof Blockly.WorkspaceSvg)) {
-    console.error("❌ HEADLESS WORKSPACE — ABORTING");
-    return;
-  }
+    if (!(workspace instanceof Blockly.WorkspaceSvg)) {
+      console.error("❌ HEADLESS WORKSPACE — ABORTING");
+      return;
+    }
 
-  // workspace.clear(); // intentionally disabled
+    // workspace.clear(); // intentionally disabled
 
-  DBG("Creating variables pass");
+    DBG("Creating variables pass");
 
 
     // First pass: Create all variables that will be needed
     blocks.forEach((row) => {
-      const cfg = typeof row.block_config === 'string' 
-        ? JSON.parse(row.block_config) 
+      const cfg = typeof row.block_config === 'string'
+        ? JSON.parse(row.block_config)
         : row.block_config;
-      
+
       if (cfg?.variable) {
         ensureVariable(workspace, cfg.variable);
       }
@@ -4228,10 +4235,10 @@ DBG("🚀 START loadBlocksIntoWorkspace", {
     blocks.forEach((row, index) => {
       console.log(`Processing block ${index}:`, row);
       console.log(
-  "Workspace instance:",
-  workspaceRef.current,
-  workspaceRef.current?.constructor.name
-);
+        "Workspace instance:",
+        workspaceRef.current,
+        workspaceRef.current?.constructor.name
+      );
 
       const newBlock = createBlocklyBlock(workspace, row);
       if (!newBlock) {
@@ -4250,11 +4257,11 @@ DBG("🚀 START loadBlocksIntoWorkspace", {
 
       previousBlock = newBlock;
     });
-    
+
     console.log('Finished loading blocks');
     DBG("✅ END loadBlocksIntoWorkspace", {
-  ts: performance.now(),
-});
+      ts: performance.now(),
+    });
 
   }
 
