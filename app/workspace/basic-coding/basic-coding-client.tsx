@@ -3513,21 +3513,26 @@ useEffect(() => {
 
 function getBlocks() {
   // ACTIVITY MODE
-   if (mode === "ACTIVITY" && activityId) {
-  fetch(`https://admin.urest.in:8089/api/tutorial/${activityId}/blocks`)
-    .then(res => res.json())
-    .then((rows) => {
-      const normalized = rows
-        .sort((a: any, b: any) => a.blockOrder - b.blockOrder)
-        .map((row: any) => ({
-          block_type: row.blockType,                 // ✅ rename
-          block_config: JSON.parse(row.blockConfig), // ✅ parse
-        }));
+  if (mode === "ACTIVITY" && activityId) {
+    const data = [
+      {
+        blockType: "SET_VARIABLE",
+        blockOrder: 1,
+        blockConfig:
+          "{\"value\":{\"type\":\"INPUT\",\"prompt\":\"How are you?\"},\"variable\":\"A\"}"
+      },
+      {
+        blockType: "PRINT",
+        blockOrder: 2,
+        blockConfig: "{\"variable\":\"A\"}"
+      }
+    ];
 
-      loadBlocksIntoWorkspace(normalized);
-    })
-    .catch(console.error);
-}
+    return data.map(row => ({
+      block_type: row.blockType,
+      block_config: row.blockConfig,
+    }));
+  }
 
   // PROJECT MODE
   if (mode === "PROJECT" && projectId) {
