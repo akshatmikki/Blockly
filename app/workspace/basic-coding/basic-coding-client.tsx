@@ -595,17 +595,34 @@ sys.stderr = PseudoFile()
               overflow: "hidden"
             }}
           >
+            {/* CRITICAL FIX: Blockly div is ALWAYS rendered, never display:none */}
             <div
               ref={blocklyDiv}
               style={{
                 width: "100%",
                 height: "100%",
-                display: view === "blocks" ? "block" : "none"
+                position: "absolute",
+                top: 0,
+                left: 0,
+                zIndex: view === "blocks" ? 1 : 0,
+                visibility: view === "blocks" ? "visible" : "hidden",
+                pointerEvents: view === "blocks" ? "auto" : "none"
               }}
             />
 
+            {/* Code view overlays on top when active */}
             {view === "code" && (
-              <div style={{ height: "100%", display: "flex", flexDirection: "column" }}>
+              <div style={{ 
+                position: "absolute",
+                top: 0,
+                left: 0,
+                width: "100%",
+                height: "100%", 
+                display: "flex", 
+                flexDirection: "column",
+                background: "#fff",
+                zIndex: 2
+              }}>
                 <div style={{ padding: "10px", background: "#ddd", fontWeight: "bold" }}>
                   Generated Python Code
                 </div>
