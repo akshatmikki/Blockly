@@ -296,14 +296,21 @@ const defineBlocks = () => {
 
   Blockly.Blocks["turtle_move"] = {
     init() {
-      this.appendDummyInput()
-        .appendField("move")
-        .appendField(new Blockly.FieldNumber(10, 0), "STEPS")
+      this.appendValueInput("DISTANCE")
+        .setCheck("Number")
+        .appendField(new Blockly.FieldVariable("turtle"), "VAR")
+        .appendField(
+          new Blockly.FieldDropdown([
+            ["forward", "FORWARD"],
+            ["backward", "BACKWARD"]
+          ]),
+          "DIRECTION"
+        );
 
-      this.setPreviousStatement(true)
-      this.setNextStatement(true)
-      this.setColour(160)
-      this.setTooltip("Move turtle forward")
+      this.setPreviousStatement(true, null);
+      this.setNextStatement(true, null);
+      this.setColour(330);
+      this.setTooltip("Move turtle forward or backward");
     },
   }
 
@@ -2453,13 +2460,18 @@ serial.send(${text})
   };
 
   pythonGenerator.forBlock['turtle_move'] = function (block, generator) {
-    const varName = generator.nameDB_.getName(
+    const varName = generator.nameDB_?.getName(
       block.getFieldValue('VAR'),
       Blockly.Names.NameType.VARIABLE
     );
     const distance =
       generator.valueToCode(block, 'DISTANCE', pythonGenerator.ORDER_NONE) || '0';
+    const direction = block.getFieldValue('DIRECTION');
 
+    if (direction === 'BACKWARD') {
+      return `${varName}.backward(${distance})\n`;
+    }
+    
     return `${varName}.forward(${distance})\n`;
   };
 
@@ -3866,19 +3878,45 @@ function BasicCodingPage() {
 </xml>
 `, []);
 
-  useEffect(() => {
-    if (!activityId || !workspaceRef.current) return
+  // Helper function to map color names to hex codes
+  function mapColorToHex(color: string): string {
+    const colorMap: Record<string, string> = {
+      'white': '#ffffff',
+      'WHITE': '#ffffff',
+      'black': '#000000',
+      'BLACK': '#000000',
+      'blue': '#0000ff',
+      'BLUE': '#0000ff',
+      'red': '#ff0000',
+      'RED': '#ff0000',
+      'green': '#00ff00',
+      'GREEN': '#00ff00',
+      'yellow': '#ffff00',
+      'YELLOW': '#ffff00',
+    };
+    return colorMap[color] || color; // Return hex if found, otherwise return as-is
+  }
 
-    fetch(`/api/tutorials/activity/${activityId}/blocks`)
-      .then(res => res.json())
-      .then(blocks => {
-        loadBlocksIntoWorkspace(blocks)
-      })
-      .catch(console.error)
-  }, [activityId])
+  // Helper function to ensure variable exists in workspace and return its ID
+  function ensureVariable(workspace: Blockly.Workspace, varName: string): string {
+    let variable = workspace.getVariable(varName);
+    if (!variable) {
+      variable = workspace.createVariable(varName);
+    }
+    return variable.getId();
+  }
 
   function createBlocklyBlock(workspace, row) {
-    const cfg = row.block_config;
+    // Parse block_config if it's a string (from database)
+    const cfg = typeof row.block_config === 'string' 
+      ? JSON.parse(row.block_config) 
+      : row.block_config;
+
+    // Add validation
+    if (!cfg) {
+      console.error('block_config is null or undefined for block:', row);
+      return null;
+    }
 
     switch (row.block_type) {
 
@@ -3889,15 +3927,17 @@ function BasicCodingPage() {
 
         // CREATE TURTLE
         if (cfg.type === "CREATE_TURTLE") {
+          const varId = ensureVariable(workspace, cfg.variable);
           const block = workspace.newBlock("turtle_create");
-          block.setFieldValue(cfg.variable, "VAR");
+          block.setFieldValue(varId, "VAR");
           return block;
         }
 
         // INPUT → variable
         if (cfg.value?.type === "INPUT") {
+          const varId = ensureVariable(workspace, cfg.variable);
           const block = workspace.newBlock("variables_set");
-          block.setFieldValue(cfg.variable, "VAR");
+          block.setFieldValue(varId, "VAR");
 
           const inputBlock = workspace.newBlock("text_prompt");
           inputBlock.setFieldValue(cfg.value.prompt, "TEXT");
@@ -3914,8 +3954,9 @@ function BasicCodingPage() {
 
         // STRING → variable
         if (cfg.type === "STRING") {
+          const varId = ensureVariable(workspace, cfg.variable);
           const block = workspace.newBlock("variables_set");
-          block.setFieldValue(cfg.variable, "VAR");
+          block.setFieldValue(varId, "VAR");
 
           const textBlock = workspace.newBlock("text");
           textBlock.setFieldValue(cfg.value, "TEXT");
@@ -3937,10 +3978,11 @@ function BasicCodingPage() {
          PRINT
       ===================== */
       case "PRINT": {
+        const varId = ensureVariable(workspace, cfg.variable);
         const block = workspace.newBlock("text_print");
 
         const varBlock = workspace.newBlock("variables_get");
-        varBlock.setFieldValue(cfg.variable, "VAR");
+        varBlock.setFieldValue(varId, "VAR");
 
         varBlock.initSvg();
         varBlock.render();
@@ -3956,9 +3998,10 @@ function BasicCodingPage() {
          TURTLE MOVE
       ===================== */
       case "TURTLE_MOVE": {
+        const varId = ensureVariable(workspace, cfg.variable);
         const block = workspace.newBlock("turtle_move");
 
-        block.setFieldValue(cfg.variable, "VAR");
+        block.setFieldValue(varId, "VAR");
         block.setFieldValue(cfg.direction, "DIRECTION");
 
         const num = workspace.newBlock("math_number");
@@ -3980,7 +4023,8 @@ function BasicCodingPage() {
       case "TURTLE_SCREEN": {
         if (cfg.action === "SET_BACKGROUND_COLOR") {
           const block = workspace.newBlock("turtle_bgcolor");
-          block.setFieldValue(cfg.color, "COLOR");
+          const hexColor = mapColorToHex(cfg.color);
+          block.setFieldValue(hexColor, "COLOR");
           return block;
         }
         return null;
@@ -3991,11 +4035,13 @@ function BasicCodingPage() {
       ===================== */
       case "TURTLE_STYLE": {
         if (cfg.action === "SET_FILL_COLOR") {
+          const varId = ensureVariable(workspace, cfg.variable);
           const block = workspace.newBlock("turtle_fill_color");
-          block.setFieldValue(cfg.variable, "VAR");
+          block.setFieldValue(varId, "VAR");
 
           const colorBlock = workspace.newBlock("colour_picker");
-          colorBlock.setFieldValue(cfg.color, "COLOUR");
+          const hexColor = mapColorToHex(cfg.color);
+          colorBlock.setFieldValue(hexColor, "COLOUR");
 
           colorBlock.initSvg();
           colorBlock.render();
@@ -4014,8 +4060,9 @@ function BasicCodingPage() {
       ===================== */
       case "TURTLE_DRAW": {
         if (cfg.action === "DOT") {
+          const varId = ensureVariable(workspace, cfg.variable);
           const block = workspace.newBlock("turtle_dot");
-          block.setFieldValue(cfg.variable, "VAR");
+          block.setFieldValue(varId, "VAR");
 
           const num = workspace.newBlock("math_number");
           num.setFieldValue(String(cfg.radius), "NUM");
@@ -4033,21 +4080,42 @@ function BasicCodingPage() {
       }
 
       default:
+        console.warn('Unknown block_type:', row.block_type, row);
         return null;
     }
   }
 
   function loadBlocksIntoWorkspace(blocks: any[]) {
+    console.log('Loading blocks into workspace:', blocks);
     const workspace = workspaceRef.current;
-    if (!workspace) return;
+    if (!workspace) {
+      console.error('Workspace not available');
+      return;
+    }
 
     workspace.clear();
 
+    // First pass: Create all variables that will be needed
+    blocks.forEach((row) => {
+      const cfg = typeof row.block_config === 'string' 
+        ? JSON.parse(row.block_config) 
+        : row.block_config;
+      
+      if (cfg?.variable) {
+        ensureVariable(workspace, cfg.variable);
+      }
+    });
+
     let previousBlock: Blockly.Block | null = null;
 
-    blocks.forEach(row => {
+    // Second pass: Create all blocks
+    blocks.forEach((row, index) => {
+      console.log(`Processing block ${index}:`, row);
       const newBlock = createBlocklyBlock(workspace, row);
-      if (!newBlock) return;
+      if (!newBlock) {
+        console.warn(`Block ${index} (type: ${row.block_type}) returned null`, row);
+        return;
+      }
 
       newBlock.initSvg();
       newBlock.render();
@@ -4060,6 +4128,8 @@ function BasicCodingPage() {
 
       previousBlock = newBlock;
     });
+    
+    console.log('Finished loading blocks');
   }
 
   useEffect(() => {
