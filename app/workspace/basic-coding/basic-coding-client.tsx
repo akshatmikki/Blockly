@@ -9,6 +9,7 @@ import 'skulpt/dist/skulpt-stdlib.js';
 import { useSearchParams } from "next/navigation"
 import { javascriptGenerator } from "blockly/javascript";
 import { createTurtle } from "@/lib/turtleEngine";
+import { debug } from 'console';
 
 const turtleEngineRef = { current: null as any };
 
@@ -3464,6 +3465,7 @@ function BasicCodingPage() {
 
   const projectId = searchParams?.get("projectId")
   const activityId = searchParams?.get("activityId")
+const [workspaceReady, setWorkspaceReady] = useState(false);
 
   const mode = projectId
     ? "PROJECT"
@@ -3484,40 +3486,59 @@ function BasicCodingPage() {
   function appendOutput(text: string) {
     setOutput(prev => prev + text + "\n")
   }
+// useEffect(() => {
+//   const node = blocklyDiv.current;
+//   if (!node) return;
+//   if (workspaceRef.current) return;
 
-  useEffect(() => {
-    if (!workspaceRef.current) return
+//   debugLog("🚀 Injecting Blockly");
 
-    // ACTIVITY MODE
-    if (mode === "ACTIVITY" && activityId) {
-      debugLog(`Fetching blocks for activity ${activityId}`);
-      fetch(`/api/tutorials/activity/${activityId}/blocks`)
-        .then(res => {
-          debugLog('API response received', { status: res.status });
-          return res.json();
-        })
-        .then(loadBlocksIntoWorkspace)
-        .catch(err => {
-          debugLog('ERROR fetching blocks', err);
-          console.error(err);
-        })
-    }
+//   const workspace = Blockly.inject(node, {
+//     toolbox: toolboxXml,
+//     trashcan: true,
+//     scrollbars: true,
+//   });
 
-    // PROJECT MODE
-    if (mode === "PROJECT" && projectId) {
-      debugLog(`Fetching blocks for project ${projectId}`);
-      fetch(`/api/project/${projectId}/blocks`)
-        .then(res => {
-          debugLog('API response received', { status: res.status });
-          return res.json();
-        })
-        .then(loadBlocksIntoWorkspace)
-        .catch(err => {
-          debugLog('ERROR fetching blocks', err);
-          console.error(err);
-        })
-    }
-  }, [mode, projectId, activityId])
+//   workspaceRef.current = workspace;
+// setWorkspaceReady(true);
+// debugLog("🚀 Injected Blockly");
+// debugLog("📐 Resizing Blockly workspace");
+// debugLog("📐 Initial workspace size", { width: node.clientWidth, height: node.clientHeight });
+// debugLog("📐 Blockly workspace resized");
+//   requestAnimationFrame(() => {
+//     Blockly.svgResize(workspace);
+//   });
+// }, []);
+
+useEffect(() => {
+  // if (!workspaceReady) {
+  //   debugLog("⏳ Waiting for workspaceReady");
+  //   return;
+  // }
+
+  const workspace = workspaceRef.current;
+  if (!workspace) {
+    debugLog("❌ workspaceReady but workspace missing");
+    return;
+  }
+
+  if (mode === "ACTIVITY" && activityId) {
+    debugLog(`📦 Loading blocks for activity ${activityId}`);
+    fetch(`/api/tutorials/activity/${activityId}/blocks`)
+      .then(res => res.json())
+      .then(loadBlocksIntoWorkspace)
+      .catch(console.error);
+  }
+
+  if (mode === "PROJECT" && projectId) {
+    debugLog(`📦 Loading blocks for project ${projectId}`);
+    fetch(`/api/project/${projectId}/blocks`)
+      .then(res => res.json())
+      .then(loadBlocksIntoWorkspace)
+      .catch(console.error);
+  }
+}, [ mode, activityId, projectId]);
+
 
   async function executeBlock(block: Blockly.Block) {
     const variables = variablesRef.current
@@ -4132,29 +4153,41 @@ function BasicCodingPage() {
       }
     });
 
-    let previousBlock: Blockly.Block | null = null;
+ let previousBlock: Blockly.Block | null = null;
+let y = 40;
 
-    // Second pass: Create all blocks
-    debugLog('Second pass: Creating blocks');
-    blocks.forEach((row, index) => {
-      debugLog(`Processing block ${index}`, { type: row.block_type, config: row.block_config });
-      const newBlock = createBlocklyBlock(workspace, row);
-      if (!newBlock) {
-        debugLog(`WARN: Block ${index} (type: ${row.block_type}) returned null`);
-        return;
-      }
+blocks.forEach((row) => {
+  const newBlock = createBlocklyBlock(workspace, row);
+  if (!newBlock) return;
 
-      newBlock.initSvg();
-      newBlock.render();
+  // Init SVG first (required)
+  newBlock.initSvg();
 
-      if (previousBlock) {
-        previousBlock.nextConnection?.connect(
-          newBlock.previousConnection
-        );
-      }
+  if (!previousBlock) {
+    // ⭐ Root block
+    newBlock.render();
+    newBlock.moveBy(40, y);
+    y += newBlock.getHeightWidth().height + 30;
+  } else {
+    // ⭐ Connect BEFORE render
+    if (
+      previousBlock.nextConnection &&
+      newBlock.previousConnection
+    ) {
+      previousBlock.nextConnection.connect(
+        newBlock.previousConnection
+      );
+    }
+    newBlock.render();
+  }
 
-      previousBlock = newBlock;
-    });
+  previousBlock = newBlock;
+});
+
+workspace.render();
+Blockly.svgResize(workspace);
+workspace.scrollCenter();
+
     
     debugLog('✅ Finished loading blocks successfully');
   }
