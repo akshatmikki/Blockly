@@ -3514,20 +3514,20 @@ useEffect(() => {
 function getBlocks() {
   // ACTIVITY MODE
    if (mode === "ACTIVITY" && activityId) {
-    fetch(`/api/tutorials/activity/${activityId}/blocks`)
-      .then(res => res.json())
+  fetch(`https://admin.urest.in:8089/api/tutorial/${activityId}/blocks`)
+    .then(res => res.json())
     .then((rows) => {
       const normalized = rows
-        .sort((a: any, b: any) => a.block_order - b.block_order)
+        .sort((a: any, b: any) => a.blockOrder - b.blockOrder)
         .map((row: any) => ({
-          block_type: row.block_type,
-          block_config: row.block_config, // already an object ✅
+          block_type: row.blockType,                 // ✅ rename
+          block_config: JSON.parse(row.blockConfig), // ✅ parse
         }));
 
-        loadBlocksIntoWorkspace(normalized);
-      })
-      .catch(console.error);
-  }
+      loadBlocksIntoWorkspace(normalized);
+    })
+    .catch(console.error);
+}
 
   // PROJECT MODE
   if (mode === "PROJECT" && projectId) {
