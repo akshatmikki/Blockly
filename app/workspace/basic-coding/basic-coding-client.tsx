@@ -3524,6 +3524,10 @@ useEffect(() => {
     activityId: stableActivityId,
     projectId: stableProjectId,
   });
+DBG("WorkspaceRef check", {
+  workspaceExists: !!workspaceRef.current,
+  blocklyDivExists: !!blocklyDivRef.current,
+});
 
   const workspace = workspaceRef.current;
   if (!workspace) return;
