@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useRef, useState, useMemo } from 'react';
 import * as Blockly from 'blockly';
-import { pythonGenerator } from 'blockly/python';
+import { pythonGenerator, Order as PythonOrder } from 'blockly/python';
 import 'blockly/msg/en';
 import 'blockly/blocks';
 import Sk from 'skulpt';
@@ -2325,7 +2325,7 @@ const definePythonGenerators = () => {
   ========================= */
   pythonGenerator.forBlock['speak_text'] = function (block, gen) {
     const text =
-      gen.valueToCode(block, "TEXT", gen.ORDER_NONE) || '""';
+      gen.valueToCode(block, "TEXT", PythonOrder.NONE) || '""';
 
     return `playsound.say(${text})\n`;
   };
@@ -2358,7 +2358,7 @@ const definePythonGenerators = () => {
 
   pythonGenerator.forBlock['file_write'] = function (block, gen) {
     const text =
-      gen.valueToCode(block, "TEXT", gen.ORDER_NONE) || '""';
+      gen.valueToCode(block, "TEXT", PythonOrder.NONE) || '""';
     return `file.write(${text})\n`;
   };
 
@@ -2368,7 +2368,7 @@ const definePythonGenerators = () => {
 
   pythonGenerator.forBlock['serial_send'] = function (block, gen) {
     const text =
-      gen.valueToCode(block, "TEXT", gen.ORDER_NONE) || '""';
+      gen.valueToCode(block, "TEXT", PythonOrder.NONE) || '""';
     return `
 import serial
 serial.send(${text})
@@ -2426,21 +2426,21 @@ serial.send(${text})
   };
   pythonGenerator.forBlock['pygal_add'] = function (block, gen) {
     const label =
-      gen.valueToCode(block, "LABEL", gen.ORDER_NONE) || "''";
+      gen.valueToCode(block, "LABEL", PythonOrder.NONE) || "''";
     const values =
-      gen.valueToCode(block, "VALUES", gen.ORDER_NONE) || "[]";
+      gen.valueToCode(block, "VALUES", PythonOrder.NONE) || "[]";
 
     return `${currentPygalChartVar}.add(${label}, ${values})\n`;
   };
   pythonGenerator.forBlock['pygal_title'] = function (block, gen) {
     const title =
-      gen.valueToCode(block, "TITLE", gen.ORDER_NONE) || "''";
+      gen.valueToCode(block, "TITLE", PythonOrder.NONE) || "''";
 
     return `${currentPygalChartVar}.title = ${title}\n`;
   };
   pythonGenerator.forBlock['pygal_xlabels'] = function (block, gen) {
     const labels =
-      gen.valueToCode(block, "LABELS", gen.ORDER_NONE) || "[]";
+      gen.valueToCode(block, "LABELS", PythonOrder.NONE) || "[]";
 
     return `${currentPygalChartVar}.x_labels = ${labels}\n`;
   };
@@ -2451,13 +2451,13 @@ serial.send(${text})
 
   pythonGenerator.forBlock['input_prompt'] = function (block, gen) {
     const text =
-      gen.valueToCode(block, "TEXT", gen.ORDER_NONE) || '""';
-    return [`input(${text})`, gen.ORDER_ATOMIC];
+      gen.valueToCode(block, "TEXT", PythonOrder.NONE) || '""';
+    return [`input(${text})`, PythonOrder.ATOMIC];
   };
 
   pythonGenerator.forBlock['string_literal'] = function (block) {
     const text = block.getFieldValue("VALUE");
-    return [`"${text}"`, pythonGenerator.ORDER_ATOMIC];
+    return [`"${text}"`, PythonOrder.ATOMIC];
   };
 
   pythonGenerator.forBlock['turtle_move'] = function (block, generator) {
@@ -2466,7 +2466,7 @@ serial.send(${text})
       Blockly.Names.NameType.VARIABLE
     );
     const distance =
-      generator.valueToCode(block, 'DISTANCE', pythonGenerator.ORDER_NONE) || '0';
+      generator.valueToCode(block, 'DISTANCE', PythonOrder.NONE) || '0';
     const direction = block.getFieldValue('DIRECTION');
 
     if (direction === 'BACKWARD') {
@@ -2478,31 +2478,31 @@ serial.send(${text})
 
   pythonGenerator.forBlock['number_literal'] = function (block) {
     const value = parseInt(block.getFieldValue("NUM"), 10);
-    return [value.toString(), pythonGenerator.ORDER_ATOMIC];
+    return [value.toString(), PythonOrder.ATOMIC];
   };
 
   pythonGenerator.forBlock['boolean_literal'] = function (block) {
-    return [block.getFieldValue("BOOL"), pythonGenerator.ORDER_ATOMIC];
+    return [block.getFieldValue("BOOL"), PythonOrder.ATOMIC];
   };
   pythonGenerator.forBlock['print_simple'] = function (block, gen) {
     const value =
-      gen.valueToCode(block, "VALUE", gen.ORDER_NONE) || "";
+      gen.valueToCode(block, "VALUE", PythonOrder.NONE) || "";
     return `print(${value})\n`;
   };
 
   pythonGenerator.forBlock['print_sep'] = function (block, gen) {
     const value =
-      gen.valueToCode(block, "VALUE", gen.ORDER_NONE) || "";
+      gen.valueToCode(block, "VALUE", PythonOrder.NONE) || "";
     const sep =
-      gen.valueToCode(block, "SEP", gen.ORDER_NONE) || '" "';
+      gen.valueToCode(block, "SEP", PythonOrder.NONE) || '" "';
     return `print(${value}, sep=${sep})\n`;
   };
 
   pythonGenerator.forBlock['print_end'] = function (block, gen) {
     const value =
-      gen.valueToCode(block, "VALUE", gen.ORDER_NONE) || "";
+      gen.valueToCode(block, "VALUE", PythonOrder.NONE) || "";
     const end =
-      gen.valueToCode(block, "END", gen.ORDER_NONE) || '""';
+      gen.valueToCode(block, "END", PythonOrder.NONE) || '""';
     return `print(${value}, end=${end})\n`;
   };
 
@@ -2522,21 +2522,21 @@ serial.send(${text})
 
   pythonGenerator.forBlock['turtle_forward'] = function (block, generator) {
     const varName = generator.nameDB_.getName(block.getFieldValue('VAR'), Blockly.Names.NameType.VARIABLE);
-    const distance = generator.valueToCode(block, 'DISTANCE', pythonGenerator.ORDER_ATOMIC) || '0';
+    const distance = generator.valueToCode(block, 'DISTANCE', PythonOrder.ATOMIC) || '0';
     const code = `${varName}.forward(${distance})\n`;
     return code;
   };
 
   pythonGenerator.forBlock['turtle_right'] = function (block, generator) {
     const varName = generator.nameDB_.getName(block.getFieldValue('VAR'), Blockly.Names.NameType.VARIABLE);
-    const angle = generator.valueToCode(block, 'ANGLE', pythonGenerator.ORDER_ATOMIC) || '0';
+    const angle = generator.valueToCode(block, 'ANGLE', PythonOrder.ATOMIC) || '0';
     const code = `${varName}.right(${angle})\n`;
     return code;
   };
 
   pythonGenerator.forBlock['turtle_left'] = function (block, generator) {
     const varName = generator.nameDB_.getName(block.getFieldValue('VAR'), Blockly.Names.NameType.VARIABLE);
-    const angle = generator.valueToCode(block, 'ANGLE', pythonGenerator.ORDER_ATOMIC) || '0';
+    const angle = generator.valueToCode(block, 'ANGLE', PythonOrder.ATOMIC) || '0';
     const code = `${varName}.left(${angle})\n`;
     return code;
   };
@@ -2553,26 +2553,26 @@ serial.send(${text})
 
   pythonGenerator.forBlock['convert_to_int'] = function (block, gen) {
     const value =
-      gen.valueToCode(block, 'VALUE', gen.ORDER_NONE) || '0';
-    return [`int(${value})`, gen.ORDER_ATOMIC];
+      gen.valueToCode(block, 'VALUE', PythonOrder.NONE) || '0';
+    return [`int(${value})`, PythonOrder.ATOMIC];
   };
 
   pythonGenerator.forBlock['convert_to_float'] = function (block, gen) {
     const value =
-      gen.valueToCode(block, 'VALUE', gen.ORDER_NONE) || '0';
-    return [`float(${value})`, gen.ORDER_ATOMIC];
+      gen.valueToCode(block, 'VALUE', PythonOrder.NONE) || '0';
+    return [`float(${value})`, PythonOrder.ATOMIC];
   };
 
   pythonGenerator.forBlock['convert_to_string'] = function (block, gen) {
     const value =
-      gen.valueToCode(block, 'VALUE', gen.ORDER_NONE) || '""';
-    return [`str(${value})`, gen.ORDER_ATOMIC];
+      gen.valueToCode(block, 'VALUE', PythonOrder.NONE) || '""';
+    return [`str(${value})`, PythonOrder.ATOMIC];
   };
 
   pythonGenerator.forBlock['convert_to_bool'] = function (block, gen) {
     const value =
-      gen.valueToCode(block, 'VALUE', gen.ORDER_NONE) || 'False';
-    return [`bool(${value})`, gen.ORDER_ATOMIC];
+      gen.valueToCode(block, 'VALUE', PythonOrder.NONE) || 'False';
+    return [`bool(${value})`, PythonOrder.ATOMIC];
   };
 
   pythonGenerator.forBlock['convert_upper_case'] = function (block, gen) {
@@ -2594,7 +2594,7 @@ serial.send(${text})
   };
 
   pythonGenerator.forBlock['controls_repeat'] = function (block, generator) {
-    const times = generator.valueToCode(block, 'TIMES', pythonGenerator.ORDER_ATOMIC) || '0';
+    const times = generator.valueToCode(block, 'TIMES', PythonOrder.ATOMIC) || '0';
     let branch = generator.statementToCode(block, 'DO');
     branch = generator.addLoopTrap(branch, block.id) || generator.PASS;
     const code = `for __count in range(int(${times})):\n${branch}`;
@@ -2605,7 +2605,7 @@ serial.send(${text})
   pythonGenerator.forBlock['math_number'] = function (block, generator) {
     const num = block.getFieldValue('NUM');
     const code = num;
-    return [code, pythonGenerator.ORDER_ATOMIC];
+    return [code, PythonOrder.ATOMIC];
   };
 
   pythonGenerator.forBlock['math_arithmetic'] = function (block, generator) {
@@ -2621,13 +2621,13 @@ serial.send(${text})
       'POWER': [arg0 + ' ** ' + arg1, pythonGenerator.ORDER_EXPONENTIATION]
     };
 
-    return operations[operator] || [arg0, pythonGenerator.ORDER_ATOMIC];
+    return operations[operator] || [arg0, PythonOrder.ATOMIC];
   };
 
   // Variable blocks (these are built-in Blockly blocks)
   pythonGenerator.forBlock['variables_get'] = function (block, generator) {
     const varName = generator.nameDB_.getName(block.getFieldValue('VAR'), Blockly.Names.NameType.VARIABLE);
-    return [varName, pythonGenerator.ORDER_ATOMIC];
+    return [varName, PythonOrder.ATOMIC];
   };
 
   pythonGenerator.forBlock['variables_set'] = function (block, generator) {
@@ -2637,7 +2637,7 @@ serial.send(${text})
     );
 
     const arg0 =
-      generator.valueToCode(block, 'VALUE', pythonGenerator.ORDER_NONE) || 'None';
+      generator.valueToCode(block, 'VALUE', PythonOrder.NONE) || 'None';
 
     return `${varName} = ${arg0}\n`;
   };
@@ -2647,18 +2647,18 @@ serial.send(${text})
   pythonGenerator.forBlock['text'] = function (block, generator) {
     const text = block.getFieldValue('TEXT');
     const code = `"${text}"`;
-    return [code, pythonGenerator.ORDER_ATOMIC];
+    return [code, PythonOrder.ATOMIC];
   };
 
   pythonGenerator.forBlock['input_prompt'] = function (block, generator) {
-    const prompt = generator.valueToCode(block, 'PROMPT', pythonGenerator.ORDER_ATOMIC) || '""';
+    const prompt = generator.valueToCode(block, 'PROMPT', PythonOrder.ATOMIC) || '""';
     const code = `input(${prompt})`;
-    return [code, pythonGenerator.ORDER_ATOMIC];
+    return [code, PythonOrder.ATOMIC];
   };
 
   // Output blocks
   pythonGenerator.forBlock['output_print'] = function (block, generator) {
-    const text = generator.valueToCode(block, 'TEXT', pythonGenerator.ORDER_ATOMIC) || '""';
+    const text = generator.valueToCode(block, 'TEXT', PythonOrder.ATOMIC) || '""';
     const code = `print(${text})\n`;
     return code;
   };
@@ -2684,7 +2684,7 @@ serial.send(${text})
   };
 
   pythonGenerator.forBlock['output_print_item'] = function (block, generator) {
-    const value = generator.valueToCode(block, 'VALUE', pythonGenerator.ORDER_ATOMIC) || '""';
+    const value = generator.valueToCode(block, 'VALUE', PythonOrder.ATOMIC) || '""';
     const code = `__print_items.append(${value})\n`;
     return code;
   };
@@ -2693,25 +2693,25 @@ serial.send(${text})
   pythonGenerator.forBlock['text_input'] = function (block, generator) {
     const text = block.getFieldValue('TEXT');
     const code = `"${text.replace(/"/g, '\\"')}"`;
-    return [code, pythonGenerator.ORDER_ATOMIC];
+    return [code, PythonOrder.ATOMIC];
   };
 
   // Boolean generators
   pythonGenerator.forBlock['logic_true'] = function (block, generator) {
-    return ['True', pythonGenerator.ORDER_ATOMIC];
+    return ['True', PythonOrder.ATOMIC];
   };
 
   pythonGenerator.forBlock['logic_false'] = function (block, generator) {
-    return ['False', pythonGenerator.ORDER_ATOMIC];
+    return ['False', PythonOrder.ATOMIC];
   };
 
   pythonGenerator.forBlock['logic_null'] = function (block, generator) {
-    return ['None', pythonGenerator.ORDER_ATOMIC];
+    return ['None', PythonOrder.ATOMIC];
   };
 
   // Logic generators
   pythonGenerator.forBlock['logic_if'] = function (block, generator) {
-    const condition = generator.valueToCode(block, 'IF0', pythonGenerator.ORDER_ATOMIC) || 'True';
+    const condition = generator.valueToCode(block, 'IF0', PythonOrder.ATOMIC) || 'True';
     let statements = generator.statementToCode(block, 'DO0');
     const code = `if ${condition}:\n${statements}`;
     return code;
@@ -2774,7 +2774,7 @@ serial.send(${text})
   pythonGenerator.forBlock['procedures_defreturn'] = function (block, generator) {
     const funcName = block.getFieldValue('NAME');
     let branch = generator.statementToCode(block, 'STACK');
-    const returnVal = generator.valueToCode(block, 'RETURN', pythonGenerator.ORDER_ATOMIC) || 'None';
+    const returnVal = generator.valueToCode(block, 'RETURN', PythonOrder.ATOMIC) || 'None';
     if (!branch) {
       branch = '    pass\n';
     }
@@ -2783,48 +2783,48 @@ serial.send(${text})
   };
 
   pythonGenerator.forBlock['procedures_return'] = function (block, generator) {
-    const value = generator.valueToCode(block, 'VALUE', pythonGenerator.ORDER_ATOMIC) || 'None';
+    const value = generator.valueToCode(block, 'VALUE', PythonOrder.ATOMIC) || 'None';
     const code = `return ${value}\n`;
     return code;
   };
 
   pythonGenerator.forBlock['procedures_ifreturn'] = function (block, generator) {
-    const condition = generator.valueToCode(block, 'CONDITION', pythonGenerator.ORDER_ATOMIC) || 'True';
-    const value = generator.valueToCode(block, 'VALUE', pythonGenerator.ORDER_ATOMIC) || 'None';
+    const condition = generator.valueToCode(block, 'CONDITION', PythonOrder.ATOMIC) || 'True';
+    const value = generator.valueToCode(block, 'VALUE', PythonOrder.ATOMIC) || 'None';
     const code = `if ${condition}:\n    return ${value}\n`;
     return code;
   };
 
   // Tuple generators
   pythonGenerator.forBlock['tuples_create'] = function (block, generator) {
-    const item1 = generator.valueToCode(block, 'ITEM1', pythonGenerator.ORDER_ATOMIC) || 'None';
+    const item1 = generator.valueToCode(block, 'ITEM1', PythonOrder.ATOMIC) || 'None';
     const code = `(${item1},)`;
-    return [code, pythonGenerator.ORDER_ATOMIC];
+    return [code, PythonOrder.ATOMIC];
   };
 
   pythonGenerator.forBlock['tuples_get_item'] = function (block, generator) {
-    const index = generator.valueToCode(block, 'INDEX', pythonGenerator.ORDER_ATOMIC) || '0';
-    const tuple = generator.valueToCode(block, 'TUPLE', pythonGenerator.ORDER_ATOMIC) || '()';
+    const index = generator.valueToCode(block, 'INDEX', PythonOrder.ATOMIC) || '0';
+    const tuple = generator.valueToCode(block, 'TUPLE', PythonOrder.ATOMIC) || '()';
     const code = `${tuple}[${index}]`;
     return [code, pythonGenerator.ORDER_MEMBER];
   };
 
   pythonGenerator.forBlock['tuples_count'] = function (block, generator) {
-    const element = generator.valueToCode(block, 'ELEMENT', pythonGenerator.ORDER_ATOMIC) || 'None';
-    const tuple = generator.valueToCode(block, 'TUPLE', pythonGenerator.ORDER_ATOMIC) || '()';
+    const element = generator.valueToCode(block, 'ELEMENT', PythonOrder.ATOMIC) || 'None';
+    const tuple = generator.valueToCode(block, 'TUPLE', PythonOrder.ATOMIC) || '()';
     const code = `${tuple}.count(${element})`;
     return [code, pythonGenerator.ORDER_MEMBER];
   };
 
   pythonGenerator.forBlock['tuples_position'] = function (block, generator) {
-    const element = generator.valueToCode(block, 'ELEMENT', pythonGenerator.ORDER_ATOMIC) || 'None';
-    const tuple = generator.valueToCode(block, 'TUPLE', pythonGenerator.ORDER_ATOMIC) || '()';
+    const element = generator.valueToCode(block, 'ELEMENT', PythonOrder.ATOMIC) || 'None';
+    const tuple = generator.valueToCode(block, 'TUPLE', PythonOrder.ATOMIC) || '()';
     const code = `${tuple}.index(${element})`;
     return [code, pythonGenerator.ORDER_MEMBER];
   };
 
   pythonGenerator.forBlock['tuples_length'] = function (block, generator) {
-    const tuple = generator.valueToCode(block, 'TUPLE', pythonGenerator.ORDER_ATOMIC) || '()';
+    const tuple = generator.valueToCode(block, 'TUPLE', PythonOrder.ATOMIC) || '()';
     const code = `len(${tuple})`;
     return [code, pythonGenerator.ORDER_MEMBER];
   };
@@ -2868,7 +2868,7 @@ serial.send(${text})
 
   // Loops: Repeat while
   pythonGenerator.forBlock['controls_repeat_while'] = function (block, generator) {
-    const condition = generator.valueToCode(block, 'CONDITION', pythonGenerator.ORDER_NONE) || 'False';
+    const condition = generator.valueToCode(block, 'CONDITION', PythonOrder.NONE) || 'False';
     const body = generator.statementToCode(block, 'DO');
     const code = `while ${condition}:\n${body}`;
     return code;
@@ -2877,9 +2877,9 @@ serial.send(${text})
   // Loops: For (count with from/to)
   pythonGenerator.forBlock['controls_for'] = function (block, generator) {
     const varName = generator.nameDB_.getName(block.getFieldValue('VAR'), Blockly.Names.NameType.VARIABLE);
-    const start = generator.valueToCode(block, 'FROM', pythonGenerator.ORDER_NONE) || '0';
-    const end = generator.valueToCode(block, 'TO', pythonGenerator.ORDER_NONE) || '10';
-    const by = generator.valueToCode(block, 'BY', pythonGenerator.ORDER_NONE) || '1';
+    const start = generator.valueToCode(block, 'FROM', PythonOrder.NONE) || '0';
+    const end = generator.valueToCode(block, 'TO', PythonOrder.NONE) || '10';
+    const by = generator.valueToCode(block, 'BY', PythonOrder.NONE) || '1';
     const body = generator.statementToCode(block, 'DO');
     const code = `for ${varName} in range(${start}, ${end}, ${by}):\n${body}`;
     return code;
@@ -2888,7 +2888,7 @@ serial.send(${text})
   // Loops: For each
   pythonGenerator.forBlock['controls_forEach'] = function (block, generator) {
     const varName = generator.nameDB_.getName(block.getFieldValue('VAR'), Blockly.Names.NameType.VARIABLE);
-    const list = generator.valueToCode(block, 'LIST', pythonGenerator.ORDER_NONE) || '[]';
+    const list = generator.valueToCode(block, 'LIST', PythonOrder.NONE) || '[]';
     const body = generator.statementToCode(block, 'DO');
     const code = `for ${varName} in ${list}:\n${body}`;
     return code;
@@ -2901,15 +2901,15 @@ serial.send(${text})
 
   // Math: Range
   pythonGenerator.forBlock['math_range'] = function (block, generator) {
-    return ['range(10)', pythonGenerator.ORDER_ATOMIC];
+    return ['range(10)', PythonOrder.ATOMIC];
   };
 
   // Math: Range with to
   pythonGenerator.forBlock['math_range_to'] = function (block, generator) {
-    const start = generator.valueToCode(block, 'START', pythonGenerator.ORDER_NONE) || '0';
-    const end = generator.valueToCode(block, 'END', pythonGenerator.ORDER_NONE) || '10';
+    const start = generator.valueToCode(block, 'START', PythonOrder.NONE) || '0';
+    const end = generator.valueToCode(block, 'END', PythonOrder.NONE) || '10';
     const code = `range(${start}, ${end})`;
-    return [code, pythonGenerator.ORDER_ATOMIC];
+    return [code, PythonOrder.ATOMIC];
   };
 
   // Math: Square root
@@ -2955,8 +2955,8 @@ serial.send(${text})
 
   // Math: Random integer
   pythonGenerator.forBlock['math_random_int'] = function (block, generator) {
-    const from = generator.valueToCode(block, 'FROM', pythonGenerator.ORDER_NONE) || '1';
-    const to = generator.valueToCode(block, 'TO', pythonGenerator.ORDER_NONE) || '100';
+    const from = generator.valueToCode(block, 'FROM', PythonOrder.NONE) || '1';
+    const to = generator.valueToCode(block, 'TO', PythonOrder.NONE) || '100';
     const code = `random.randint(${from}, ${to})`;
     return [code, pythonGenerator.ORDER_MEMBER];
   };
@@ -2969,12 +2969,12 @@ serial.send(${text})
   // Lists: Create list
   pythonGenerator.forBlock['lists_create_with'] = function (block, generator) {
     const code = `[]`;
-    return [code, pythonGenerator.ORDER_ATOMIC];
+    return [code, PythonOrder.ATOMIC];
   };
 
   // Lists: Get item
   pythonGenerator.forBlock['lists_getIndex'] = function (block, generator) {
-    const index = generator.valueToCode(block, 'INDEX', pythonGenerator.ORDER_NONE) || '0';
+    const index = generator.valueToCode(block, 'INDEX', PythonOrder.NONE) || '0';
     const list = generator.valueToCode(block, 'LIST', pythonGenerator.ORDER_MEMBER) || '[]';
     const code = `${list}[${index}]`;
     return [code, pythonGenerator.ORDER_MEMBER];
@@ -2983,7 +2983,7 @@ serial.send(${text})
   // Lists: Append item
   pythonGenerator.forBlock['lists_append'] = function (block, generator) {
     const list = generator.valueToCode(block, 'LIST', pythonGenerator.ORDER_MEMBER) || '[]';
-    const item = generator.valueToCode(block, 'ITEM', pythonGenerator.ORDER_NONE) || 'None';
+    const item = generator.valueToCode(block, 'ITEM', PythonOrder.NONE) || 'None';
     const code = `${list}.append(${item})\n`;
     return code;
   };
@@ -2991,7 +2991,7 @@ serial.send(${text})
   // Lists: Remove item
   pythonGenerator.forBlock['lists_remove_item'] = function (block, generator) {
     const list = generator.valueToCode(block, 'LIST', pythonGenerator.ORDER_MEMBER) || '[]';
-    const item = generator.valueToCode(block, 'ITEM', pythonGenerator.ORDER_NONE) || 'None';
+    const item = generator.valueToCode(block, 'ITEM', PythonOrder.NONE) || 'None';
     const code = `${list}.remove(${item})\n`;
     return code;
   };
@@ -2999,7 +2999,7 @@ serial.send(${text})
   // Lists: Remove at position
   pythonGenerator.forBlock['lists_remove_at'] = function (block, generator) {
     const list = generator.valueToCode(block, 'LIST', pythonGenerator.ORDER_MEMBER) || '[]';
-    const index = generator.valueToCode(block, 'INDEX', pythonGenerator.ORDER_NONE) || '0';
+    const index = generator.valueToCode(block, 'INDEX', PythonOrder.NONE) || '0';
     const code = `${list}.pop(${index})\n`;
     return code;
   };
@@ -3021,21 +3021,21 @@ serial.send(${text})
   // Lists: Insert at position
   pythonGenerator.forBlock['lists_insert_at'] = function (block, generator) {
     const list = generator.valueToCode(block, 'LIST', pythonGenerator.ORDER_MEMBER) || '[]';
-    const index = generator.valueToCode(block, 'INDEX', pythonGenerator.ORDER_NONE) || '0';
-    const item = generator.valueToCode(block, 'ITEM', pythonGenerator.ORDER_NONE) || 'None';
+    const index = generator.valueToCode(block, 'INDEX', PythonOrder.NONE) || '0';
+    const item = generator.valueToCode(block, 'ITEM', PythonOrder.NONE) || 'None';
     const code = `${list}.insert(${index}, ${item})\n`;
     return code;
   };
 
   // Sets: Create set
   pythonGenerator.forBlock['sets_create_with'] = function (block, generator) {
-    return ['set()', pythonGenerator.ORDER_ATOMIC];
+    return ['set()', PythonOrder.ATOMIC];
   };
 
   // Sets: Add item
   pythonGenerator.forBlock['sets_add_item'] = function (block, generator) {
     const set = generator.valueToCode(block, 'SET', pythonGenerator.ORDER_MEMBER) || 'set()';
-    const item = generator.valueToCode(block, 'ITEM', pythonGenerator.ORDER_NONE) || 'None';
+    const item = generator.valueToCode(block, 'ITEM', PythonOrder.NONE) || 'None';
     const code = `${set}.add(${item})\n`;
     return code;
   };
@@ -3066,16 +3066,16 @@ serial.send(${text})
 
   // Dictionaries: Create dict
   pythonGenerator.forBlock['dicts_create_with'] = function (block, generator) {
-    const key1 = generator.valueToCode(block, 'KEY1', pythonGenerator.ORDER_NONE) || '"key1"';
-    const value1 = generator.valueToCode(block, 'VALUE1', pythonGenerator.ORDER_NONE) || 'None';
+    const key1 = generator.valueToCode(block, 'KEY1', PythonOrder.NONE) || '"key1"';
+    const value1 = generator.valueToCode(block, 'VALUE1', PythonOrder.NONE) || 'None';
     const code = `{${key1}: ${value1}}`;
-    return [code, pythonGenerator.ORDER_ATOMIC];
+    return [code, PythonOrder.ATOMIC];
   };
 
   // Dictionaries: Get value by key
   pythonGenerator.forBlock['dicts_get_value'] = function (block, generator) {
     const dict = generator.valueToCode(block, 'DICT', pythonGenerator.ORDER_MEMBER) || '{}';
-    const key = generator.valueToCode(block, 'KEY', pythonGenerator.ORDER_NONE) || '"key"';
+    const key = generator.valueToCode(block, 'KEY', PythonOrder.NONE) || '"key"';
     const code = `${dict}[${key}]`;
     return [code, pythonGenerator.ORDER_MEMBER];
   };
@@ -3104,7 +3104,7 @@ serial.send(${text})
   // Motion: Backward
   pythonGenerator.forBlock['turtle_backward'] = function (block, generator) {
     const varName = generator.nameDB_.getName(block.getFieldValue('VAR'), Blockly.Names.NameType.VARIABLE);
-    const distance = generator.valueToCode(block, 'DISTANCE', pythonGenerator.ORDER_NONE) || '50';
+    const distance = generator.valueToCode(block, 'DISTANCE', PythonOrder.NONE) || '50';
     const code = `print(f"[DEBUG] Moving ${varName} backward by {${distance}}")\n${varName}.backward(${distance})\nprint("[DEBUG] Backward move complete")\n`;
     return code;
   };
@@ -3112,7 +3112,7 @@ serial.send(${text})
   // Motion: Dot
   pythonGenerator.forBlock['turtle_dot'] = function (block, generator) {
     const varName = generator.nameDB_.getName(block.getFieldValue('VAR'), Blockly.Names.NameType.VARIABLE);
-    const size = generator.valueToCode(block, 'SIZE', pythonGenerator.ORDER_NONE) || '10';
+    const size = generator.valueToCode(block, 'SIZE', PythonOrder.NONE) || '10';
     const code = `${varName}.dot(${size})\n`;
     return code;
   };
@@ -3120,7 +3120,7 @@ serial.send(${text})
   // Motion: Heading
   pythonGenerator.forBlock['turtle_heading'] = function (block, generator) {
     const varName = generator.nameDB_.getName(block.getFieldValue('VAR'), Blockly.Names.NameType.VARIABLE);
-    const angle = generator.valueToCode(block, 'ANGLE', pythonGenerator.ORDER_NONE) || '0';
+    const angle = generator.valueToCode(block, 'ANGLE', PythonOrder.NONE) || '0';
     const code = `${varName}.setheading(${angle})\n`;
     return code;
   };
@@ -3128,8 +3128,8 @@ serial.send(${text})
   // Motion: Position
   pythonGenerator.forBlock['turtle_position'] = function (block, generator) {
     const varName = generator.nameDB_.getName(block.getFieldValue('VAR'), Blockly.Names.NameType.VARIABLE);
-    const x = generator.valueToCode(block, 'X', pythonGenerator.ORDER_NONE) || '0';
-    const y = generator.valueToCode(block, 'Y', pythonGenerator.ORDER_NONE) || '0';
+    const x = generator.valueToCode(block, 'X', PythonOrder.NONE) || '0';
+    const y = generator.valueToCode(block, 'Y', PythonOrder.NONE) || '0';
     const code = `${varName}.goto(${x}, ${y})\n`;
     return code;
   };
@@ -3173,7 +3173,7 @@ serial.send(${text})
   // Turtle: Speed
   pythonGenerator.forBlock['turtle_speed'] = function (block, generator) {
     const varName = generator.nameDB_.getName(block.getFieldValue('VAR'), Blockly.Names.NameType.VARIABLE);
-    const speed = generator.valueToCode(block, 'SPEED', pythonGenerator.ORDER_NONE) || '5';
+    const speed = generator.valueToCode(block, 'SPEED', PythonOrder.NONE) || '5';
     const code = `${varName}.speed(${speed})\n`;
     return code;
   };
@@ -3181,7 +3181,7 @@ serial.send(${text})
   // Turtle: Width
   pythonGenerator.forBlock['turtle_width'] = function (block, generator) {
     const varName = generator.nameDB_.getName(block.getFieldValue('VAR'), Blockly.Names.NameType.VARIABLE);
-    const width = generator.valueToCode(block, 'WIDTH', pythonGenerator.ORDER_NONE) || '5';
+    const width = generator.valueToCode(block, 'WIDTH', PythonOrder.NONE) || '5';
     const code = `${varName}.pensize(${width})\n`;
     return code;
   };
@@ -3189,7 +3189,7 @@ serial.send(${text})
   // Turtle: Fill color
   pythonGenerator.forBlock['turtle_fill_color'] = function (block, generator) {
     const varName = generator.nameDB_.getName(block.getFieldValue('VAR'), Blockly.Names.NameType.VARIABLE);
-    const color = generator.valueToCode(block, 'COLOR', pythonGenerator.ORDER_NONE) || '"red"';
+    const color = generator.valueToCode(block, 'COLOR', PythonOrder.NONE) || '"red"';
     const code = `${varName}.fillcolor(${color})\n`;
     return code;
   };
@@ -3197,7 +3197,7 @@ serial.send(${text})
   // Turtle: Color (pen color)
   pythonGenerator.forBlock['turtle_color'] = function (block, generator) {
     const varName = generator.nameDB_.getName(block.getFieldValue('VAR'), Blockly.Names.NameType.VARIABLE);
-    const color = generator.valueToCode(block, 'COLOR', pythonGenerator.ORDER_NONE) || '"black"';
+    const color = generator.valueToCode(block, 'COLOR', PythonOrder.NONE) || '"black"';
     const code = `${varName}.color(${color})\n`;
     return code;
   };
@@ -3223,44 +3223,44 @@ serial.send(${text})
 
   // Colors: Red
   pythonGenerator.forBlock['colour_red'] = function (block, generator) {
-    return ['"red"', pythonGenerator.ORDER_ATOMIC];
+    return ['"red"', PythonOrder.ATOMIC];
   };
 
   // Colors: Green
   pythonGenerator.forBlock['colour_green'] = function (block, generator) {
-    return ['"green"', pythonGenerator.ORDER_ATOMIC];
+    return ['"green"', PythonOrder.ATOMIC];
   };
 
   // Colors: Blue
   pythonGenerator.forBlock['colour_blue'] = function (block, generator) {
-    return ['"blue"', pythonGenerator.ORDER_ATOMIC];
+    return ['"blue"', PythonOrder.ATOMIC];
   };
 
   // Colors: Yellow
   pythonGenerator.forBlock['colour_yellow'] = function (block, generator) {
-    return ['"yellow"', pythonGenerator.ORDER_ATOMIC];
+    return ['"yellow"', PythonOrder.ATOMIC];
   };
 
   // Colors: Purple
   pythonGenerator.forBlock['colour_purple'] = function (block, generator) {
-    return ['"purple"', pythonGenerator.ORDER_ATOMIC];
+    return ['"purple"', PythonOrder.ATOMIC];
   };
 
   // Colors: Pink
   pythonGenerator.forBlock['colour_pink'] = function (block, generator) {
-    return ['"pink"', pythonGenerator.ORDER_ATOMIC];
+    return ['"pink"', PythonOrder.ATOMIC];
   };
 
   // Colors: Picker
   pythonGenerator.forBlock['colour_picker'] = function (block, generator) {
     const color = block.getFieldValue('COLOUR');
-    return [`'${color}'`, pythonGenerator.ORDER_ATOMIC];
+    return [`'${color}'`, PythonOrder.ATOMIC];
   };
 
   // Lists: First occurrence
   pythonGenerator.forBlock['lists_first_occurrence'] = function (block, generator) {
     const list = generator.valueToCode(block, 'LIST', pythonGenerator.ORDER_MEMBER) || '[]';
-    const item = generator.valueToCode(block, 'ITEM', pythonGenerator.ORDER_NONE) || 'None';
+    const item = generator.valueToCode(block, 'ITEM', PythonOrder.NONE) || 'None';
     const code = `${list}.index(${item})`;
     return [code, pythonGenerator.ORDER_MEMBER];
   };
@@ -3268,7 +3268,7 @@ serial.send(${text})
   // Lists: Count element
   pythonGenerator.forBlock['lists_count_element'] = function (block, generator) {
     const list = generator.valueToCode(block, 'LIST', pythonGenerator.ORDER_MEMBER) || '[]';
-    const item = generator.valueToCode(block, 'ITEM', pythonGenerator.ORDER_NONE) || 'None';
+    const item = generator.valueToCode(block, 'ITEM', PythonOrder.NONE) || 'None';
     const code = `${list}.count(${item})`;
     return [code, pythonGenerator.ORDER_MEMBER];
   };
@@ -3284,8 +3284,8 @@ serial.send(${text})
   // Lists: Get sub-list
   pythonGenerator.forBlock['lists_sub_list'] = function (block, generator) {
     const list = generator.valueToCode(block, 'LIST', pythonGenerator.ORDER_MEMBER) || '[]';
-    const start = generator.valueToCode(block, 'START', pythonGenerator.ORDER_NONE) || '0';
-    const end = generator.valueToCode(block, 'END', pythonGenerator.ORDER_NONE) || 'len(list)';
+    const start = generator.valueToCode(block, 'START', PythonOrder.NONE) || '0';
+    const end = generator.valueToCode(block, 'END', PythonOrder.NONE) || 'len(list)';
     const code = `${list}[${start}:${end}]`;
     return [code, pythonGenerator.ORDER_MEMBER];
   };
@@ -3355,7 +3355,7 @@ serial.send(${text})
   // Dictionaries: Remove key
   pythonGenerator.forBlock['dicts_remove_key'] = function (block, generator) {
     const dict = generator.valueToCode(block, 'DICT', pythonGenerator.ORDER_MEMBER) || '{}';
-    const key = generator.valueToCode(block, 'KEY', pythonGenerator.ORDER_NONE) || '"key"';
+    const key = generator.valueToCode(block, 'KEY', PythonOrder.NONE) || '"key"';
     const code = `del ${dict}[${key}]\n`;
     return code;
   };
@@ -3363,8 +3363,8 @@ serial.send(${text})
   // Dictionaries: Update dictionary
   pythonGenerator.forBlock['dicts_update'] = function (block, generator) {
     const dict = generator.valueToCode(block, 'DICT', pythonGenerator.ORDER_MEMBER) || '{}';
-    const key = generator.valueToCode(block, 'KEY', pythonGenerator.ORDER_NONE) || '"key"';
-    const value = generator.valueToCode(block, 'VALUE', pythonGenerator.ORDER_NONE) || 'None';
+    const key = generator.valueToCode(block, 'KEY', PythonOrder.NONE) || '"key"';
+    const value = generator.valueToCode(block, 'VALUE', PythonOrder.NONE) || 'None';
     const code = `${dict}[${key}] = ${value}\n`;
     return code;
   };
@@ -3392,7 +3392,7 @@ serial.send(${text})
   // Control: Button
   pythonGenerator.forBlock['controls_button'] = function (block, generator) {
     const direction = block.getFieldValue('DIRECTION');
-    return [`"${direction}"`, pythonGenerator.ORDER_ATOMIC];
+    return [`"${direction}"`, PythonOrder.ATOMIC];
   };
   /* =========================
    MATPLOTLIB GENERATORS
@@ -3404,27 +3404,27 @@ serial.send(${text})
 
   // plot line (Y only)
   pythonGenerator.forBlock['plot_line'] = function (block, gen) {
-    const y = gen.valueToCode(block, "Y", gen.ORDER_NONE) || "[]";
+    const y = gen.valueToCode(block, "Y", PythonOrder.NONE) || "[]";
     return `plt.plot(${y}, ${y})\n`;
   };
 
   // plot X vs Y
   pythonGenerator.forBlock['plot_xs_ys'] = function (block, gen) {
-    const x = gen.valueToCode(block, "X", gen.ORDER_NONE) || "[]";
-    const y = gen.valueToCode(block, "Y", gen.ORDER_NONE) || "[]";
+    const x = gen.valueToCode(block, "X", PythonOrder.NONE) || "[]";
+    const y = gen.valueToCode(block, "Y", PythonOrder.NONE) || "[]";
     return `plt.plot(${x}, ${y})\n`;
   };
 
   // scatter
   pythonGenerator.forBlock['plot_scatter'] = function (block, gen) {
-    const x = gen.valueToCode(block, "X", gen.ORDER_NONE) || "[]";
-    const y = gen.valueToCode(block, "Y", gen.ORDER_NONE) || "[]";
+    const x = gen.valueToCode(block, "X", PythonOrder.NONE) || "[]";
+    const y = gen.valueToCode(block, "Y", PythonOrder.NONE) || "[]";
     return `plt.scatter(${x}, ${y})\n`;
   };
 
   // histogram
   pythonGenerator.forBlock['plot_histogram'] = function (block, gen) {
-    const d = gen.valueToCode(block, "DATA", gen.ORDER_NONE) || "[]";
+    const d = gen.valueToCode(block, "DATA", PythonOrder.NONE) || "[]";
     return `plt.hist(${d})\n`;
   };
 
@@ -3435,18 +3435,18 @@ serial.send(${text})
 
   // title
   pythonGenerator.forBlock['plot_title'] = function (block, gen) {
-    const t = gen.valueToCode(block, "TITLE", gen.ORDER_NONE) || "''";
+    const t = gen.valueToCode(block, "TITLE", PythonOrder.NONE) || "''";
     return `plt.title(${t})\n`;
   };
 
   // labels
   pythonGenerator.forBlock['plot_xlabel'] = function (block, gen) {
-    const l = gen.valueToCode(block, "LABEL", gen.ORDER_NONE) || "''";
+    const l = gen.valueToCode(block, "LABEL", PythonOrder.NONE) || "''";
     return `plt.xlabel(${l})\n`;
   };
 
   pythonGenerator.forBlock['plot_ylabel'] = function (block, gen) {
-    const l = gen.valueToCode(block, "LABEL", gen.ORDER_NONE) || "''";
+    const l = gen.valueToCode(block, "LABEL", PythonOrder.NONE) || "''";
     return `plt.ylabel(${l})\n`;
   };
 
@@ -4198,13 +4198,22 @@ workspace.scrollCenter();
     defineBlocks();
     definePythonGenerators();
     defineJavascriptGenerators();
-
+ const devicePixelRatio = window.devicePixelRatio || 1;
+  
+  // Calculate appropriate start scale based on DPI
+  // Lower DPI (< 1.5) = bigger blocks, Higher DPI (> 2) = smaller blocks
+  let startScale = 1.0;
+  if (devicePixelRatio < 1.5) {
+    startScale = 0.8; // Make blocks smaller on low-DPI screens
+  } else if (devicePixelRatio > 2) {
+    startScale = 1.2; // Make blocks bigger on high-DPI screens
+  }
     const workspace = Blockly.inject(blocklyDiv.current, {
       toolbox: toolboxXml,
       zoom: {
         controls: true,
         wheel: true,
-        startScale: 1.0,
+        startScale: startScale,
         maxScale: 3,
         minScale: 0.3,
         scaleSpeed: 1.2
@@ -5258,7 +5267,10 @@ plt = _FakePlt()
               style={{
                 width: "100%",
                 height: "100%",
-                display: view === "blocks" ? "block" : "none"
+                display: view === "blocks" ? "block" : "none",
+                fontSize: "14px", // Force consistent font size
+    transform: "scale(1)", // Prevent browser scaling
+    transformOrigin: "top left"
               }}
             />
 

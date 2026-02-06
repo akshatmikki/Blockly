@@ -201,3 +201,23 @@
 .blocklyScrollbarBackground {
   fill: transparent;
 }
+
+/* Force consistent Blockly sizing */
+.blocklyText {
+  font-size: 12pt !important;
+  font-family: sans-serif !important;
+}
+
+.blocklyFlyout {
+  transform: scale(1) !important;
+}
+
+.blocklyToolboxDiv {
+  font-size: 14px !important;
+}
+
+/* Fix for different DPIs */
+.blocklyWorkspace {
+  image-rendering: crisp-edges;
+  -webkit-font-smoothing: antialiased;
+}
