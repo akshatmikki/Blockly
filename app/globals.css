@@ -109,6 +109,7 @@
 .blocklyDiv {
   width: 100%;
   height: 100%;
+  /* ❌ DON'T USE TRANSFORM - it breaks layout */
 }
 
 /* Prevent layout bleed */
@@ -202,22 +203,26 @@
   fill: transparent;
 }
 
-/* Force consistent Blockly sizing */
+/* =====================================================
+   ✅ SIMPLE FONT SIZE FIX - NO SCALING
+===================================================== */
+
 .blocklyText {
-  font-size: 12pt !important;
+  font-size: 12px !important;
   font-family: sans-serif !important;
 }
 
-.blocklyFlyout {
-  transform: scale(1) !important;
+.blocklyEditableText,
+.blocklyDropdownText {
+  font-size: 12px !important;
 }
 
 .blocklyToolboxDiv {
-  font-size: 14px !important;
+  font-size: 13px !important;
 }
 
-/* Fix for different DPIs */
+/* Fix for different DPIs - only rendering quality */
 .blocklyWorkspace {
-  image-rendering: crisp-edges;
+  image-rendering: auto;
   -webkit-font-smoothing: antialiased;
 }

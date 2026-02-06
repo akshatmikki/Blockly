@@ -4194,116 +4194,77 @@ workspace.scrollCenter();
     debugLog('✅ Finished loading blocks successfully');
   }
 
-  useEffect(() => {
-    defineBlocks();
-    definePythonGenerators();
-    defineJavascriptGenerators();
- const devicePixelRatio = window.devicePixelRatio || 1;
-  
-  // Calculate appropriate start scale based on DPI
-  // Lower DPI (< 1.5) = bigger blocks, Higher DPI (> 2) = smaller blocks
-  let startScale = 1.0;
-  if (devicePixelRatio < 1.5) {
-    startScale = 0.8; // Make blocks smaller on low-DPI screens
-  } else if (devicePixelRatio > 2) {
-    startScale = 1.2; // Make blocks bigger on high-DPI screens
-  }
-    const workspace = Blockly.inject(blocklyDiv.current, {
-      toolbox: toolboxXml,
-      zoom: {
-        controls: true,
-        wheel: true,
-        startScale: startScale,
-        maxScale: 3,
-        minScale: 0.3,
-        scaleSpeed: 1.2
-      },
-      trashcan: true
-    });
+useEffect(() => {
+  defineBlocks();
+  definePythonGenerators();
+  defineJavascriptGenerators();
 
-    workspaceRef.current = workspace;
-     setWorkspaceReady(true);
-    const preventToolboxScroll = () => {
-      // Find the flyout (block drawer) element
-      const flyout = blocklyDiv.current?.querySelector('.blocklyFlyout');
-      const toolboxDiv = blocklyDiv.current?.querySelector('.blocklyToolboxDiv');
+  const workspace = Blockly.inject(blocklyDiv.current, {
+    toolbox: toolboxXml,
+    zoom: {
+      controls: true,
+      wheel: true,
+      startScale: 1.0, // ✅ Keep simple - let users zoom if needed
+      maxScale: 3,
+      minScale: 0.3,
+      scaleSpeed: 1.2
+    },
+    trashcan: true,
+    renderer: 'zelos' // ✅ Modern renderer
+  });
 
-      // Prevent wheel events on flyout from propagating to workspace
-      if (flyout) {
-        flyout.addEventListener('wheel', (e) => {
-          e.stopPropagation();
-        }, { passive: true });
+  workspaceRef.current = workspace;
+  setWorkspaceReady(true); // ✅ ADD THIS
+
+  const preventToolboxScroll = () => {
+    const flyout = blocklyDiv.current?.querySelector('.blocklyFlyout');
+    const toolboxDiv = blocklyDiv.current?.querySelector('.blocklyToolboxDiv');
+
+    if (flyout) {
+      flyout.addEventListener('wheel', (e) => e.stopPropagation(), { passive: true });
+      flyout.addEventListener('touchmove', (e) => e.stopPropagation(), { passive: true });
+    }
+
+    if (toolboxDiv) {
+      toolboxDiv.addEventListener('wheel', (e) => e.stopPropagation(), { passive: true });
+      toolboxDiv.addEventListener('touchmove', (e) => e.stopPropagation(), { passive: true });
+    }
+  };
+
+  setTimeout(preventToolboxScroll, 100);
+
+  workspace.addChangeListener((event: any) => {
+    if (event.type === Blockly.Events.TOOLBOX_ITEM_SELECT) {
+      setTimeout(preventToolboxScroll, 50);
+    }
+  });
+
+  workspace.addChangeListener((event) => {
+    if (
+      event.type !== Blockly.Events.BLOCK_CREATE &&
+      event.type !== Blockly.Events.BLOCK_CHANGE &&
+      event.type !== Blockly.Events.BLOCK_DELETE &&
+      event.type !== Blockly.Events.BLOCK_MOVE
+    ) {
+      return;
+    }
+    setCode(pythonGenerator.workspaceToCode(workspace));
+  });
+
+  workspace.addChangeListener((event) => {
+    if (event.type === Blockly.Events.UI && event.element === "click") {
+      const block = workspace.getBlockById(event.blockId);
+      if (block && block.type === "file_upload") {
+        fileInputRef.current?.click();
       }
+    }
+  });
 
-      // Prevent wheel events on toolbox from propagating to workspace
-      if (toolboxDiv) {
-        toolboxDiv.addEventListener('wheel', (e) => {
-          e.stopPropagation();
-        }, { passive: true });
-      }
-
-      // Also prevent touch scroll propagation on mobile
-      if (flyout) {
-        flyout.addEventListener('touchmove', (e) => {
-          e.stopPropagation();
-        }, { passive: true });
-      }
-
-      if (toolboxDiv) {
-        toolboxDiv.addEventListener('touchmove', (e) => {
-          e.stopPropagation();
-        }, { passive: true });
-      }
-    };
-
-    // Apply the fix after a short delay to ensure Blockly is fully rendered
-    setTimeout(preventToolboxScroll, 100);
-
-    // Also reapply when toolbox opens (category clicked)
-    workspace.addChangeListener((event: any) => {
-      if (event.type === Blockly.Events.TOOLBOX_ITEM_SELECT) {
-        setTimeout(preventToolboxScroll, 50);
-      }
-    });
-    /* =========================
-       1️⃣ CODE GENERATION LISTENER
-    ========================= */
-    workspace.addChangeListener((event) => {
-      if (
-        event.type !== Blockly.Events.BLOCK_CREATE &&
-        event.type !== Blockly.Events.BLOCK_CHANGE &&
-        event.type !== Blockly.Events.BLOCK_DELETE &&
-        event.type !== Blockly.Events.BLOCK_MOVE
-      ) {
-        return;
-      }
-
-      setCode(pythonGenerator.workspaceToCode(workspace));
-    });
-
-    /* =========================
-       2️⃣ FILE UPLOAD BLOCK HANDLER
-       (DOUBLE-CLICK SAFE)
-    ========================= */
-    workspace.addChangeListener((event) => {
-      if (
-        event.type === Blockly.Events.UI &&
-        event.element === "click"
-      ) {
-        const block = workspace.getBlockById(event.blockId);
-
-        if (block && block.type === "file_upload") {
-          fileInputRef.current?.click();
-        }
-      }
-    });
-
-
-    return () => {
-      workspace.dispose();
-      setWorkspaceReady(false);
-    };
-  }, [toolboxXml]);
+  return () => {
+    workspace.dispose();
+    setWorkspaceReady(false); // ✅ ADD THIS
+  };
+}, [toolboxXml]);
 
 
   function renderPlot(plot, labels) {
