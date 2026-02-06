@@ -3486,37 +3486,37 @@ const [workspaceReady, setWorkspaceReady] = useState(false);
   function appendOutput(text: string) {
     setOutput(prev => prev + text + "\n")
   }
+// useEffect(() => {
+//   const node = blocklyDiv.current;
+//   if (!node) return;
+
+//   // 🔒 hard guard
+//   if (workspaceRef.current) return;
+
+//   debugLog("🚀 Injecting Blockly");
+
+//   const workspace = Blockly.inject(node, {
+//     toolbox: toolboxXml,
+//     trashcan: true,
+//     scrollbars: true,
+//   });
+
+//   workspaceRef.current = workspace;
+
+//   requestAnimationFrame(() => {
+//     Blockly.svgResize(workspace);
+//   });
+
+//   // ✅ ONLY set ready AFTER workspaceRef is set
+//   setWorkspaceReady(true);
+//   debugLog("🚀 Injected Blockly");
+// }, [blocklyDiv.current]); // 👈 THIS is the key
+
 useEffect(() => {
-  const node = blocklyDiv.current;
-  if (!node) return;
-
-  // 🔒 hard guard
-  if (workspaceRef.current) return;
-
-  debugLog("🚀 Injecting Blockly");
-
-  const workspace = Blockly.inject(node, {
-    toolbox: toolboxXml,
-    trashcan: true,
-    scrollbars: true,
-  });
-
-  workspaceRef.current = workspace;
-
-  requestAnimationFrame(() => {
-    Blockly.svgResize(workspace);
-  });
-
-  // ✅ ONLY set ready AFTER workspaceRef is set
-  setWorkspaceReady(true);
-  debugLog("🚀 Injected Blockly");
-}, [blocklyDiv.current]); // 👈 THIS is the key
-
-useEffect(() => {
-  if (!workspaceReady) {
-    debugLog("⏳ Waiting for workspaceReady");
-    return;
-  }
+  // if (!workspaceReady) {
+  //   debugLog("⏳ Waiting for workspaceReady");
+  //   return;
+  // }
 
   const workspace = workspaceRef.current;
   if (!workspace) {
@@ -3539,7 +3539,7 @@ useEffect(() => {
       .then(loadBlocksIntoWorkspace)
       .catch(console.error);
   }
-}, [workspaceReady, mode, activityId, projectId]);
+}, [ mode, activityId, projectId]);
 
 
   async function executeBlock(block: Blockly.Block) {
