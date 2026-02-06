@@ -3513,10 +3513,10 @@ const [workspaceReady, setWorkspaceReady] = useState(false);
 // }, [blocklyDiv.current]); // 👈 THIS is the key
 
 useEffect(() => {
-  // if (!workspaceReady) {
-  //   debugLog("⏳ Waiting for workspaceReady");
-  //   return;
-  // }
+  if (!workspaceReady) {
+    debugLog("⏳ Waiting for workspaceReady");
+    return;
+  }
 
   const workspace = workspaceRef.current;
   if (!workspace) {
@@ -3539,7 +3539,7 @@ useEffect(() => {
       .then(loadBlocksIntoWorkspace)
       .catch(console.error);
   }
-}, [ mode, activityId, projectId]);
+}, [workspaceReady, mode, activityId, projectId]);
 
 
   async function executeBlock(block: Blockly.Block) {
@@ -4213,6 +4213,7 @@ workspace.scrollCenter();
     });
 
     workspaceRef.current = workspace;
+     setWorkspaceReady(true);
     const preventToolboxScroll = () => {
       // Find the flyout (block drawer) element
       const flyout = blocklyDiv.current?.querySelector('.blocklyFlyout');
@@ -4291,6 +4292,7 @@ workspace.scrollCenter();
 
     return () => {
       workspace.dispose();
+      setWorkspaceReady(false);
     };
   }, [toolboxXml]);
 
