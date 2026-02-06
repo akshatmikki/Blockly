@@ -226,3 +226,30 @@
   image-rendering: auto;
   -webkit-font-smoothing: antialiased;
 }
+
+/* =====================================================
+   FLYOUT SCROLLBAR (FIXED)
+===================================================== */
+
+.blocklyFlyoutScrollbar {
+  transition: opacity 0.15s ease;
+}
+
+/* ✅ CRITICAL FIX - Hide scrollbar when flyout hidden */
+.blocklyFlyout.blocklyHidden .blocklyFlyoutScrollbar,
+.blocklyFlyout.blocklyHidden + .blocklyFlyoutScrollbar {
+  display: none !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  visibility: hidden !important;
+}
+
+/* ✅ Also hide when flyout is closing */
+.blocklyFlyout:not(.blocklyFlyoutOpen) .blocklyFlyoutScrollbar {
+  display: none !important;
+}
+
+/* ✅ Force hide all flyout scrollbars when not actively showing blocks */
+.blocklyMainBackground ~ .blocklyFlyoutScrollbar:not(:has(+ .blocklyFlyout:not(.blocklyHidden))) {
+  display: none !important;
+}

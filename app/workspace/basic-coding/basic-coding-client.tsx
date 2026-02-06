@@ -3695,7 +3695,7 @@ useEffect(() => {
 <category name="Input" colour="30">
   <block type="input_prompt" />
   <block type="string_literal" />
-  <block type="number_literal" />
+  <block type="math_number" />
   <block type="boolean_literal" />
 </category>
 
@@ -3767,7 +3767,7 @@ useEffect(() => {
 
   <!-- Number -->
   <category name="Integer" colour="230">
-    <block type="number_literal" />
+    <block type="math_number" />
   </category>
 
     <!-- Boolean -->
@@ -4259,6 +4259,28 @@ useEffect(() => {
       }
     }
   });
+
+  // ✅ ADD THIS CODE IN YOUR WORKSPACE INITIALIZATION
+// Add this after the file upload listener (around line 4260)
+
+workspace.addChangeListener((event: any) => {
+  if (event.type === Blockly.Events.TOOLBOX_ITEM_SELECT) {
+    setTimeout(() => {
+      const scrollbars = blocklyDiv.current?.querySelectorAll('.blocklyFlyoutScrollbar');
+      
+      scrollbars?.forEach((scrollbar) => {
+        const flyout = scrollbar.previousElementSibling;
+        
+        // Hide scrollbar if flyout is hidden or doesn't exist
+        if (!flyout || flyout.classList.contains('blocklyHidden')) {
+          (scrollbar as HTMLElement).style.display = 'none';
+        } else {
+          (scrollbar as HTMLElement).style.display = '';
+        }
+      });
+    }, 50);
+  }
+});
 
   return () => {
     workspace.dispose();
