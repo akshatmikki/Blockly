@@ -2472,7 +2472,7 @@ serial.send(${text})
     if (direction === 'BACKWARD') {
       return `${varName}.backward(${distance})\n`;
     }
-    
+
     return `${varName}.forward(${distance})\n`;
   };
 
@@ -2511,14 +2511,16 @@ serial.send(${text})
   };
 
   pythonGenerator.forBlock['turtle_create'] = function (block, generator) {
+    // ✅ Ensure import turtle is added ONCE
+    generator.definitions_['import_turtle'] = 'import turtle';
+
     const varName = generator.nameDB_.getName(
       block.getFieldValue('VAR'),
       Blockly.Names.NameType.VARIABLE
     );
 
-    return `${varName} = _turtle.Turtle()\n`;
+    return `${varName} = turtle.Turtle()\n`;
   };
-
 
   pythonGenerator.forBlock['turtle_forward'] = function (block, generator) {
     const varName = generator.nameDB_.getName(block.getFieldValue('VAR'), Blockly.Names.NameType.VARIABLE);
@@ -2954,17 +2956,26 @@ serial.send(${text})
   };
 
   // Math: Random integer
-  pythonGenerator.forBlock['math_random_int'] = function (block, generator) {
-    const from = generator.valueToCode(block, 'FROM', PythonOrder.NONE) || '1';
-    const to = generator.valueToCode(block, 'TO', PythonOrder.NONE) || '100';
-    const code = `random.randint(${from}, ${to})`;
-    return [code, pythonGenerator.ORDER_MEMBER];
-  };
+ pythonGenerator.forBlock['math_random_int'] = function (block, generator) {
+  // Ensure import is added once at top
+  generator.definitions_['import_random'] = 'import random';
+
+  const from =
+    generator.valueToCode(block, 'FROM', PythonOrder.NONE) || '1';
+  const to =
+    generator.valueToCode(block, 'TO', PythonOrder.NONE) || '100';
+
+  const code = `random.randint(${from}, ${to})`;
+  return [code, pythonGenerator.ORDER_FUNCTION_CALL];
+};
 
   // Math: Random fraction
   pythonGenerator.forBlock['math_random_fraction'] = function (block, generator) {
-    return ['random.random()', pythonGenerator.ORDER_MEMBER];
-  };
+  // ✅ ensure import added once
+  generator.definitions_['import_random'] = 'import random';
+
+  return ['random.random()', pythonGenerator.ORDER_FUNCTION_CALL];
+};
 
   // Lists: Create list
   pythonGenerator.forBlock['lists_create_with'] = function (block, generator) {
@@ -3465,7 +3476,7 @@ function BasicCodingPage() {
 
   const projectId = searchParams?.get("projectId")
   const activityId = searchParams?.get("activityId")
-const [workspaceReady, setWorkspaceReady] = useState(false);
+  const [workspaceReady, setWorkspaceReady] = useState(false);
 
   const mode = projectId
     ? "PROJECT"
@@ -3475,7 +3486,7 @@ const [workspaceReady, setWorkspaceReady] = useState(false);
 
 
   const workspaceRef = useRef<Blockly.WorkspaceSvg | null>(null)
-  
+
   function debugLog(message: string, data?: any) {
     const timestamp = new Date().toLocaleTimeString();
     const logMessage = `[${timestamp}] ${message}`;
@@ -3486,60 +3497,35 @@ const [workspaceReady, setWorkspaceReady] = useState(false);
   function appendOutput(text: string) {
     setOutput(prev => prev + text + "\n")
   }
-// useEffect(() => {
-//   const node = blocklyDiv.current;
-//   if (!node) return;
 
-//   // 🔒 hard guard
-//   if (workspaceRef.current) return;
+  useEffect(() => {
+    if (!workspaceReady) {
+      debugLog("⏳ Waiting for workspaceReady");
+      return;
+    }
 
-//   debugLog("🚀 Injecting Blockly");
+    const workspace = workspaceRef.current;
+    if (!workspace) {
+      debugLog("❌ workspaceReady but workspace missing");
+      return;
+    }
 
-//   const workspace = Blockly.inject(node, {
-//     toolbox: toolboxXml,
-//     trashcan: true,
-//     scrollbars: true,
-//   });
+    if (mode === "ACTIVITY" && activityId) {
+      debugLog(`📦 Loading blocks for activity ${activityId}`);
+      fetch(`/api/tutorials/activity/${activityId}/blocks`)
+        .then(res => res.json())
+        .then(loadBlocksIntoWorkspace)
+        .catch(console.error);
+    }
 
-//   workspaceRef.current = workspace;
-
-//   requestAnimationFrame(() => {
-//     Blockly.svgResize(workspace);
-//   });
-
-//   // ✅ ONLY set ready AFTER workspaceRef is set
-//   setWorkspaceReady(true);
-//   debugLog("🚀 Injected Blockly");
-// }, [blocklyDiv.current]); // 👈 THIS is the key
-
-useEffect(() => {
-  if (!workspaceReady) {
-    debugLog("⏳ Waiting for workspaceReady");
-    return;
-  }
-
-  const workspace = workspaceRef.current;
-  if (!workspace) {
-    debugLog("❌ workspaceReady but workspace missing");
-    return;
-  }
-
-  if (mode === "ACTIVITY" && activityId) {
-    debugLog(`📦 Loading blocks for activity ${activityId}`);
-    fetch(`/api/tutorials/activity/${activityId}/blocks`)
-      .then(res => res.json())
-      .then(loadBlocksIntoWorkspace)
-      .catch(console.error);
-  }
-
-  if (mode === "PROJECT" && projectId) {
-    debugLog(`📦 Loading blocks for project ${projectId}`);
-    fetch(`/api/project/${projectId}/blocks`)
-      .then(res => res.json())
-      .then(loadBlocksIntoWorkspace)
-      .catch(console.error);
-  }
-}, [workspaceReady, mode, activityId, projectId]);
+    if (mode === "PROJECT" && projectId) {
+      debugLog(`📦 Loading blocks for project ${projectId}`);
+      fetch(`/api/project/${projectId}/blocks`)
+        .then(res => res.json())
+        .then(loadBlocksIntoWorkspace)
+        .catch(console.error);
+    }
+  }, [workspaceReady, mode, activityId, projectId]);
 
 
   async function executeBlock(block: Blockly.Block) {
@@ -3952,11 +3938,64 @@ useEffect(() => {
     }
     return variable.getId();
   }
+  function createValueBlock(workspace, valueCfg) {
+    if (!valueCfg) return null;
+
+    switch (valueCfg.type) {
+
+      case "INT": {
+        const num = workspace.newBlock("math_number");
+        num.setFieldValue(String(valueCfg.value), "NUM");
+        num.initSvg();
+        num.render();
+        return num;
+      }
+
+      case "STRING": {
+        const text = workspace.newBlock("text");
+        text.setFieldValue(valueCfg.value, "TEXT");
+        text.initSvg();
+        text.render();
+        return text;
+      }
+
+      case "VARIABLE": {
+        const varId = ensureVariable(workspace, valueCfg.name);
+        const v = workspace.newBlock("variables_get");
+        v.setFieldValue(varId, "VAR");
+        v.initSvg();
+        v.render();
+        return v;
+      }
+
+      case "EXPRESSION": {
+        if (valueCfg.operator === "MULTIPLY") {
+          const expr = workspace.newBlock("math_arithmetic");
+          expr.setFieldValue("MULTIPLY", "OP");
+
+          const left = createValueBlock(workspace, valueCfg.left);
+          const right = createValueBlock(workspace, valueCfg.right);
+
+          expr.initSvg();
+          expr.render();
+
+          expr.getInput("A")?.connection?.connect(left?.outputConnection);
+          expr.getInput("B")?.connection?.connect(right?.outputConnection);
+
+          return expr;
+        }
+        return null;
+      }
+
+      default:
+        return null;
+    }
+  }
 
   function createBlocklyBlock(workspace, row) {
     // Parse block_config if it's a string (from database)
-    const cfg = typeof row.block_config === 'string' 
-      ? JSON.parse(row.block_config) 
+    const cfg = typeof row.block_config === 'string'
+      ? JSON.parse(row.block_config)
       : row.block_config;
 
     // Add validation
@@ -4014,6 +4053,29 @@ useEffect(() => {
           block.getInput("VALUE")
             ?.connection
             ?.connect(textBlock.outputConnection);
+
+          return block;
+        }
+        // INT / VARIABLE / EXPRESSION → variable (NEW, additive)
+        if (
+          cfg.value?.type === "INT" ||
+          cfg.value?.type === "VARIABLE" ||
+          cfg.value?.type === "EXPRESSION"
+        ) {
+          const varId = ensureVariable(workspace, cfg.variable);
+          const block = workspace.newBlock("variables_set");
+          block.setFieldValue(varId, "VAR");
+
+          const valueBlock = createValueBlock(workspace, cfg.value);
+
+          block.initSvg();
+          block.render();
+
+          if (valueBlock) {
+            block.getInput("VALUE")
+              ?.connection
+              ?.connect(valueBlock.outputConnection);
+          }
 
           return block;
         }
@@ -4145,132 +4207,83 @@ useEffect(() => {
     // First pass: Create all variables that will be needed
     debugLog('First pass: Creating variables');
     blocks.forEach((row) => {
-      const cfg = typeof row.block_config === 'string' 
-        ? JSON.parse(row.block_config) 
+      const cfg = typeof row.block_config === 'string'
+        ? JSON.parse(row.block_config)
         : row.block_config;
-      
+
       if (cfg?.variable) {
         ensureVariable(workspace, cfg.variable);
         debugLog(`Created variable: ${cfg.variable}`);
       }
     });
 
- let previousBlock: Blockly.Block | null = null;
-let y = 40;
+    let previousBlock: Blockly.Block | null = null;
+    let y = 40;
 
-blocks.forEach((row) => {
-  const newBlock = createBlocklyBlock(workspace, row);
-  if (!newBlock) return;
+    blocks.forEach((row) => {
+      const newBlock = createBlocklyBlock(workspace, row);
+      if (!newBlock) return;
 
-  // Init SVG first (required)
-  newBlock.initSvg();
+      // Init SVG first (required)
+      newBlock.initSvg();
 
-  if (!previousBlock) {
-    // ⭐ Root block
-    newBlock.render();
-    newBlock.moveBy(40, y);
-    y += newBlock.getHeightWidth().height + 30;
-  } else {
-    // ⭐ Connect BEFORE render
-    if (
-      previousBlock.nextConnection &&
-      newBlock.previousConnection
-    ) {
-      previousBlock.nextConnection.connect(
-        newBlock.previousConnection
-      );
-    }
-    newBlock.render();
-  }
+      if (!previousBlock) {
+        // ⭐ Root block
+        newBlock.render();
+        newBlock.moveBy(40, y);
+        y += newBlock.getHeightWidth().height + 30;
+      } else {
+        // ⭐ Connect BEFORE render
+        if (
+          previousBlock.nextConnection &&
+          newBlock.previousConnection
+        ) {
+          previousBlock.nextConnection.connect(
+            newBlock.previousConnection
+          );
+        }
+        newBlock.render();
+      }
 
-  previousBlock = newBlock;
-});
+      previousBlock = newBlock;
+    });
 
-workspace.render();
-Blockly.svgResize(workspace);
-workspace.scrollCenter();
+    workspace.render();
+    Blockly.svgResize(workspace);
+    workspace.scrollCenter();
 
-    
+
     debugLog('✅ Finished loading blocks successfully');
   }
 
-useEffect(() => {
-  defineBlocks();
-  definePythonGenerators();
-  defineJavascriptGenerators();
+  useEffect(() => {
+    defineBlocks();
+    definePythonGenerators();
+    defineJavascriptGenerators();
 
-  const workspace = Blockly.inject(blocklyDiv.current, {
-    toolbox: toolboxXml,
-    zoom: {
-      controls: true,
-      wheel: true,
-      startScale: 1.0, // ✅ Keep simple - let users zoom if needed
-      maxScale: 3,
-      minScale: 0.3,
-      scaleSpeed: 1.2
-    },
-    trashcan: true,
-    renderer: 'zelos' // ✅ Modern renderer
-  });
+    const workspace = Blockly.inject(blocklyDiv.current, {
+      toolbox: toolboxXml,
+      zoom: {
+        controls: true,
+        wheel: true,
+        startScale: 1.0, // ✅ Keep simple - let users zoom if needed
+        maxScale: 3,
+        minScale: 0.3,
+        scaleSpeed: 1.2
+      },
+      trashcan: true,
+      renderer: 'zelos' // ✅ Modern renderer
+    });
 
-  workspaceRef.current = workspace;
-  setWorkspaceReady(true); // ✅ ADD THIS
+    workspaceRef.current = workspace;
+    setWorkspaceReady(true); // ✅ ADD THIS
 
-  const preventToolboxScroll = () => {
-    const flyout = blocklyDiv.current?.querySelector('.blocklyFlyout');
-    const toolboxDiv = blocklyDiv.current?.querySelector('.blocklyToolboxDiv');
-
-    if (flyout) {
-      flyout.addEventListener('wheel', (e) => e.stopPropagation(), { passive: true });
-      flyout.addEventListener('touchmove', (e) => e.stopPropagation(), { passive: true });
-    }
-
-    if (toolboxDiv) {
-      toolboxDiv.addEventListener('wheel', (e) => e.stopPropagation(), { passive: true });
-      toolboxDiv.addEventListener('touchmove', (e) => e.stopPropagation(), { passive: true });
-    }
-  };
-
-  setTimeout(preventToolboxScroll, 100);
-
-  workspace.addChangeListener((event: any) => {
-    if (event.type === Blockly.Events.TOOLBOX_ITEM_SELECT) {
-      setTimeout(preventToolboxScroll, 50);
-    }
-  });
-
-  workspace.addChangeListener((event) => {
-    if (
-      event.type !== Blockly.Events.BLOCK_CREATE &&
-      event.type !== Blockly.Events.BLOCK_CHANGE &&
-      event.type !== Blockly.Events.BLOCK_DELETE &&
-      event.type !== Blockly.Events.BLOCK_MOVE
-    ) {
-      return;
-    }
-    setCode(pythonGenerator.workspaceToCode(workspace));
-  });
-
-  workspace.addChangeListener((event) => {
-    if (event.type === Blockly.Events.UI && event.element === "click") {
-      const block = workspace.getBlockById(event.blockId);
-      if (block && block.type === "file_upload") {
-        fileInputRef.current?.click();
-      }
-    }
-  });
-
-  // ✅ ADD THIS CODE IN YOUR WORKSPACE INITIALIZATION
-// Add this after the file upload listener (around line 4260)
-
-workspace.addChangeListener((event: any) => {
-  if (event.type === Blockly.Events.TOOLBOX_ITEM_SELECT) {
-    setTimeout(() => {
+    const updateFlyoutScrollbars = () => {
       const scrollbars = blocklyDiv.current?.querySelectorAll('.blocklyFlyoutScrollbar');
-      
+
       scrollbars?.forEach((scrollbar) => {
-        const flyout = scrollbar.previousElementSibling;
-        
+        const flyout = scrollbar.previousElementSibling as HTMLElement | null;
+
         // Hide scrollbar if flyout is hidden or doesn't exist
         if (!flyout || flyout.classList.contains('blocklyHidden')) {
           (scrollbar as HTMLElement).style.display = 'none';
@@ -4278,15 +4291,107 @@ workspace.addChangeListener((event: any) => {
           (scrollbar as HTMLElement).style.display = '';
         }
       });
-    }, 50);
-  }
-});
+    };
 
-  return () => {
-    workspace.dispose();
-    setWorkspaceReady(false); // ✅ ADD THIS
-  };
-}, [toolboxXml]);
+    let flyoutObserver: MutationObserver | null = null;
+    let containerObserver: MutationObserver | null = null;
+
+    const attachFlyoutObserver = () => {
+      const flyout = blocklyDiv.current?.querySelector('.blocklyFlyout');
+      if (!flyout) return;
+
+      if (flyoutObserver) {
+        flyoutObserver.disconnect();
+      }
+
+      flyoutObserver = new MutationObserver(() => {
+        updateFlyoutScrollbars();
+      });
+
+      flyoutObserver.observe(flyout, {
+        attributes: true,
+        attributeFilter: ['class', 'style'],
+      });
+    };
+
+    const preventToolboxScroll = () => {
+      const flyout = blocklyDiv.current?.querySelector('.blocklyFlyout');
+      const toolboxDiv = blocklyDiv.current?.querySelector('.blocklyToolboxDiv');
+
+      if (flyout) {
+        flyout.addEventListener('wheel', (e) => e.stopPropagation(), { passive: true });
+        flyout.addEventListener('touchmove', (e) => e.stopPropagation(), { passive: true });
+      }
+
+      if (toolboxDiv) {
+        toolboxDiv.addEventListener('wheel', (e) => e.stopPropagation(), { passive: true });
+        toolboxDiv.addEventListener('touchmove', (e) => e.stopPropagation(), { passive: true });
+      }
+    };
+
+    setTimeout(() => {
+      preventToolboxScroll();
+      attachFlyoutObserver();
+      updateFlyoutScrollbars();
+    }, 100);
+
+    if (blocklyDiv.current) {
+      containerObserver = new MutationObserver(() => {
+        attachFlyoutObserver();
+        updateFlyoutScrollbars();
+      });
+
+      containerObserver.observe(blocklyDiv.current, {
+        childList: true,
+        subtree: true,
+      });
+    }
+
+    workspace.addChangeListener((event: any) => {
+      if (event.type === Blockly.Events.TOOLBOX_ITEM_SELECT) {
+        setTimeout(() => {
+          preventToolboxScroll();
+          updateFlyoutScrollbars();
+        }, 50);
+      }
+    });
+
+    workspace.addChangeListener((event) => {
+      if (
+        event.type !== Blockly.Events.BLOCK_CREATE &&
+        event.type !== Blockly.Events.BLOCK_CHANGE &&
+        event.type !== Blockly.Events.BLOCK_DELETE &&
+        event.type !== Blockly.Events.BLOCK_MOVE
+      ) {
+        return;
+      }
+      setCode(pythonGenerator.workspaceToCode(workspace));
+    });
+
+    workspace.addChangeListener((event) => {
+      if (event.type === Blockly.Events.UI) {
+        setTimeout(updateFlyoutScrollbars, 0);
+      }
+
+      if (event.type === Blockly.Events.UI && event.element === "click") {
+        const block = workspace.getBlockById(event.blockId);
+        if (block && block.type === "file_upload") {
+          fileInputRef.current?.click();
+        }
+      }
+    });
+
+    return () => {
+      if (flyoutObserver) {
+        flyoutObserver.disconnect();
+      }
+      if (containerObserver) {
+        containerObserver.disconnect();
+      }
+      workspace.dispose();
+      setWorkspaceReady(false); // ✅ ADD THIS
+    };
+  }, [toolboxXml]);
 
 
   function renderPlot(plot, labels) {
@@ -5120,7 +5225,7 @@ plt = _FakePlt()
           </div>
         </div>
       )}
-      
+
       {/* Toggle Debug Button (when hidden) */}
       {!showDebug && (
         <button
@@ -5194,24 +5299,6 @@ plt = _FakePlt()
             ▶ Run
           </button>
 
-          <button
-            onClick={async () => {
-              if (!workspaceRef.current) return;
-              setOutput("");
-              await runWorkspace(workspaceRef.current);
-            }}
-            style={{
-              padding: "8px 24px",
-              background: "#4CAF50",
-              color: "#fff",
-              border: "none",
-              borderRadius: "4px",
-              fontWeight: "bold"
-            }}
-          >
-            ▶ Run tutorials
-          </button>
-
           <div style={{ marginLeft: "auto", display: "flex", gap: "10px" }}>
             {["blocks", "code", "canvas"].map(v => (
               <button
@@ -5252,8 +5339,8 @@ plt = _FakePlt()
                 height: "100%",
                 display: view === "blocks" ? "block" : "none",
                 fontSize: "14px", // Force consistent font size
-    transform: "scale(1)", // Prevent browser scaling
-    transformOrigin: "top left"
+                transform: "scale(1)", // Prevent browser scaling
+                transformOrigin: "top left"
               }}
             />
 

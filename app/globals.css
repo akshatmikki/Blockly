@@ -236,6 +236,7 @@
 }
 
 /* ✅ CRITICAL FIX - Hide scrollbar when flyout hidden */
+/* Hide scrollbar when flyout is hidden */
 .blocklyFlyout.blocklyHidden .blocklyFlyoutScrollbar,
 .blocklyFlyout.blocklyHidden + .blocklyFlyoutScrollbar {
   display: none !important;
@@ -244,12 +245,39 @@
   visibility: hidden !important;
 }
 
-/* ✅ Also hide when flyout is closing */
+/* Hide scrollbar when flyout is closing */
 .blocklyFlyout:not(.blocklyFlyoutOpen) .blocklyFlyoutScrollbar {
   display: none !important;
 }
 
-/* ✅ Force hide all flyout scrollbars when not actively showing blocks */
-.blocklyMainBackground ~ .blocklyFlyoutScrollbar:not(:has(+ .blocklyFlyout:not(.blocklyHidden))) {
+/* Force hide orphaned scrollbar */
+.blocklyFlyoutScrollbar {
+  pointer-events: auto;
+}
+
+.blocklyFlyout.blocklyHidden ~ .blocklyFlyoutScrollbar {
   display: none !important;
+}
+
+/* Remove background + border while typing */
+.blocklyEditableText.editing text {
+  opacity: 0 !important;
+}
+
+/* Hide SVG text when editing */
+.blocklyEditableText.editing > text,
+.blocklyDropdownText.editing > text {
+  display: none !important;
+}
+
+/* Keep HTML input visible */
+.blocklyHtmlInput {
+  background: transparent !important;
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+
+  color: white; /* or var(--foreground) */
+  font-family: monospace;
+  font-size: 12px;
 }
