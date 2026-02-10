@@ -785,44 +785,44 @@ const defineBlocks = () => {
     }
   };
 
-  // Conversion: To Float
-  Blockly.Blocks['convert_to_float'] = {
-    init: function () {
-      this.appendDummyInput()
-        .appendField("Float");
-      this.appendValueInput("VALUE")
-        .setCheck(null);
-      this.setOutput(true, "Number");
-      this.setColour(100);
-      this.setTooltip("Convert to float");
-    }
-  };
+ // Conversion: To Float
+Blockly.Blocks['convert_to_float'] = {
+  init: function () {
+    this.appendValueInput("VALUE")
+      .setCheck(null)
+      .appendField("float");
 
-  // Conversion: To String
-  Blockly.Blocks['convert_to_string'] = {
-    init: function () {
-      this.appendDummyInput()
-        .appendField("String");
-      this.appendValueInput("VALUE")
-        .setCheck(null);
-      this.setOutput(true, "String");
-      this.setColour(100);
-      this.setTooltip("Convert to string");
-    }
-  };
+    this.setOutput(true, "Number");
+    this.setColour(100);
+    this.setTooltip("Convert value to float");
+  }
+};
 
-  // Conversion: To Boolean
-  Blockly.Blocks['convert_to_bool'] = {
-    init: function () {
-      this.appendDummyInput()
-        .appendField("Boolean");
-      this.appendValueInput("VALUE")
-        .setCheck(null);
-      this.setOutput(true, "Boolean");
-      this.setColour(100);
-      this.setTooltip("Convert to boolean");
-    }
-  };
+// Conversion: To String
+Blockly.Blocks['convert_to_string'] = {
+  init: function () {
+    this.appendValueInput("VALUE")
+      .setCheck(null)
+      .appendField("str");
+
+    this.setOutput(true, "String");
+    this.setColour(100);
+    this.setTooltip("Convert value to string");
+  }
+};
+
+// Conversion: To Boolean
+Blockly.Blocks['convert_to_bool'] = {
+  init: function () {
+    this.appendValueInput("VALUE")
+      .setCheck(null)
+      .appendField("bool");
+
+    this.setOutput(true, "Boolean");
+    this.setColour(100);
+    this.setTooltip("Convert value to boolean");
+  }
+};
 
   // Conversion: Upper case
   Blockly.Blocks['convert_upper_case'] = {
@@ -1057,53 +1057,6 @@ const defineBlocks = () => {
    CONVERSION BLOCKS
 ========================= */
 
-  // Convert to Int
-  Blockly.Blocks['convert_to_int'] = {
-    init: function () {
-      this.appendValueInput("VALUE")
-        .setCheck(null)
-        .appendField("Int");
-      this.setOutput(true, "Number");
-      this.setColour(100);
-      this.setTooltip("Convert value to integer");
-    }
-  };
-
-  // Convert to Float
-  Blockly.Blocks['convert_to_float'] = {
-    init: function () {
-      this.appendValueInput("VALUE")
-        .setCheck(null)
-        .appendField("Float");
-      this.setOutput(true, "Number");
-      this.setColour(100);
-      this.setTooltip("Convert value to float");
-    }
-  };
-
-  // Convert to String
-  Blockly.Blocks['convert_to_string'] = {
-    init: function () {
-      this.appendValueInput("VALUE")
-        .setCheck(null)
-        .appendField("String");
-      this.setOutput(true, "String");
-      this.setColour(100);
-      this.setTooltip("Convert value to string");
-    }
-  };
-
-  // Convert to Boolean
-  Blockly.Blocks['convert_to_bool'] = {
-    init: function () {
-      this.appendValueInput("VALUE")
-        .setCheck(null)
-        .appendField("Boolean");
-      this.setOutput(true, "Boolean");
-      this.setColour(100);
-      this.setTooltip("Convert value to boolean");
-    }
-  };
 
   // Convert to Upper Case
   Blockly.Blocks['convert_upper_case'] = {
@@ -2267,51 +2220,53 @@ const defineBlocks = () => {
       this.setColour(210);
     }
   };
-
-
 };
 
 const defineJavascriptGenerators = () => {
 
   /* ==========================
      CREATE TURTLE (NO-OP)
-  ========================== */
+     ========================== */
   javascriptGenerator.forBlock["turtle_create"] = function () {
-    return "";
+    return ""; // turtle already exists
   };
 
   /* ==========================
-     MOVE (forward/backward)
-  ========================== */
+     MOVE (FORWARD / BACKWARD)
+     ========================== */
   javascriptGenerator.forBlock["turtle_move"] = function (block) {
     const distance =
       javascriptGenerator.valueToCode(block, "DISTANCE", 0) || "0";
-
     const direction = block.getFieldValue("DIRECTION");
-
-    if (direction === "FORWARD") {
-      return `__turtle.forward(${distance});\n`;
-    }
 
     if (direction === "BACKWARD") {
       return `__turtle.backward(${distance});\n`;
     }
 
-    return "";
+    return `__turtle.forward(${distance});\n`;
+  };
+
+  javascriptGenerator.forBlock["turtle_forward"] = function (block) {
+    const distance =
+      javascriptGenerator.valueToCode(block, "DISTANCE", 0) || "0";
+    return `__turtle.forward(${distance});\n`;
+  };
+
+  javascriptGenerator.forBlock["turtle_backward"] = function (block) {
+    const distance =
+      javascriptGenerator.valueToCode(block, "DISTANCE", 0) || "0";
+    return `__turtle.backward(${distance});\n`;
   };
 
   /* ==========================
-     TURN RIGHT
-  ========================== */
+     TURN
+     ========================== */
   javascriptGenerator.forBlock["turtle_right"] = function (block) {
     const angle =
       javascriptGenerator.valueToCode(block, "ANGLE", 0) || "0";
     return `__turtle.right(${angle});\n`;
   };
 
-  /* ==========================
-     TURN LEFT
-  ========================== */
   javascriptGenerator.forBlock["turtle_left"] = function (block) {
     const angle =
       javascriptGenerator.valueToCode(block, "ANGLE", 0) || "0";
@@ -2319,8 +2274,28 @@ const defineJavascriptGenerators = () => {
   };
 
   /* ==========================
+     HEADING
+     ========================== */
+  javascriptGenerator.forBlock["turtle_heading"] = function (block) {
+    const angle =
+      javascriptGenerator.valueToCode(block, "ANGLE", 0) || "0";
+    return `__turtle.setHeading(${angle});\n`;
+  };
+
+  /* ==========================
+     POSITION
+     ========================== */
+  javascriptGenerator.forBlock["turtle_position"] = function (block) {
+    const x =
+      javascriptGenerator.valueToCode(block, "X", 0) || "0";
+    const y =
+      javascriptGenerator.valueToCode(block, "Y", 0) || "0";
+    return `__turtle.goto(${x}, ${y});\n`;
+  };
+
+  /* ==========================
      DOT
-  ========================== */
+     ========================== */
   javascriptGenerator.forBlock["turtle_dot"] = function (block) {
     const size =
       javascriptGenerator.valueToCode(block, "SIZE", 0) || "10";
@@ -2328,34 +2303,81 @@ const defineJavascriptGenerators = () => {
   };
 
   /* ==========================
-     BACKGROUND COLOR
-  ========================== */
-  javascriptGenerator.forBlock["turtle_bgcolor"] = function (block) {
-    const color = block.getFieldValue("COLOR");
-    return `__turtle.bgcolor("${color}");\n`;
+     PEN CONTROL
+     ========================== */
+  javascriptGenerator.forBlock["turtle_penup"] = () =>
+    "__turtle.penUp();\n";
+
+  javascriptGenerator.forBlock["turtle_pendown"] = () =>
+    "__turtle.penDown();\n";
+
+  javascriptGenerator.forBlock["turtle_width"] = function (block) {
+    const width =
+      javascriptGenerator.valueToCode(block, "WIDTH", 0) || "1";
+    return `__turtle.setWidth(${width});\n`;
   };
 
   /* ==========================
-     FILL COLOR
-  ========================== */
+     COLORS
+     ========================== */
+  javascriptGenerator.forBlock["turtle_pencolor"] = function (block) {
+    const color = block.getFieldValue("COLOR");
+    return `__turtle.setColor("${color}");\n`;
+  };
+
+  javascriptGenerator.forBlock["turtle_color"] = function (block) {
+    const color =
+      javascriptGenerator.valueToCode(block, "COLOR", 0) || '"black"';
+    return `__turtle.setColor(${color});\n`;
+  };
+
   javascriptGenerator.forBlock["turtle_fill_color"] = function (block) {
     const color =
       javascriptGenerator.valueToCode(block, "COLOR", 0) || '"black"';
+    return `__turtle.fillColor(${color});\n`;
+  };
 
-    return `__turtle.fillcolor(${color});\n`;
+  javascriptGenerator.forBlock["turtle_bgcolor"] = function (block) {
+    const color = block.getFieldValue("COLOR");
+    return `__turtle.setBackground("${color}");\n`;
   };
 
   /* ==========================
-     PEN UP / DOWN
-  ========================== */
-  javascriptGenerator.forBlock["turtle_penup"] = () =>
-    "__turtle.penup();\n";
+     FILL
+     ========================== */
+  javascriptGenerator.forBlock["turtle_begin_fill"] = () =>
+    "__turtle.beginFill();\n";
 
-  javascriptGenerator.forBlock["turtle_pendown"] = () =>
-    "__turtle.pendown();\n";
+  javascriptGenerator.forBlock["turtle_end_fill"] = () =>
+    "__turtle.endFill();\n";
+
+  /* ==========================
+     SHAPE
+     ========================== */
+  javascriptGenerator.forBlock["turtle_shape"] = function (block) {
+    const shape = block.getFieldValue("SHAPE");
+    return `__turtle.setShape("${shape}");\n`;
+  };
+
+  /* ==========================
+     SPEED
+     ========================== */
+  javascriptGenerator.forBlock["turtle_speed"] = function (block) {
+    const speed =
+      javascriptGenerator.valueToCode(block, "SPEED", 0) || "5";
+    return `__turtle.setSpeed(${speed});\n`;
+  };
+
+  /* ==========================
+     VISIBILITY
+     ========================== */
+  javascriptGenerator.forBlock["turtle_hide"] = () =>
+    "__turtle.hide();\n";
+
+  javascriptGenerator.forBlock["turtle_show"] = () =>
+    "__turtle.show();\n";
 };
 
-// Python Code Generators for Custom Blocks
 const definePythonGenerators = () => {
   /* =========================
      PYGAL GENERATORS
@@ -2603,29 +2625,31 @@ serial.send(${text})
      CONVERSION GENERATORS
   ========================= */
 
-  pythonGenerator.forBlock['convert_to_int'] = function (block, gen) {
-    const value =
-      gen.valueToCode(block, 'VALUE', PythonOrder.NONE) || '0';
-    return [`int(${value})`, PythonOrder.ATOMIC];
-  };
+pythonGenerator.forBlock['convert_to_int'] = function (block, generator) {
+  const value =
+    generator.valueToCode(block, 'VALUE', pythonGenerator.ORDER_FUNCTION_CALL) || '0';
 
-  pythonGenerator.forBlock['convert_to_float'] = function (block, gen) {
-    const value =
-      gen.valueToCode(block, 'VALUE', PythonOrder.NONE) || '0';
-    return [`float(${value})`, PythonOrder.ATOMIC];
-  };
+  const code = `int(${value})`;
+  return [code, pythonGenerator.ORDER_FUNCTION_CALL];
+};
 
-  pythonGenerator.forBlock['convert_to_string'] = function (block, gen) {
-    const value =
-      gen.valueToCode(block, 'VALUE', PythonOrder.NONE) || '""';
-    return [`str(${value})`, PythonOrder.ATOMIC];
-  };
+ pythonGenerator.forBlock['convert_to_float'] = function (block, generator) {
+  const value =
+    generator.valueToCode(block, 'VALUE', pythonGenerator.ORDER_FUNCTION_CALL) || '0';
+  return [`float(${value})`, pythonGenerator.ORDER_FUNCTION_CALL];
+};
 
-  pythonGenerator.forBlock['convert_to_bool'] = function (block, gen) {
-    const value =
-      gen.valueToCode(block, 'VALUE', PythonOrder.NONE) || 'False';
-    return [`bool(${value})`, PythonOrder.ATOMIC];
-  };
+pythonGenerator.forBlock['convert_to_string'] = function (block, generator) {
+  const value =
+    generator.valueToCode(block, 'VALUE', pythonGenerator.ORDER_FUNCTION_CALL) || '""';
+  return [`str(${value})`, pythonGenerator.ORDER_FUNCTION_CALL];
+};
+
+pythonGenerator.forBlock['convert_to_bool'] = function (block, generator) {
+  const value =
+    generator.valueToCode(block, 'VALUE', pythonGenerator.ORDER_FUNCTION_CALL) || 'False';
+  return [`bool(${value})`, pythonGenerator.ORDER_FUNCTION_CALL];
+};
 
   pythonGenerator.forBlock['convert_upper_case'] = function (block, gen) {
     const value =
@@ -2882,29 +2906,6 @@ serial.send(${text})
   };
 
   // Conversion generators
-  pythonGenerator.forBlock['convert_to_int'] = function (block, generator) {
-    const value = generator.valueToCode(block, 'VALUE', pythonGenerator.ORDER_UNARY_POSTFIX) || '0';
-    const code = `int(${value})`;
-    return [code, pythonGenerator.ORDER_UNARY_POSTFIX];
-  };
-
-  pythonGenerator.forBlock['convert_to_float'] = function (block, generator) {
-    const value = generator.valueToCode(block, 'VALUE', pythonGenerator.ORDER_UNARY_POSTFIX) || '0';
-    const code = `float(${value})`;
-    return [code, pythonGenerator.ORDER_UNARY_POSTFIX];
-  };
-
-  pythonGenerator.forBlock['convert_to_string'] = function (block, generator) {
-    const value = generator.valueToCode(block, 'VALUE', pythonGenerator.ORDER_UNARY_POSTFIX) || '""';
-    const code = `str(${value})`;
-    return [code, pythonGenerator.ORDER_UNARY_POSTFIX];
-  };
-
-  pythonGenerator.forBlock['convert_to_bool'] = function (block, generator) {
-    const value = generator.valueToCode(block, 'VALUE', pythonGenerator.ORDER_UNARY_POSTFIX) || 'True';
-    const code = `bool(${value})`;
-    return [code, pythonGenerator.ORDER_UNARY_POSTFIX];
-  };
 
   pythonGenerator.forBlock['convert_upper_case'] = function (block, generator) {
     const value = generator.valueToCode(block, 'VALUE', pythonGenerator.ORDER_MEMBER) || '""';
@@ -3577,7 +3578,6 @@ function BasicCodingPage() {
         .catch(console.error);
     }
   }, [workspaceReady, mode, activityId, projectId]);
-
 
   async function executeBlock(block: Blockly.Block) {
     const variables = variablesRef.current
