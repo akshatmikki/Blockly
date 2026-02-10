@@ -9,12 +9,41 @@ import 'skulpt/dist/skulpt-stdlib.js';
 import { useSearchParams } from "next/navigation"
 import { javascriptGenerator } from "blockly/javascript";
 import { createTurtle } from "@/lib/turtleEngine";
-import { debug } from 'console';
 
 const turtleEngineRef = { current: null as any };
 
 
 const variablesRef = { current: {} as Record<string, any> }
+class CleanNumberInput extends Blockly.FieldNumber {
+  showEditor_() {
+    // Hide SVG text
+    this.textElement_.style.display = 'none';
+
+    super.showEditor_();
+
+    const oldDispose = this.htmlInput_.onblur;
+    this.htmlInput_.onblur = (e) => {
+      this.textElement_.style.display = '';
+      oldDispose?.(e);
+    };
+  }
+}
+
+class CleanTextInput extends Blockly.FieldTextInput {
+  showEditor_() {
+    // Hide SVG text
+    this.textElement_.style.display = 'none';
+
+    super.showEditor_();
+
+    // When editing ends, show SVG text again
+    const oldDispose = this.htmlInput_.onblur;
+    this.htmlInput_.onblur = (e) => {
+      this.textElement_.style.display = '';
+      oldDispose?.(e);
+    };
+  }
+}
 
 
 function appendConsole(text: string) {
@@ -31,6 +60,15 @@ function showInputPrompt(prompt: string): Promise<string> {
 
 // Custom Blockly Blocks Definitions
 const defineBlocks = () => {
+Blockly.Blocks['math_number'] = {
+  init: function () {
+    this.appendDummyInput()
+      .appendField(new CleanNumberInput(0), 'NUM');
+
+    this.setOutput(true, 'Number');
+    this.setColour(230);
+  }
+};
 
   /* =========================
      SPEAK BLOCK
@@ -80,10 +118,6 @@ const defineBlocks = () => {
   /* =========================
      FILE HANDLING
   ========================= */
-  /* =========================
-     FILE UPLOAD BLOCK
-  ========================= */
-
   Blockly.Blocks['file_upload'] = {
     init: function () {
       this.appendDummyInput()
@@ -103,6 +137,7 @@ const defineBlocks = () => {
       this.setTooltip("Upload a file from your device");
     }
   };
+
 
   Blockly.Blocks['file_open'] = {
     init: function () {
@@ -598,34 +633,38 @@ const defineBlocks = () => {
 
   // Functions: Define function
   Blockly.Blocks['procedures_defnoreturn'] = {
-    init: function () {
-      this.appendDummyInput()
-        .appendField("define")
-        .appendField(new Blockly.FieldTextInput("do something"), "NAME");
-      this.appendStatementInput("STACK");
-      this.setColour(290);
-      this.setTooltip("Define a new function");
-      this.setPreviousStatement(true, null);
-      this.setNextStatement(true, null);
-    }
-  };
+  init: function () {
+    this.appendDummyInput()
+      .appendField("define")
+      .appendField(new CleanTextInput("do_something"), "NAME");
 
-  // Functions: Define with return
-  Blockly.Blocks['procedures_defreturn'] = {
-    init: function () {
-      this.appendDummyInput()
-        .appendField("define")
-        .appendField(new Blockly.FieldTextInput("do something"), "NAME");
-      this.appendStatementInput("STACK");
-      this.appendValueInput("RETURN")
-        .setCheck(null)
-        .appendField("return");
-      this.setColour(290);
-      this.setTooltip("Define function with return");
-      this.setPreviousStatement(true, null);
-      this.setNextStatement(true, null);
-    }
-  };
+    this.appendStatementInput("STACK");
+
+    this.setColour(290);
+    this.setTooltip("Define a new function");
+    this.setPreviousStatement(true);
+    this.setNextStatement(true);
+  }
+};
+
+Blockly.Blocks['procedures_defreturn'] = {
+  init: function () {
+    this.appendDummyInput()
+      .appendField("define")
+      .appendField(new CleanTextInput("do_something"), "NAME");
+
+    this.appendStatementInput("STACK");
+
+    this.appendValueInput("RETURN")
+      .appendField("return");
+
+    this.setColour(290);
+    this.setTooltip("Define function with return");
+    this.setPreviousStatement(true);
+    this.setNextStatement(true);
+  }
+};
+
 
   // Functions: Return
   Blockly.Blocks['procedures_return'] = {
@@ -2141,19 +2180,17 @@ const defineBlocks = () => {
     }
   };
 
-  Blockly.Blocks['string_literal'] = {
-    init: function () {
-      this.appendDummyInput()
-        .appendField('"')
-        .appendField(new Blockly.FieldTextInput('text'), 'VALUE')
-        .appendField('"');
+ Blockly.Blocks['string_literal'] = {
+  init: function () {
+    this.appendDummyInput()
+      .appendField('"')
+      .appendField(new CleanTextInput('text'), 'VALUE')
+      .appendField('"');
 
-      this.setOutput(true, 'String');
-      this.setColour(160);
-      this.setTooltip('String value');
-      this.setHelpUrl('');
-    }
-  };
+    this.setOutput(true, 'String');
+    this.setColour(160);
+  }
+};
 
   Blockly.Blocks['number_literal'] = {
     init: function () {
@@ -2346,24 +2383,37 @@ const definePythonGenerators = () => {
     return "__UPLOAD_FILE__\n";
   };
 
-  pythonGenerator.forBlock['file_open'] = function (block) {
+  pythonGenerator.forBlock['file_open'] = function (block, generator) {
+    generator.definitions_['file_runtime'] =
+`from io import StringIO
+def open_uploaded(filename, mode="r"):
+print("DEBUG FILES:", list(__uploaded_files.keys()))
+    if filename not in __uploaded_files:
+        raise FileNotFoundError(filename)
+    return StringIO(__uploaded_files[filename])
+
+file_handle = None
+`;
+
+
     const filename = block.getFieldValue("FILENAME");
     const mode = block.getFieldValue("MODE");
-    return `file = open("${filename}", "${mode}")\n`;
+
+    return `file_handle = open_uploaded("${filename}", "${mode}")\n`;
   };
 
   pythonGenerator.forBlock['file_read'] = function () {
-    return `print(file.read())\n`;
+    return `print(file_handle.read())\n`;
   };
 
   pythonGenerator.forBlock['file_write'] = function (block, gen) {
     const text =
       gen.valueToCode(block, "TEXT", PythonOrder.NONE) || '""';
-    return `file.write(${text})\n`;
+    return `file_handle.write(${text})\n`;
   };
 
   pythonGenerator.forBlock['file_close'] = function () {
-    return `file.close()\n`;
+    return `file_handle.close()\n`;
   };
 
   pythonGenerator.forBlock['serial_send'] = function (block, gen) {
@@ -2956,26 +3006,26 @@ serial.send(${text})
   };
 
   // Math: Random integer
- pythonGenerator.forBlock['math_random_int'] = function (block, generator) {
-  // Ensure import is added once at top
-  generator.definitions_['import_random'] = 'import random';
+  pythonGenerator.forBlock['math_random_int'] = function (block, generator) {
+    // Ensure import is added once at top
+    generator.definitions_['import_random'] = 'import random';
 
-  const from =
-    generator.valueToCode(block, 'FROM', PythonOrder.NONE) || '1';
-  const to =
-    generator.valueToCode(block, 'TO', PythonOrder.NONE) || '100';
+    const from =
+      generator.valueToCode(block, 'FROM', PythonOrder.NONE) || '1';
+    const to =
+      generator.valueToCode(block, 'TO', PythonOrder.NONE) || '100';
 
-  const code = `random.randint(${from}, ${to})`;
-  return [code, pythonGenerator.ORDER_FUNCTION_CALL];
-};
+    const code = `random.randint(${from}, ${to})`;
+    return [code, pythonGenerator.ORDER_FUNCTION_CALL];
+  };
 
   // Math: Random fraction
   pythonGenerator.forBlock['math_random_fraction'] = function (block, generator) {
-  // ✅ ensure import added once
-  generator.definitions_['import_random'] = 'import random';
+    // ✅ ensure import added once
+    generator.definitions_['import_random'] = 'import random';
 
-  return ['random.random()', pythonGenerator.ORDER_FUNCTION_CALL];
-};
+    return ['random.random()', pythonGenerator.ORDER_FUNCTION_CALL];
+  };
 
   // Lists: Create list
   pythonGenerator.forBlock['lists_create_with'] = function (block, generator) {
@@ -3487,6 +3537,9 @@ function BasicCodingPage() {
 
   const workspaceRef = useRef<Blockly.WorkspaceSvg | null>(null)
 
+  // hidden input
+
+
   function debugLog(message: string, data?: any) {
     const timestamp = new Date().toLocaleTimeString();
     const logMessage = `[${timestamp}] ${message}`;
@@ -3644,16 +3697,16 @@ function BasicCodingPage() {
     }
   }
 
-  async function runWorkspace(workspace: Blockly.Workspace) {
-    variablesRef.current = {};
-    turtleEngineRef.current = null; // 🔴 IMPORTANT
+  // async function runWorkspace(workspace: Blockly.Workspace) {
+  //   variablesRef.current = {};
+  //   turtleEngineRef.current = null; // 🔴 IMPORTANT
 
-    const topBlocks = workspace.getTopBlocks(true);
+  //   const topBlocks = workspace.getTopBlocks(true);
 
-    for (const block of topBlocks) {
-      await executeBlock(block);
-    }
-  }
+  //   for (const block of topBlocks) {
+  //     await executeBlock(block);
+  //   }
+  // }
 
   function getCanvasTextOutput() {
     let pre = canvasContainerRef.current.querySelector(".canvas-text-output");
@@ -4725,6 +4778,27 @@ function BasicCodingPage() {
     });
   }
 
+  function injectUploadedFiles(code) {
+  if (!window.__uploadedFiles) return code;
+
+  const files = JSON.stringify(window.__uploadedFiles)
+    .replace(/\\/g, "\\\\")
+    .replace(/'/g, "\\'");
+
+  return `
+from io import StringIO
+__uploaded_files = ${files}
+
+def open_uploaded(filename, mode="r"):
+    if filename not in __uploaded_files:
+        raise FileNotFoundError(filename)
+    return StringIO(__uploaded_files[filename])
+
+file_handle = None
+
+` + code;
+}
+
   const runCode = () => {
     if (!Sk || typeof Sk.configure !== "function") {
       setOutput("Python runtime not available.");
@@ -4739,24 +4813,6 @@ function BasicCodingPage() {
     const usesPygal = /\bpygal\b/.test(code);
     // Clear previous canvas
     canvasContainerRef.current.innerHTML = "";
-
-    // if (usesTurtle) {
-    //   const turtleDiv = document.createElement("div");
-    //   turtleDiv.id = "turtleCanvas";
-    //   turtleDiv.style.width = "100%";
-    //   turtleDiv.style.height = "500px";
-    //   turtleDiv.style.border = "2px solid #5566AA";
-    //   turtleDiv.style.borderRadius = "8px";
-    //   turtleDiv.style.backgroundColor = "#ffffff";
-    //   turtleDiv.style.position = "relative";
-    //   canvasContainerRef.current.appendChild(turtleDiv);
-
-    //   // Turtle graphics config MUST be before import turtle
-    //   Sk.TurtleGraphics = Sk.TurtleGraphics || {};
-    //   Sk.TurtleGraphics.target = "turtleCanvas";
-    //   Sk.TurtleGraphics.width = 800;
-    //   Sk.TurtleGraphics.height = 500;
-    // }
 
     if (usesTurtle) {
       const canvas = document.createElement("canvas");
@@ -4775,15 +4831,7 @@ function BasicCodingPage() {
 
     Sk.configure({
       output: (text) => {
-        console.log("[Skulpt Output]", text);
-
-
         const cleanText = text.trim();
-        if (code.includes("__UPLOAD_FILE__")) {
-          fileInputRef.current.click();
-          return; // wait for upload
-        }
-
         /* =========================
            🖼️ SPRITE HANDLER
         ========================= */
@@ -4902,6 +4950,7 @@ function BasicCodingPage() {
       fileInputRef.current.click();
       return;
     }
+
     // 👇 Only inject turtle init if required
     let initCode = "";
     if (code.includes("playsound.say")) {
@@ -5083,8 +5132,7 @@ plt = _FakePlt()
       return; // ⛔ DO NOT FALL THROUGH TO SKULPT
     }
     if (!usesTurtle) {
-      const fullCode = initCode + cleanedCode;
-
+      const fullCode = injectUploadedFiles(initCode + cleanedCode);
       const myPromise = Sk.misceval.asyncToPromise(() => {
         return Sk.importMainWithBody("<stdin>", false, fullCode, true);
       });
@@ -5141,8 +5189,36 @@ plt = _FakePlt()
 
   return (
     <>
+      <input
+        ref={fileInputRef}
+        type="file"
+        style={{ display: "none" }}
+        onChange={async (e) => {
+          const file = e.target.files?.[0];
+          if (!file) return;
+
+          const text = await file.text();
+
+          window.__uploadedFiles = window.__uploadedFiles || {};
+          window.__uploadedFiles[file.name] = text;
+          window.__fileUploaded = true;
+
+          // 🔥 AUTO-FILL filename into Blockly block
+          const ws = workspaceRef.current;
+          if (ws) {
+            const blocks = ws.getAllBlocks(false);
+            const openBlock = blocks.find(b => b.type === "file_open");
+            if (openBlock) {
+              openBlock.setFieldValue(file.name, "FILENAME");
+            }
+          }
+
+          runCode();
+        }}
+      />
+
       {/* Debug Panel */}
-      {showDebug && (
+      {/* {showDebug && (
         <div style={{
           position: 'fixed',
           top: '10px',
@@ -5224,10 +5300,10 @@ plt = _FakePlt()
             )}
           </div>
         </div>
-      )}
+      )} */}
 
       {/* Toggle Debug Button (when hidden) */}
-      {!showDebug && (
+      {/* {!showDebug && (
         <button
           onClick={() => setShowDebug(true)}
           style={{
@@ -5248,7 +5324,7 @@ plt = _FakePlt()
         >
           🔍
         </button>
-      )}
+      )} */}
 
       <input
         type="file"
