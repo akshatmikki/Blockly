@@ -98,14 +98,14 @@ export default function LoginPage() {
           </div>
 
           {/* Forgot password */}
-          <div className="text-right">
+          {/* <div className="text-right">
             <a
               href="/admin_login"
               className="text-sm text-blue-600 hover:underline"
             >
               Forgot password?
             </a>
-          </div>
+          </div> */}
 
           {/* Buttons */}
           <div className="flex gap-3">
@@ -115,19 +115,19 @@ export default function LoginPage() {
             >
               Login
             </Button>
-            <Button
+            {/* <Button
               type="button"
               className="flex-1 h-12 bg-green-600 hover:bg-green-700 cursor-pointer"
             >
               Callback
-            </Button>
+            </Button> */}
           </div>
-          <p className="text-sm text-center text-gray-600 mt-6">
+          {/* <p className="text-sm text-center text-gray-600 mt-6">
   Don't have an account already?{" "}
   <a href="/sign_up" className="text-orange-600 hover:underline">
     Sign up
   </a>
-</p>
+</p> */}
           {/* Divider */}
           <div className="flex items-center gap-4 py-4">
             <div className="flex-1 h-px bg-gray-300" />

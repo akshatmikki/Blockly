@@ -60,15 +60,15 @@ function showInputPrompt(prompt: string): Promise<string> {
 
 // Custom Blockly Blocks Definitions
 const defineBlocks = () => {
-Blockly.Blocks['math_number'] = {
-  init: function () {
-    this.appendDummyInput()
-      .appendField(new CleanNumberInput(0), 'NUM');
+  Blockly.Blocks['math_number'] = {
+    init: function () {
+      this.appendDummyInput()
+        .appendField(new CleanNumberInput(0), 'NUM');
 
-    this.setOutput(true, 'Number');
-    this.setColour(230);
-  }
-};
+      this.setOutput(true, 'Number');
+      this.setColour(230);
+    }
+  };
 
   /* =========================
      SPEAK BLOCK
@@ -633,37 +633,37 @@ Blockly.Blocks['math_number'] = {
 
   // Functions: Define function
   Blockly.Blocks['procedures_defnoreturn'] = {
-  init: function () {
-    this.appendDummyInput()
-      .appendField("define")
-      .appendField(new CleanTextInput("do_something"), "NAME");
+    init: function () {
+      this.appendDummyInput()
+        .appendField("define")
+        .appendField(new CleanTextInput("do_something"), "NAME");
 
-    this.appendStatementInput("STACK");
+      this.appendStatementInput("STACK");
 
-    this.setColour(290);
-    this.setTooltip("Define a new function");
-    this.setPreviousStatement(true);
-    this.setNextStatement(true);
-  }
-};
+      this.setColour(290);
+      this.setTooltip("Define a new function");
+      this.setPreviousStatement(true);
+      this.setNextStatement(true);
+    }
+  };
 
-Blockly.Blocks['procedures_defreturn'] = {
-  init: function () {
-    this.appendDummyInput()
-      .appendField("define")
-      .appendField(new CleanTextInput("do_something"), "NAME");
+  Blockly.Blocks['procedures_defreturn'] = {
+    init: function () {
+      this.appendDummyInput()
+        .appendField("define")
+        .appendField(new CleanTextInput("do_something"), "NAME");
 
-    this.appendStatementInput("STACK");
+      this.appendStatementInput("STACK");
 
-    this.appendValueInput("RETURN")
-      .appendField("return");
+      this.appendValueInput("RETURN")
+        .appendField("return");
 
-    this.setColour(290);
-    this.setTooltip("Define function with return");
-    this.setPreviousStatement(true);
-    this.setNextStatement(true);
-  }
-};
+      this.setColour(290);
+      this.setTooltip("Define function with return");
+      this.setPreviousStatement(true);
+      this.setNextStatement(true);
+    }
+  };
 
 
   // Functions: Return
@@ -2180,17 +2180,17 @@ Blockly.Blocks['procedures_defreturn'] = {
     }
   };
 
- Blockly.Blocks['string_literal'] = {
-  init: function () {
-    this.appendDummyInput()
-      .appendField('"')
-      .appendField(new CleanTextInput('text'), 'VALUE')
-      .appendField('"');
+  Blockly.Blocks['string_literal'] = {
+    init: function () {
+      this.appendDummyInput()
+        .appendField('"')
+        .appendField(new CleanTextInput('text'), 'VALUE')
+        .appendField('"');
 
-    this.setOutput(true, 'String');
-    this.setColour(160);
-  }
-};
+      this.setOutput(true, 'String');
+      this.setColour(160);
+    }
+  };
 
   Blockly.Blocks['number_literal'] = {
     init: function () {
@@ -2385,7 +2385,7 @@ const definePythonGenerators = () => {
 
   pythonGenerator.forBlock['file_open'] = function (block, generator) {
     generator.definitions_['file_runtime'] =
-`from io import StringIO
+      `from io import StringIO
 def open_uploaded(filename, mode="r"):
 print("DEBUG FILES:", list(__uploaded_files.keys()))
     if filename not in __uploaded_files:
@@ -3538,8 +3538,6 @@ function BasicCodingPage() {
   const workspaceRef = useRef<Blockly.WorkspaceSvg | null>(null)
 
   // hidden input
-
-
   function debugLog(message: string, data?: any) {
     const timestamp = new Date().toLocaleTimeString();
     const logMessage = `[${timestamp}] ${message}`;
@@ -4330,6 +4328,30 @@ function BasicCodingPage() {
 
     workspaceRef.current = workspace;
     setWorkspaceReady(true); // ✅ ADD THIS
+    workspace.addChangeListener((e: any) => {
+      if (e.type === Blockly.Events.TOOLBOX_ITEM_SELECT) {
+        requestAnimationFrame(() => {
+          // 1. Normal resize
+          Blockly.svgResize(workspace);
+
+          // 2. Force clear cached content metrics
+          (workspace as any).cachedContentBounds_ = null;
+
+          // 3. Recompute content
+          workspace.resizeContents();
+
+          // 4. Hard reset scrollbars
+          if (workspace.scrollbar) {
+            workspace.scrollbar.resize();
+            workspace.scrollbar.setVisible(false);
+            workspace.scrollbar.setVisible(true);
+          }
+
+          // 5. Snap back to origin
+          workspace.scroll(0, 0);
+        });
+      }
+    });
 
     const updateFlyoutScrollbars = () => {
       const scrollbars = blocklyDiv.current?.querySelectorAll('.blocklyFlyoutScrollbar');
@@ -4779,13 +4801,13 @@ function BasicCodingPage() {
   }
 
   function injectUploadedFiles(code) {
-  if (!window.__uploadedFiles) return code;
+    if (!window.__uploadedFiles) return code;
 
-  const files = JSON.stringify(window.__uploadedFiles)
-    .replace(/\\/g, "\\\\")
-    .replace(/'/g, "\\'");
+    const files = JSON.stringify(window.__uploadedFiles)
+      .replace(/\\/g, "\\\\")
+      .replace(/'/g, "\\'");
 
-  return `
+    return `
 from io import StringIO
 __uploaded_files = ${files}
 
@@ -4797,7 +4819,7 @@ def open_uploaded(filename, mode="r"):
 file_handle = None
 
 ` + code;
-}
+  }
 
   const runCode = () => {
     if (!Sk || typeof Sk.configure !== "function") {

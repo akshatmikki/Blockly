@@ -8,6 +8,7 @@ import { LogOut, ChevronDown, ChevronUp, Upload, X, CheckCircle2, Eye, EyeOff, U
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import * as XLSX from "xlsx";
+import AddUserForm from "@/components/admin/AddUserForm";
 
 type User = {
   UserId: number;
@@ -22,7 +23,15 @@ type User = {
   PlainPassword?: string;
 };
 
-type ModalType = "edit" | "delete" | "reset" | "success" | "error" | "bulkUpload" | null;
+type ModalType =
+  | "edit"
+  | "delete"
+  | "reset"
+  | "success"
+  | "error"
+  | "bulkUpload"
+  | "addUser"
+  | null;
 
 export default function AdminDashboard() {
   const router = useRouter();
@@ -378,8 +387,6 @@ export default function AdminDashboard() {
         Object.keys(row).forEach(key => {
           normalizedRow[key.toLowerCase().trim()] = row[key];
         });
-
-        console.log(`Processing row ${i + 2}:`, normalizedRow);
 
         // Check for required fields (case-insensitive)
         const email = normalizedRow.email;
@@ -789,6 +796,26 @@ export default function AdminDashboard() {
               </div>
             </div>
           )}
+          {modalType === "addUser" && (
+  <div className="p-8">
+    <div className="flex items-center justify-between mb-6">
+      <h2 className="text-2xl font-bold text-gray-800">Add New User</h2>
+      <button onClick={closeModal}>
+        <X size={24} />
+      </button>
+    </div>
+
+    <AddUserForm
+      onCancel={closeModal}
+      onSuccess={() => {
+        setModalData({ message: "User created successfully!" });
+        setModalType("success");
+        fetchUsers();
+      }}
+    />
+  </div>
+)}
+
         </div>
       </div>
     );
@@ -813,6 +840,12 @@ export default function AdminDashboard() {
           </div>
           <h1 className="text-2xl font-bold text-gray-800">Admin Dashboard</h1>
           <div className="flex gap-3">
+            <Button
+  onClick={() => setModalType("addUser")}
+  className="bg-green-500 hover:bg-green-600 cursor-pointer flex items-center gap-2"
+>
+  + Add User
+</Button>
             <Button
               onClick={() => setModalType("bulkUpload")}
               className="bg-blue-500 hover:bg-blue-600 cursor-pointer flex items-center gap-2"

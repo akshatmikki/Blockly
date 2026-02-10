@@ -1,7 +1,12 @@
-import { Suspense } from "react";
-import AICodingPage from "./ai-coding-client";
+"use client";
 
-export const dynamic = "force-dynamic";
+import dynamic from "next/dynamic";
+import { Suspense } from "react";
+
+const AICodingPage = dynamic(
+  () => import("./ai-coding-client"),
+  { ssr: false }
+);
 
 export default function Page() {
   return (
