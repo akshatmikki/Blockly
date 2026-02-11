@@ -3584,121 +3584,121 @@ function BasicCodingPage() {
     }
   }, [workspaceReady, mode, activityId, projectId]);
 
-  async function executeBlock(block: Blockly.Block) {
-    const variables = variablesRef.current
+//   async function executeBlock(block: Blockly.Block) {
+//     const variables = variablesRef.current
 
-    /* ==========================
-       SET VARIABLE
-    ========================== */
-    if (block.type === "variables_set") {
-      const varId = block.getFieldValue("VAR")
-      const variable = block.workspace.getVariableById(varId)
-      const varName = variable?.name ?? varId
+//     /* ==========================
+//        SET VARIABLE
+//     ========================== */
+//     if (block.type === "variables_set") {
+//       const varId = block.getFieldValue("VAR")
+//       const variable = block.workspace.getVariableById(varId)
+//       const varName = variable?.name ?? varId
 
-      const valueBlock = block.getInputTargetBlock("VALUE")
-      let value: any = null
+//       const valueBlock = block.getInputTargetBlock("VALUE")
+//       let value: any = null
 
-      if (valueBlock?.type === "text") {
-        value = valueBlock.getFieldValue("TEXT")
-      }
+//       if (valueBlock?.type === "text") {
+//         value = valueBlock.getFieldValue("TEXT")
+//       }
 
-      if (valueBlock?.type === "input_prompt") {
-        value = await showInputPrompt(
-          valueBlock.getFieldValue("TEXT")
-        )
-      }
+//       if (valueBlock?.type === "input_prompt") {
+//         value = await showInputPrompt(
+//           valueBlock.getFieldValue("TEXT")
+//         )
+//       }
 
-      variables[varName] = value
-      appendConsole(`[DEBUG] ${varName} = ${value}`)
-    }
+//       variables[varName] = value
+//       appendConsole(`[DEBUG] ${varName} = ${value}`)
+//     }
 
-    /* ==========================
-       PRINT
-    ========================== */
-    if (block.type === "text_print") {
-      const valueBlock = block.getInputTargetBlock("TEXT")
+//     /* ==========================
+//        PRINT
+//     ========================== */
+//     if (block.type === "text_print") {
+//       const valueBlock = block.getInputTargetBlock("TEXT")
 
-      if (valueBlock?.type === "variables_get") {
-        const varId = valueBlock.getFieldValue("VAR")
-        const variable = block.workspace.getVariableById(varId)
-        const varName = variable?.name ?? varId
+//       if (valueBlock?.type === "variables_get") {
+//         const varId = valueBlock.getFieldValue("VAR")
+//         const variable = block.workspace.getVariableById(varId)
+//         const varName = variable?.name ?? varId
 
-        appendOutput(String(variables[varName] ?? ""))
-      }
-    }
-    /* ==========================
-   CREATE TURTLE
-========================== */
-    if (block.type === "turtle_create") {
-      const varId = block.getFieldValue("VAR");
-      const variable = block.workspace.getVariableById(varId);
-      const varName = variable?.name ?? varId;
+//         appendOutput(String(variables[varName] ?? ""))
+//       }
+//     }
+//     /* ==========================
+//    CREATE TURTLE
+// ========================== */
+//     if (block.type === "turtle_create") {
+//       const varId = block.getFieldValue("VAR");
+//       const variable = block.workspace.getVariableById(varId);
+//       const varName = variable?.name ?? varId;
 
-      // create canvas turtle
-      if (!turtleEngineRef.current) {
-        turtleEngineRef.current = createTurtle("turtleCanvas");
-        turtleEngineRef.current.reset();
-      }
+//       // create canvas turtle
+//       if (!turtleEngineRef.current) {
+//         turtleEngineRef.current = createTurtle("turtleCanvas");
+//         turtleEngineRef.current.reset();
+//       }
 
-      // store reference in variables
-      variables[varName] = turtleEngineRef.current;
+//       // store reference in variables
+//       variables[varName] = turtleEngineRef.current;
 
-      appendConsole(`[DEBUG] created turtle '${varName}'`);
-    }
+//       appendConsole(`[DEBUG] created turtle '${varName}'`);
+//     }
 
-    /* ==========================
-       TURTLE BACKGROUND COLOR
-    ========================== */
-    if (block.type === "turtle_bgcolor") {
-      const color = block.getFieldValue("COLOR");
+//     /* ==========================
+//        TURTLE BACKGROUND COLOR
+//     ========================== */
+//     if (block.type === "turtle_bgcolor") {
+//       const color = block.getFieldValue("COLOR");
 
-      turtleEngineRef.current?.bgcolor(color);
+//       turtleEngineRef.current?.bgcolor(color);
 
-      appendConsole(`[DEBUG] set background color ${color}`);
-    }
-    /* ==========================
-       TURTLE FILL COLOR
-    ========================== */
-    if (block.type === "turtle_color") {
-      const varId = block.getFieldValue("VAR");
-      const variable = block.workspace.getVariableById(varId);
-      const varName = variable?.name ?? varId;
+//       appendConsole(`[DEBUG] set background color ${color}`);
+//     }
+//     /* ==========================
+//        TURTLE FILL COLOR
+//     ========================== */
+//     if (block.type === "turtle_color") {
+//       const varId = block.getFieldValue("VAR");
+//       const variable = block.workspace.getVariableById(varId);
+//       const varName = variable?.name ?? varId;
 
-      const color = block.getFieldValue("COLOR");
+//       const color = block.getFieldValue("COLOR");
 
-      variables[varName]?.fillcolor(color);
+//       variables[varName]?.fillcolor(color);
 
-      appendConsole(`[DEBUG] ${varName}.fillcolor(${color})`);
-    }
-    /* ==========================
-       TURTLE DOT
-    ========================== */
-    if (block.type === "turtle_dot") {
-      const varId = block.getFieldValue("VAR");
-      const variable = block.workspace.getVariableById(varId);
-      const varName = variable?.name ?? varId;
+//       appendConsole(`[DEBUG] ${varName}.fillcolor(${color})`);
+//     }
+//     /* ==========================
+//        TURTLE DOT
+//     ========================== */
+//     if (block.type === "turtle_dot") {
+//       const varId = block.getFieldValue("VAR");
+//       const variable = block.workspace.getVariableById(varId);
+//       const varName = variable?.name ?? varId;
 
-      const radiusBlock = block.getInputTargetBlock("RADIUS");
-      let radius = 10;
+//       const radiusBlock = block.getInputTargetBlock("RADIUS");
+//       let radius = 10;
 
-      if (radiusBlock?.type === "math_number") {
-        radius = Number(radiusBlock.getFieldValue("NUM"));
-      }
+//       if (radiusBlock?.type === "math_number") {
+//         radius = Number(radiusBlock.getFieldValue("NUM"));
+//       }
 
-      variables[varName]?.dot(radius);
+//       variables[varName]?.dot(radius);
 
-      appendConsole(`[DEBUG] ${varName}.dot(${radius})`);
-    }
+//       appendConsole(`[DEBUG] ${varName}.dot(${radius})`);
+//     }
 
 
-    /* ==========================
-       NEXT BLOCK
-    ========================== */
-    const next = block.getNextBlock()
-    if (next) {
-      await executeBlock(next)
-    }
-  }
+//     /* ==========================
+//        NEXT BLOCK
+//     ========================== */
+//     const next = block.getNextBlock()
+//     if (next) {
+//       await executeBlock(next)
+//     }
+//   }
 
   // async function runWorkspace(workspace: Blockly.Workspace) {
   //   variablesRef.current = {};
@@ -3994,6 +3994,7 @@ function BasicCodingPage() {
     }
     return variable.getId();
   }
+  
   function createValueBlock(workspace, valueCfg) {
     if (!valueCfg) return null;
 
@@ -4048,129 +4049,151 @@ function BasicCodingPage() {
     }
   }
 
-  function createBlocklyBlock(workspace, row) {
-    // Parse block_config if it's a string (from database)
-    const cfg = typeof row.block_config === 'string'
-      ? JSON.parse(row.block_config)
-      : row.block_config;
+function createBlocklyBlock(workspace, row) {
+  const cfg = typeof row.block_config === "string"
+    ? JSON.parse(row.block_config)
+    : row.block_config;
 
-    // Add validation
-    if (!cfg) {
-      console.error('block_config is null or undefined for block:', row);
-      return null;
-    }
+  if (!cfg) {
+    console.error("block_config is null or undefined for block:", row);
+    return null;
+  }
 
-    switch (row.block_type) {
+  switch (row.block_type) {
 
-      /* =====================
-         SET VARIABLE
-      ===================== */
-      case "SET_VARIABLE": {
+    /* =====================
+       SET VARIABLE
+    ===================== */
+    case "SET_VARIABLE": {
 
-        // CREATE TURTLE
-        if (cfg.type === "CREATE_TURTLE") {
-          const varId = ensureVariable(workspace, cfg.variable);
-          const block = workspace.newBlock("turtle_create");
-          block.setFieldValue(varId, "VAR");
-          return block;
-        }
-
-        // INPUT → variable
-        if (cfg.value?.type === "INPUT") {
-          const varId = ensureVariable(workspace, cfg.variable);
-          const block = workspace.newBlock("variables_set");
-          block.setFieldValue(varId, "VAR");
-
-          const inputBlock = workspace.newBlock("text_prompt");
-          inputBlock.setFieldValue(cfg.value.prompt, "TEXT");
-
-          inputBlock.initSvg();
-          inputBlock.render();
-
-          block.getInput("VALUE")
-            ?.connection
-            ?.connect(inputBlock.outputConnection);
-
-          return block;
-        }
-
-        // STRING → variable
-        if (cfg.type === "STRING") {
-          const varId = ensureVariable(workspace, cfg.variable);
-          const block = workspace.newBlock("variables_set");
-          block.setFieldValue(varId, "VAR");
-
-          const textBlock = workspace.newBlock("text");
-          textBlock.setFieldValue(cfg.value, "TEXT");
-
-          textBlock.initSvg();
-          textBlock.render();
-
-          block.getInput("VALUE")
-            ?.connection
-            ?.connect(textBlock.outputConnection);
-
-          return block;
-        }
-        // INT / VARIABLE / EXPRESSION → variable (NEW, additive)
-        if (
-          cfg.value?.type === "INT" ||
-          cfg.value?.type === "VARIABLE" ||
-          cfg.value?.type === "EXPRESSION"
-        ) {
-          const varId = ensureVariable(workspace, cfg.variable);
-          const block = workspace.newBlock("variables_set");
-          block.setFieldValue(varId, "VAR");
-
-          const valueBlock = createValueBlock(workspace, cfg.value);
-
-          block.initSvg();
-          block.render();
-
-          if (valueBlock) {
-            block.getInput("VALUE")
-              ?.connection
-              ?.connect(valueBlock.outputConnection);
-          }
-
-          return block;
-        }
-
-        return null;
+      // CREATE TURTLE
+      if (cfg.type === "CREATE_TURTLE") {
+        const varId = ensureVariable(workspace, cfg.variable);
+        const block = workspace.newBlock("turtle_create");
+        block.setFieldValue(varId, "VAR");
+        return block;
       }
 
-      /* =====================
-         PRINT
-      ===================== */
-      case "PRINT": {
+      // INPUT → variable
+      if (cfg.value?.type === "INPUT") {
         const varId = ensureVariable(workspace, cfg.variable);
-        const block = workspace.newBlock("text_print");
+        const block = workspace.newBlock("variables_set");
+        block.setFieldValue(varId, "VAR");
 
-        const varBlock = workspace.newBlock("variables_get");
-        varBlock.setFieldValue(varId, "VAR");
+        const inputBlock = workspace.newBlock("text_prompt");
+        inputBlock.setFieldValue(cfg.value.prompt, "TEXT");
 
-        varBlock.initSvg();
-        varBlock.render();
+        inputBlock.initSvg();
+        inputBlock.render();
 
-        block.getInput("TEXT")
+        block.getInput("VALUE")
           ?.connection
-          ?.connect(varBlock.outputConnection);
+          ?.connect(inputBlock.outputConnection);
 
         return block;
       }
 
-      /* =====================
-         TURTLE MOVE
-      ===================== */
-      case "TURTLE_MOVE": {
+      // STRING → variable
+      if (cfg.type === "STRING") {
         const varId = ensureVariable(workspace, cfg.variable);
-        const block = workspace.newBlock("turtle_move");
+        const block = workspace.newBlock("variables_set");
+        block.setFieldValue(varId, "VAR");
+
+        const textBlock = workspace.newBlock("text");
+        textBlock.setFieldValue(cfg.value, "TEXT");
+
+        textBlock.initSvg();
+        textBlock.render();
+
+        block.getInput("VALUE")
+          ?.connection
+          ?.connect(textBlock.outputConnection);
+
+        return block;
+      }
+
+      // INT / VARIABLE / EXPRESSION → variable
+      if (
+        cfg.value?.type === "INT" ||
+        cfg.value?.type === "VARIABLE" ||
+        cfg.value?.type === "EXPRESSION"
+      ) {
+        const varId = ensureVariable(workspace, cfg.variable);
+        const block = workspace.newBlock("variables_set");
+        block.setFieldValue(varId, "VAR");
+
+        const valueBlock = createValueBlock(workspace, cfg.value);
+
+        block.initSvg();
+        block.render();
+
+        if (valueBlock) {
+          block.getInput("VALUE")
+            ?.connection
+            ?.connect(valueBlock.outputConnection);
+        }
+
+        return block;
+      }
+
+      return null;
+    }
+
+    /* =====================
+       PRINT
+    ===================== */
+    case "PRINT": {
+      const varId = ensureVariable(workspace, cfg.variable);
+      const block = workspace.newBlock("text_print");
+
+      const varBlock = workspace.newBlock("variables_get");
+      varBlock.setFieldValue(varId, "VAR");
+
+      varBlock.initSvg();
+      varBlock.render();
+
+      block.getInput("TEXT")
+        ?.connection
+        ?.connect(varBlock.outputConnection);
+
+      return block;
+    }
+
+    /* =====================
+       TURTLE MOVE (legacy)
+    ===================== */
+    case "TURTLE_MOVE": {
+      const varId = ensureVariable(workspace, cfg.variable);
+      const block = workspace.newBlock("turtle_move");
+
+      block.setFieldValue(varId, "VAR");
+      block.setFieldValue(cfg.direction, "DIRECTION");
+
+      const num = workspace.newBlock("math_number");
+      num.setFieldValue(String(cfg.value), "NUM");
+
+      num.initSvg();
+      num.render();
+
+      block.getInput("DISTANCE")
+        ?.connection
+        ?.connect(num.outputConnection);
+
+      return block;
+    }
+
+    /* =====================
+       TURTLE MOTION (DB version)
+    ===================== */
+    case "TURTLE_MOTION": {
+      if (cfg.action === "FORWARD") {
+        const varId = ensureVariable(workspace, cfg.variable);
+        const block = workspace.newBlock("turtle_forward");
 
         block.setFieldValue(varId, "VAR");
-        block.setFieldValue(cfg.direction, "DIRECTION");
 
         const num = workspace.newBlock("math_number");
-        num.setFieldValue(String(cfg.value), "NUM");
+        num.setFieldValue(String(cfg.distance), "NUM");
 
         num.initSvg();
         num.render();
@@ -4182,73 +4205,109 @@ function BasicCodingPage() {
         return block;
       }
 
-      /* =====================
-         BACKGROUND COLOR
-      ===================== */
-      case "TURTLE_SCREEN": {
-        if (cfg.action === "SET_BACKGROUND_COLOR") {
-          const block = workspace.newBlock("turtle_bgcolor");
-          const hexColor = mapColorToHex(cfg.color);
-          block.setFieldValue(hexColor, "COLOR");
-          return block;
-        }
-        return null;
-      }
-
-      /* =====================
-         FILL COLOR
-      ===================== */
-      case "TURTLE_STYLE": {
-        if (cfg.action === "SET_FILL_COLOR") {
-          const varId = ensureVariable(workspace, cfg.variable);
-          const block = workspace.newBlock("turtle_fill_color");
-          block.setFieldValue(varId, "VAR");
-
-          const colorBlock = workspace.newBlock("colour_picker");
-          const hexColor = mapColorToHex(cfg.color);
-          colorBlock.setFieldValue(hexColor, "COLOUR");
-
-          colorBlock.initSvg();
-          colorBlock.render();
-
-          block.getInput("COLOR")
-            ?.connection
-            ?.connect(colorBlock.outputConnection);
-
-          return block;
-        }
-        return null;
-      }
-
-      /* =====================
-         DOT
-      ===================== */
-      case "TURTLE_DRAW": {
-        if (cfg.action === "DOT") {
-          const varId = ensureVariable(workspace, cfg.variable);
-          const block = workspace.newBlock("turtle_dot");
-          block.setFieldValue(varId, "VAR");
-
-          const num = workspace.newBlock("math_number");
-          num.setFieldValue(String(cfg.radius), "NUM");
-
-          num.initSvg();
-          num.render();
-
-          block.getInput("SIZE")
-            ?.connection
-            ?.connect(num.outputConnection);
-
-          return block;
-        }
-        return null;
-      }
-
-      default:
-        console.warn('Unknown block_type:', row.block_type, row);
-        return null;
+      return null;
     }
+
+    /* =====================
+       BACKGROUND COLOR
+    ===================== */
+    case "TURTLE_SCREEN": {
+      if (cfg.action === "SET_BACKGROUND_COLOR") {
+        const block = workspace.newBlock("turtle_bgcolor");
+        const hexColor = mapColorToHex(cfg.color);
+        block.setFieldValue(hexColor, "COLOR");
+        return block;
+      }
+      return null;
+    }
+
+    /* =====================
+       TURTLE STYLE
+    ===================== */
+    case "TURTLE_STYLE": {
+
+      // SET FILL COLOR
+      if (cfg.action === "SET_FILL_COLOR") {
+        const varId = ensureVariable(workspace, cfg.variable);
+        const block = workspace.newBlock("turtle_fill_color");
+        block.setFieldValue(varId, "VAR");
+
+        const colorBlock = workspace.newBlock("colour_picker");
+        const hexColor = mapColorToHex(cfg.color);
+        colorBlock.setFieldValue(hexColor, "COLOUR");
+
+        colorBlock.initSvg();
+        colorBlock.render();
+
+        block.getInput("COLOR")
+          ?.connection
+          ?.connect(colorBlock.outputConnection);
+
+        return block;
+      }
+
+      // SET SHAPE
+      if (cfg.action === "SET_SHAPE") {
+        const varId = ensureVariable(workspace, cfg.variable);
+        const block = workspace.newBlock("turtle_shape");
+
+        block.setFieldValue(varId, "VAR");
+        block.setFieldValue(cfg.shape, "SHAPE");
+
+        return block;
+      }
+
+      // SET WIDTH
+      if (cfg.action === "SET_WIDTH") {
+        const varId = ensureVariable(workspace, cfg.variable);
+        const block = workspace.newBlock("turtle_width");
+        block.setFieldValue(varId, "VAR");
+
+        const num = workspace.newBlock("math_number");
+        num.setFieldValue(String(cfg.width), "NUM");
+
+        num.initSvg();
+        num.render();
+
+        block.getInput("WIDTH")
+          ?.connection
+          ?.connect(num.outputConnection);
+
+        return block;
+      }
+
+      return null;
+    }
+
+    /* =====================
+       DOT
+    ===================== */
+    case "TURTLE_DRAW": {
+      if (cfg.action === "DOT") {
+        const varId = ensureVariable(workspace, cfg.variable);
+        const block = workspace.newBlock("turtle_dot");
+        block.setFieldValue(varId, "VAR");
+
+        const num = workspace.newBlock("math_number");
+        num.setFieldValue(String(cfg.radius), "NUM");
+
+        num.initSvg();
+        num.render();
+
+        block.getInput("SIZE")
+          ?.connection
+          ?.connect(num.outputConnection);
+
+        return block;
+      }
+      return null;
+    }
+
+    default:
+      console.warn("Unknown block_type:", row.block_type, row);
+      return null;
   }
+}
 
   function loadBlocksIntoWorkspace(blocks: any[]) {
     debugLog('Loading blocks into workspace', { count: blocks.length, blocks });
