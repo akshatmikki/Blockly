@@ -3994,7 +3994,7 @@ function BasicCodingPage() {
     }
     return variable.getId();
   }
-  
+
   function createValueBlock(workspace, valueCfg) {
     if (!valueCfg) return null;
 
@@ -5321,7 +5321,7 @@ plt = _FakePlt()
       />
 
       {/* Debug Panel */}
-      {/* {showDebug && (
+      {showDebug && (
         <div style={{
           position: 'fixed',
           top: '10px',
@@ -5403,10 +5403,10 @@ plt = _FakePlt()
             )}
           </div>
         </div>
-      )} */}
+      )}
 
       {/* Toggle Debug Button (when hidden) */}
-      {/* {!showDebug && (
+      {!showDebug && (
         <button
           onClick={() => setShowDebug(true)}
           style={{
@@ -5427,7 +5427,7 @@ plt = _FakePlt()
         >
           🔍
         </button>
-      )} */}
+      )}
 
       <input
         type="file"
