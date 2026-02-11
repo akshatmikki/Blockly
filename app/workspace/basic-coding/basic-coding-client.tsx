@@ -352,46 +352,29 @@ const defineBlocks = () => {
 
   // Turtle: Pen Color
 
-  Blockly.Blocks['turtle_pencolor'] = {
-    init: function () {
-      this.appendDummyInput()
-        .appendField(new Blockly.FieldVariable("turtle"), "VAR")
-        .appendField("pen color")
-        .appendField(
-          new Blockly.FieldDropdown([
-            ["red", "#ff0000"],
-            ["green", "#00ff00"],
-            ["blue", "#0000ff"],
-            ["black", "#000000"]
-          ]),
-          "COLOR"
-        );
-      this.setPreviousStatement(true, null);
-      this.setNextStatement(true, null);
-      this.setColour(330);
-      this.setTooltip("Set pen color");
-    }
-  };
+  Blockly.Blocks["turtle_pencolor"] = {
+  init: function () {
+    this.appendValueInput("COLOR")
+      .appendField("set")
+      .appendField(new Blockly.FieldVariable("t"), "VAR")
+      .appendField("pen color");
+    this.setPreviousStatement(true);
+    this.setNextStatement(true);
+    this.setColour(330);
+  }
+};
 
   // Turtle: Background Color
-  Blockly.Blocks['turtle_bgcolor'] = {
-    init: function () {
-      this.appendDummyInput()
-        .appendField("set background color")
-        .appendField(
-          new Blockly.FieldDropdown([
-            ["white", "#ffffff"],
-            ["black", "#000000"],
-            ["blue", "#0000ff"]
-          ]),
-          "COLOR"
-        );
-      this.setPreviousStatement(true, null);
-      this.setNextStatement(true, null);
-      this.setColour(330);
-      this.setTooltip("Set background color");
-    }
-  };
+ Blockly.Blocks["turtle_bgcolor"] = {
+  init: function () {
+    this.appendValueInput("COLOR")
+      .appendField("set background color");
+    this.setPreviousStatement(true);
+    this.setNextStatement(true);
+    this.setColour(330);
+  }
+};
+
 
   // For Loop
   Blockly.Blocks['controls_repeat'] = {
@@ -1486,88 +1469,81 @@ Blockly.Blocks['convert_to_bool'] = {
   };
 
   // TURTLE: Shape
-  Blockly.Blocks['turtle_shape'] = {
-    init: function () {
-      this.appendDummyInput()
-        .appendField("set turtle")
-        .appendField(new Blockly.FieldVariable("turtle"), "VAR")
-        .appendField("shape in")
-        .appendField(
-          new Blockly.FieldDropdown([
-            ["triangle", "triangle"],
-            ["circle", "circle"],
-            ["square", "square"]
-          ]),
-          "SHAPE"
-        );
-      this.setPreviousStatement(true, null);
-      this.setNextStatement(true, null);
-      this.setColour(330);
-      this.setTooltip("Set turtle shape");
-    }
-  };
+ Blockly.Blocks['turtle_shape'] = {
+  init: function () {
+    this.appendDummyInput()
+      .appendField("set turtle")
+      .appendField(new Blockly.FieldVariable("turtle"), "VAR")
+      .appendField("shape in")
+      .appendField(
+        new Blockly.FieldDropdown([
+          ["turtle", "turtle"],   // 🐢 added
+          ["triangle", "triangle"],
+          ["circle", "circle"],
+          ["square", "square"]
+        ]),
+        "SHAPE"
+      );
+
+    this.setPreviousStatement(true, null);
+    this.setNextStatement(true, null);
+    this.setColour(330);
+    this.setTooltip("Set turtle shape");
+  }
+};
 
   // TURTLE: Speed
-  Blockly.Blocks['turtle_speed'] = {
-    init: function () {
-      this.appendDummyInput()
-        .appendField("make turtle")
-        .appendField(new Blockly.FieldVariable("turtle"), "VAR")
-        .appendField("set speed");
-      this.appendValueInput("SPEED")
-        .setCheck("Number");
-      this.setPreviousStatement(true, null);
-      this.setNextStatement(true, null);
-      this.setColour(330);
-      this.setTooltip("Set turtle speed");
-    }
-  };
+ Blockly.Blocks["turtle_speed"] = {
+  init: function () {
+    this.appendValueInput("SPEED")
+      .appendField("set")
+      .appendField(new Blockly.FieldVariable("t"), "VAR")
+      .appendField("speed");
+    this.setPreviousStatement(true);
+    this.setNextStatement(true);
+    this.setColour(330);
+  }
+};
 
   // TURTLE: Width
-  Blockly.Blocks['turtle_width'] = {
-    init: function () {
-      this.appendDummyInput()
-        .appendField("make turtle")
-        .appendField(new Blockly.FieldVariable("turtle"), "VAR")
-        .appendField("wide to");
-      this.appendValueInput("WIDTH")
-        .setCheck("Number");
-      this.setPreviousStatement(true, null);
-      this.setNextStatement(true, null);
-      this.setColour(330);
-      this.setTooltip("Set turtle width");
-    }
-  };
+ Blockly.Blocks["turtle_width"] = {
+  init: function () {
+    this.appendValueInput("WIDTH")
+      .appendField("set")
+      .appendField(new Blockly.FieldVariable("t"), "VAR")
+      .appendField("width");
+    this.setPreviousStatement(true);
+    this.setNextStatement(true);
+    this.setColour(330);
+  }
+};
 
   // TURTLE: Fill color
-  Blockly.Blocks['turtle_fill_color'] = {
-    init: function () {
-      this.appendDummyInput()
-        .appendField("make turtle")
-        .appendField(new Blockly.FieldVariable("turtle"), "VAR")
-        .appendField("fill color");
-      this.appendValueInput("COLOR");
-      this.setPreviousStatement(true, null);
-      this.setNextStatement(true, null);
-      this.setColour(330);
-      this.setTooltip("Set fill color");
-    }
-  };
+Blockly.Blocks["turtle_fill_color"] = {
+  init: function () {
+    this.appendValueInput("COLOR")
+      .appendField("set")
+      .appendField(new Blockly.FieldVariable("t"), "VAR")
+      .appendField("fill color");
+    this.setPreviousStatement(true);
+    this.setNextStatement(true);
+    this.setColour(330);
+  }
+};
 
   // TURTLE: Color (pen color via value input)
-  Blockly.Blocks['turtle_color'] = {
-    init: function () {
-      this.appendDummyInput()
-        .appendField("make turtle")
-        .appendField(new Blockly.FieldVariable("turtle"), "VAR")
-        .appendField("color");
-      this.appendValueInput("COLOR");
-      this.setPreviousStatement(true, null);
-      this.setNextStatement(true, null);
-      this.setColour(330);
-      this.setTooltip("Set turtle color");
-    }
-  };
+ Blockly.Blocks["turtle_color"] = {
+  init: function () {
+    this.appendValueInput("COLOR")
+      .appendField("set")
+      .appendField(new Blockly.FieldVariable("t"), "VAR")
+      .appendField("color");
+    this.setPreviousStatement(true);
+    this.setNextStatement(true);
+    this.setColour(330);
+  }
+};
+
 
   // CONTROL: On key press
   Blockly.Blocks['controls_onkey'] = {
@@ -1957,31 +1933,30 @@ Blockly.Blocks['convert_to_bool'] = {
   };
 
   // TURTLE: Hide
-  Blockly.Blocks['turtle_hide'] = {
-    init: function () {
-      this.appendDummyInput()
-        .appendField("make turtle")
-        .appendField(new Blockly.FieldVariable("turtle"), "VAR")
-        .appendField("hide");
-      this.setPreviousStatement(true, null);
-      this.setNextStatement(true, null);
-      this.setColour(330);
-      this.setTooltip("Hide turtle");
-    }
-  };
+  Blockly.Blocks["turtle_hide"] = {
+  init: function () {
+    this.appendDummyInput()
+      .appendField("hide turtle")
+      .appendField(new Blockly.FieldVariable("t"), "VAR");
+    this.setPreviousStatement(true);
+    this.setNextStatement(true);
+    this.setColour(330);
+  }
+};
+
 
   // TURTLE: Show
-  Blockly.Blocks['turtle_show'] = {
-    init: function () {
-      this.appendDummyInput()
-        .appendField("show turtle")
-        .appendField(new Blockly.FieldVariable("turtle"), "VAR");
-      this.setPreviousStatement(true, null);
-      this.setNextStatement(true, null);
-      this.setColour(330);
-      this.setTooltip("Show turtle");
-    }
-  };
+ Blockly.Blocks["turtle_show"] = {
+  init: function () {
+    this.appendDummyInput()
+      .appendField("show turtle")
+      .appendField(new Blockly.FieldVariable("t"), "VAR");
+    this.setPreviousStatement(true);
+    this.setNextStatement(true);
+    this.setColour(330);
+  }
+};
+
 
   // CONTROL: Listen
   Blockly.Blocks['controls_listen'] = {
@@ -2227,9 +2202,39 @@ const defineJavascriptGenerators = () => {
   /* ==========================
      CREATE TURTLE (NO-OP)
      ========================== */
-  javascriptGenerator.forBlock["turtle_create"] = function () {
-    return ""; // turtle already exists
-  };
+javascriptGenerator.forBlock["turtle_create"] = function (block) {
+  return "";
+};
+
+
+javascriptGenerator.forBlock['colour_red'] = function () {
+  return ['"red"', javascriptGenerator.ORDER_ATOMIC];
+};
+
+javascriptGenerator.forBlock['colour_green'] = function () {
+  return ['"green"', javascriptGenerator.ORDER_ATOMIC];
+};
+
+javascriptGenerator.forBlock['colour_blue'] = function () {
+  return ['"blue"', javascriptGenerator.ORDER_ATOMIC];
+};
+
+javascriptGenerator.forBlock['colour_yellow'] = function () {
+  return ['"yellow"', javascriptGenerator.ORDER_ATOMIC];
+};
+
+javascriptGenerator.forBlock['colour_purple'] = function () {
+  return ['"purple"', javascriptGenerator.ORDER_ATOMIC];
+};
+
+javascriptGenerator.forBlock['colour_pink'] = function () {
+  return ['"pink"', javascriptGenerator.ORDER_ATOMIC];
+};
+javascriptGenerator.forBlock['colour_picker'] = function (block) {
+  const color = block.getFieldValue('COLOUR');
+  return [`"${color}"`, javascriptGenerator.ORDER_ATOMIC];
+};
+
 
   /* ==========================
      MOVE (FORWARD / BACKWARD)
@@ -2311,36 +2316,33 @@ const defineJavascriptGenerators = () => {
   javascriptGenerator.forBlock["turtle_pendown"] = () =>
     "__turtle.penDown();\n";
 
-  javascriptGenerator.forBlock["turtle_width"] = function (block) {
-    const width =
-      javascriptGenerator.valueToCode(block, "WIDTH", 0) || "1";
-    return `__turtle.setWidth(${width});\n`;
-  };
+javascriptGenerator.forBlock["turtle_width"] = function (block) {
+  const t = javascriptGenerator.nameDB_.getName(block.getFieldValue("VAR"), Blockly.Names.NameType.VARIABLE);
+  const w = javascriptGenerator.valueToCode(block, "WIDTH", javascriptGenerator.ORDER_NONE) || "1";
+  return `__turtle.width(${w});\n`;
+};
+
 
   /* ==========================
      COLORS
      ========================== */
-  javascriptGenerator.forBlock["turtle_pencolor"] = function (block) {
-    const color = block.getFieldValue("COLOR");
-    return `__turtle.setColor("${color}");\n`;
-  };
-
-  javascriptGenerator.forBlock["turtle_color"] = function (block) {
-    const color =
-      javascriptGenerator.valueToCode(block, "COLOR", 0) || '"black"';
-    return `__turtle.setColor(${color});\n`;
-  };
+ javascriptGenerator.forBlock["turtle_color"] =
+javascriptGenerator.forBlock["turtle_pencolor"] = function (block) {
+  const t = javascriptGenerator.nameDB_.getName(block.getFieldValue("VAR"), Blockly.Names.NameType.VARIABLE);
+  const c = javascriptGenerator.valueToCode(block, "COLOR", javascriptGenerator.ORDER_NONE) || '"#000000"';
+  return `__turtle.pencolor(${c});\n`;
+};
 
   javascriptGenerator.forBlock["turtle_fill_color"] = function (block) {
-    const color =
-      javascriptGenerator.valueToCode(block, "COLOR", 0) || '"black"';
-    return `__turtle.fillColor(${color});\n`;
-  };
+  const t = javascriptGenerator.nameDB_.getName(block.getFieldValue("VAR"), Blockly.Names.NameType.VARIABLE);
+  const c = javascriptGenerator.valueToCode(block, "COLOR", javascriptGenerator.ORDER_NONE) || '"#000000"';
+  return `__turtle.fillcolor(${c});\n`;
+};
 
-  javascriptGenerator.forBlock["turtle_bgcolor"] = function (block) {
-    const color = block.getFieldValue("COLOR");
-    return `__turtle.setBackground("${color}");\n`;
-  };
+ javascriptGenerator.forBlock["turtle_bgcolor"] = function (block) {
+  const c = javascriptGenerator.valueToCode(block, "COLOR", javascriptGenerator.ORDER_NONE) || '"#ffffff"';
+  return `__turtle.bgcolor(${c});\n`;
+};
 
   /* ==========================
      FILL
@@ -2354,28 +2356,33 @@ const defineJavascriptGenerators = () => {
   /* ==========================
      SHAPE
      ========================== */
-  javascriptGenerator.forBlock["turtle_shape"] = function (block) {
-    const shape = block.getFieldValue("SHAPE");
-    return `__turtle.setShape("${shape}");\n`;
-  };
+ javascriptGenerator.forBlock["turtle_shape"] = function (block) {
+  const shape = block.getFieldValue("SHAPE");
+  return `__turtle.setShape("${shape}");\n`;
+};
 
   /* ==========================
      SPEED
      ========================== */
   javascriptGenerator.forBlock["turtle_speed"] = function (block) {
-    const speed =
-      javascriptGenerator.valueToCode(block, "SPEED", 0) || "5";
-    return `__turtle.setSpeed(${speed});\n`;
-  };
+  const t = javascriptGenerator.nameDB_.getName(block.getFieldValue("VAR"), Blockly.Names.NameType.VARIABLE);
+  const s = javascriptGenerator.valueToCode(block, "SPEED", javascriptGenerator.ORDER_NONE) || "5";
+  return `__turtle.speed(${s});\n`;
+};
 
   /* ==========================
      VISIBILITY
      ========================== */
-  javascriptGenerator.forBlock["turtle_hide"] = () =>
-    "__turtle.hide();\n";
+ javascriptGenerator.forBlock["turtle_hide"] = function (block) {
+  const t = javascriptGenerator.nameDB_.getName(block.getFieldValue("VAR"), Blockly.Names.NameType.VARIABLE);
+  return `__turtle.hideturtle();\n`;
+};
 
-  javascriptGenerator.forBlock["turtle_show"] = () =>
-    "__turtle.show();\n";
+ javascriptGenerator.forBlock["turtle_show"] = function (block) {
+  const t = javascriptGenerator.nameDB_.getName(block.getFieldValue("VAR"), Blockly.Names.NameType.VARIABLE);
+  return `__turtle.showturtle();\n`;
+};
+
 };
 
 const definePythonGenerators = () => {
@@ -2582,24 +2589,30 @@ serial.send(${text})
     return ""; // ignored
   };
 
-  pythonGenerator.forBlock['turtle_create'] = function (block, generator) {
-    // ✅ Ensure import turtle is added ONCE
-    generator.definitions_['import_turtle'] = 'import turtle';
+pythonGenerator.forBlock["turtle_create"] = function (block, gen) {
+  gen.definitions_["import_turtle"] = `
+import turtle
+_screen = turtle.Screen()
+`;
 
-    const varName = generator.nameDB_.getName(
-      block.getFieldValue('VAR'),
-      Blockly.Names.NameType.VARIABLE
-    );
+  const t = gen.nameDB_.getName(
+    block.getFieldValue("VAR"),
+    Blockly.Names.NameType.VARIABLE
+  );
 
-    return `${varName} = turtle.Turtle()\n`;
-  };
+  return `${t} = turtle.Turtle()\n`;
+};
 
-  pythonGenerator.forBlock['turtle_forward'] = function (block, generator) {
-    const varName = generator.nameDB_.getName(block.getFieldValue('VAR'), Blockly.Names.NameType.VARIABLE);
-    const distance = generator.valueToCode(block, 'DISTANCE', PythonOrder.ATOMIC) || '0';
-    const code = `${varName}.forward(${distance})\n`;
-    return code;
-  };
+pythonGenerator.forBlock['turtle_forward'] = function (block, generator) {
+  const varName = generator.nameDB_.getName(
+    block.getFieldValue('VAR'),
+    Blockly.Names.NameType.VARIABLE
+  );
+  const distance =
+    generator.valueToCode(block, 'DISTANCE', PythonOrder.ATOMIC) || '0';
+
+  return `${varName}.forward(${distance})\n`;
+};
 
   pythonGenerator.forBlock['turtle_right'] = function (block, generator) {
     const varName = generator.nameDB_.getName(block.getFieldValue('VAR'), Blockly.Names.NameType.VARIABLE);
@@ -2615,12 +2628,6 @@ serial.send(${text})
     return code;
   };
 
-  pythonGenerator.forBlock['turtle_pencolor'] = function (block, generator) {
-    const varName = generator.nameDB_.getName(block.getFieldValue('VAR'), Blockly.Names.NameType.VARIABLE);
-    const color = block.getFieldValue('COLOR');
-    const code = `${varName}.pencolor('${color}')\n`;
-    return code;
-  };
   /* =========================
      CONVERSION GENERATORS
   ========================= */
@@ -2663,11 +2670,11 @@ pythonGenerator.forBlock['convert_to_bool'] = function (block, generator) {
     return [`${value}.lower()`, gen.ORDER_MEMBER];
   };
 
-  pythonGenerator.forBlock['turtle_bgcolor'] = function (block, generator) {
-    const color = block.getFieldValue('COLOR');
-    const code = `_s.bgcolor('${color}')\n`;
-    return code;
-  };
+pythonGenerator.forBlock["turtle_bgcolor"] = function (block, gen) {
+  const c = gen.valueToCode(block, "COLOR", PythonOrder.NONE) || '"#ffffff"';
+  return `_screen.bgcolor(${c})\n`;
+};
+
 
   pythonGenerator.forBlock['controls_repeat'] = function (block, generator) {
     const times = generator.valueToCode(block, 'TIMES', PythonOrder.ATOMIC) || '0';
@@ -3233,36 +3240,36 @@ pythonGenerator.forBlock['convert_to_bool'] = function (block, generator) {
   };
 
   // Turtle: Speed
-  pythonGenerator.forBlock['turtle_speed'] = function (block, generator) {
-    const varName = generator.nameDB_.getName(block.getFieldValue('VAR'), Blockly.Names.NameType.VARIABLE);
-    const speed = generator.valueToCode(block, 'SPEED', PythonOrder.NONE) || '5';
-    const code = `${varName}.speed(${speed})\n`;
-    return code;
-  };
+  pythonGenerator.forBlock["turtle_speed"] = function (block, gen) {
+  const t = gen.nameDB_.getName(block.getFieldValue("VAR"), Blockly.Names.NameType.VARIABLE);
+  const s = gen.valueToCode(block, "SPEED", PythonOrder.NONE) || "5";
+  return `${t}.speed(${s})\n`;
+};
+
 
   // Turtle: Width
-  pythonGenerator.forBlock['turtle_width'] = function (block, generator) {
-    const varName = generator.nameDB_.getName(block.getFieldValue('VAR'), Blockly.Names.NameType.VARIABLE);
-    const width = generator.valueToCode(block, 'WIDTH', PythonOrder.NONE) || '5';
-    const code = `${varName}.pensize(${width})\n`;
-    return code;
-  };
+ pythonGenerator.forBlock["turtle_width"] = function (block, gen) {
+  const t = gen.nameDB_.getName(block.getFieldValue("VAR"), Blockly.Names.NameType.VARIABLE);
+  const w = gen.valueToCode(block, "WIDTH", PythonOrder.NONE) || "1";
+  return `${t}.width(${w})\n`;
+};
+
 
   // Turtle: Fill color
-  pythonGenerator.forBlock['turtle_fill_color'] = function (block, generator) {
-    const varName = generator.nameDB_.getName(block.getFieldValue('VAR'), Blockly.Names.NameType.VARIABLE);
-    const color = generator.valueToCode(block, 'COLOR', PythonOrder.NONE) || '"red"';
-    const code = `${varName}.fillcolor(${color})\n`;
-    return code;
-  };
+  pythonGenerator.forBlock["turtle_fill_color"] = function (block, gen) {
+  const t = gen.nameDB_.getName(block.getFieldValue("VAR"), Blockly.Names.NameType.VARIABLE);
+  const c = gen.valueToCode(block, "COLOR", PythonOrder.NONE) || '"#000000"';
+  return `${t}.fillcolor(${c})\n`;
+};
 
   // Turtle: Color (pen color)
-  pythonGenerator.forBlock['turtle_color'] = function (block, generator) {
-    const varName = generator.nameDB_.getName(block.getFieldValue('VAR'), Blockly.Names.NameType.VARIABLE);
-    const color = generator.valueToCode(block, 'COLOR', PythonOrder.NONE) || '"black"';
-    const code = `${varName}.color(${color})\n`;
-    return code;
-  };
+  pythonGenerator.forBlock["turtle_color"] =
+pythonGenerator.forBlock["turtle_pencolor"] = function (block, gen) {
+  const t = gen.nameDB_.getName(block.getFieldValue("VAR"), Blockly.Names.NameType.VARIABLE);
+  const c = gen.valueToCode(block, "COLOR", PythonOrder.NONE) || '"#000000"';
+  return `${t}.color(${c})\n`;
+};
+
 
   // Control: On key press
   pythonGenerator.forBlock['controls_onkey'] = function (block, generator) {
@@ -3432,18 +3439,16 @@ pythonGenerator.forBlock['convert_to_bool'] = function (block, generator) {
   };
 
   // Turtle: Hide
-  pythonGenerator.forBlock['turtle_hide'] = function (block, generator) {
-    const varName = generator.nameDB_.getName(block.getFieldValue('VAR'), Blockly.Names.NameType.VARIABLE);
-    const code = `${varName}.hideturtle()\n`;
-    return code;
-  };
+ pythonGenerator.forBlock["turtle_hide"] = function (block, gen) {
+  const t = gen.nameDB_.getName(block.getFieldValue("VAR"), Blockly.Names.NameType.VARIABLE);
+  return `${t}.hideturtle()\n`;
+};
 
   // Turtle: Show
-  pythonGenerator.forBlock['turtle_show'] = function (block, generator) {
-    const varName = generator.nameDB_.getName(block.getFieldValue('VAR'), Blockly.Names.NameType.VARIABLE);
-    const code = `${varName}.showturtle()\n`;
-    return code;
-  };
+pythonGenerator.forBlock["turtle_show"] = function (block, gen) {
+  const t = gen.nameDB_.getName(block.getFieldValue("VAR"), Blockly.Names.NameType.VARIABLE);
+  return `${t}.showturtle()\n`;
+};
 
   // Control: Listen
   pythonGenerator.forBlock['controls_listen'] = function (block, generator) {
@@ -4828,25 +4833,42 @@ file_handle = None
     }
 
     setOutput("Running...\n");
+const ws = workspaceRef.current;
+const usesTurtle = ws
+  ? ws.getAllBlocks(false).some(b => b.type.startsWith("turtle_"))
+  : false;
 
-    const usesTurtle = /\bturtle\b/.test(code);
     const usesMath = /\bmath\./.test(code);
     const usesMatplotlib = /\bplt\./.test(code);
     const usesPygal = /\bpygal\b/.test(code);
     // Clear previous canvas
     canvasContainerRef.current.innerHTML = "";
 
-    if (usesTurtle) {
-      const canvas = document.createElement("canvas");
-      canvas.id = "turtleCanvas";
-      canvas.width = 800;
-      canvas.height = 500;
-      canvas.style.border = "2px solid #5566AA";
-      canvas.style.borderRadius = "8px";
-      canvas.style.backgroundColor = "#ffffff";
+  if (usesTurtle) {
+  const canvas = document.createElement("canvas");
+  canvas.id = "turtleCanvas";
 
-      canvasContainerRef.current.appendChild(canvas);
-    }
+  // ✅ Let CSS control size
+  canvas.style.width = "100%";
+  canvas.style.height = "100%";
+  canvas.style.display = "block";
+  canvas.style.border = "2px solid #5566AA";
+  canvas.style.borderRadius = "8px";
+  canvas.style.backgroundColor = "#ffffff";
+
+  canvasContainerRef.current.appendChild(canvas);
+
+  // ✅ Sync real resolution AFTER append
+  const rect = canvas.getBoundingClientRect();
+  const dpr = window.devicePixelRatio || 1;
+
+  canvas.width = rect.width * dpr;
+  canvas.height = rect.height * dpr;
+
+  const ctx = canvas.getContext("2d");
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+
 
     let pendingPlot = null;
     let plotLabels = { x: "", y: "" };
