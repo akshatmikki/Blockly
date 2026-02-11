@@ -4048,6 +4048,24 @@ function BasicCodingPage() {
         return null;
     }
   }
+function mapColorToBlockType(color: string) {
+  switch (color?.toUpperCase()) {
+    case "RED":
+      return "colour_red";
+    case "GREEN":
+      return "colour_green";
+    case "BLUE":
+      return "colour_blue";
+    case "YELLOW":
+      return "colour_yellow";
+    case "PURPLE":
+      return "colour_purple";
+    case "PINK":
+      return "colour_pink";
+    default:
+      return "colour_picker";
+  }
+}
 
 function createBlocklyBlock(workspace, row) {
   const cfg = typeof row.block_config === "string"
@@ -4211,15 +4229,26 @@ function createBlocklyBlock(workspace, row) {
     /* =====================
        BACKGROUND COLOR
     ===================== */
-    case "TURTLE_SCREEN": {
-      if (cfg.action === "SET_BACKGROUND_COLOR") {
-        const block = workspace.newBlock("turtle_bgcolor");
-        const hexColor = mapColorToHex(cfg.color);
-        block.setFieldValue(hexColor, "COLOR");
-        return block;
-      }
-      return null;
-    }
+   case "TURTLE_SCREEN": {
+  if (cfg.action === "SET_BACKGROUND_COLOR") {
+
+    const block = workspace.newBlock("turtle_bgcolor");
+
+    // Map DB color to Blockly block type
+    const colorBlockType = mapColorToBlockType(cfg.color);
+
+    const colorBlock = workspace.newBlock(colorBlockType);
+    colorBlock.initSvg();
+    colorBlock.render();
+
+    block.getInput("COLOR")
+      ?.connection
+      ?.connect(colorBlock.outputConnection);
+
+    return block;
+  }
+  return null;
+}
 
     /* =====================
        TURTLE STYLE
@@ -5321,7 +5350,7 @@ plt = _FakePlt()
       />
 
       {/* Debug Panel */}
-      {showDebug && (
+      {/* {showDebug && (
         <div style={{
           position: 'fixed',
           top: '10px',
@@ -5403,10 +5432,10 @@ plt = _FakePlt()
             )}
           </div>
         </div>
-      )}
+      )} */}
 
       {/* Toggle Debug Button (when hidden) */}
-      {!showDebug && (
+      {/* {!showDebug && (
         <button
           onClick={() => setShowDebug(true)}
           style={{
@@ -5427,7 +5456,7 @@ plt = _FakePlt()
         >
           🔍
         </button>
-      )}
+      )} */}
 
       <input
         type="file"
