@@ -4121,7 +4121,7 @@ let isDetectionRunning = false;
         setOutput((prev) => prev + '⏳ Loading face detection models...\n');
 
         // Use CDN path for models instead of local "/models"
-        const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model';
+        const MODEL_URL = 'https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js';
         
         await Promise.all([
           window.faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
