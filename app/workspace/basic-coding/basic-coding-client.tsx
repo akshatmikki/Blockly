@@ -4667,128 +4667,192 @@ function createBlocklyBlock(workspace, row) {
   }, [toolboxXml]);
 
 
-  function renderPlot(plot, labels) {
-    canvasContainerRef.current.innerHTML = "";
+function renderPlot(plot, labels) {
+  canvasContainerRef.current.innerHTML = "";
 
-    const canvas = document.createElement("canvas");
-    const container = canvasContainerRef.current;
+  const canvas = document.createElement("canvas");
+  const container = canvasContainerRef.current;
 
-    const rect = container.getBoundingClientRect();
+  const rect = container.getBoundingClientRect();
 
-    canvas.width = rect.width;
-    canvas.height = Math.min(450, rect.height);
-    canvas.style.border = "2px solid #ccc";
-    canvasContainerRef.current.appendChild(canvas);
+  canvas.width = rect.width;
+  canvas.height = Math.min(450, rect.height);
+  canvas.style.border = "2px solid #ccc";
+  canvasContainerRef.current.appendChild(canvas);
 
-    const ctx = canvas.getContext("2d");
+  const ctx = canvas.getContext("2d");
 
-    const { type, x, y } = plot;
+  const { type, x, y } = plot;
 
-    const padding = 60;
-    const width = canvas.width - padding * 2;
-    const height = canvas.height - padding * 2;
+  const padding = 60;
+  const width = canvas.width - padding * 2;
+  const height = canvas.height - padding * 2;
 
-    /* ======================
-       AXIS DRAW
-    ====================== */
-    ctx.strokeStyle = "#000";
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(padding, padding);
-    ctx.lineTo(padding, canvas.height - padding);
-    ctx.lineTo(canvas.width - padding, canvas.height - padding);
-    ctx.stroke();
+  /* ======================
+     AXIS DRAW
+  ====================== */
+  ctx.strokeStyle = "#000";
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(padding, padding);
+  ctx.lineTo(padding, canvas.height - padding);
+  ctx.lineTo(canvas.width - padding, canvas.height - padding);
+  ctx.stroke();
 
-    /* ======================
-       HISTOGRAM
-    ====================== */
-    if (type === "hist") {
-      const data = x;
-      const bins = 5;
-      const min = Math.min(...data);
-      const max = Math.max(...data);
-      const binSize = (max - min) / bins;
+  /* ======================
+     HISTOGRAM
+  ====================== */
+  if (type === "hist") {
+    const data = x;
+    const bins = 5;
+    const min = Math.min(...data);
+    const max = Math.max(...data);
+    const binSize = (max - min) / bins;
 
-      const counts = Array(bins).fill(0);
-      data.forEach(v => {
-        const idx = Math.min(
-          bins - 1,
-          Math.floor((v - min) / binSize)
-        );
-        counts[idx]++;
-      });
+    const counts = Array(bins).fill(0);
+    data.forEach(v => {
+      const idx = Math.min(
+        bins - 1,
+        Math.floor((v - min) / binSize)
+      );
+      counts[idx]++;
+    });
 
-      const barWidth = width / bins;
-      const maxCount = Math.max(...counts);
+    const barWidth = width / bins;
+    const maxCount = Math.max(...counts);
 
-      ctx.fillStyle = "#3498db";
+    ctx.fillStyle = "#3498db";
 
-      counts.forEach((count, i) => {
-        const barHeight = (count / maxCount) * height;
-        const px = padding + i * barWidth;
-        const py = canvas.height - padding - barHeight;
-        ctx.fillRect(px, py, barWidth - 5, barHeight);
-      });
+    counts.forEach((count, i) => {
+      const barHeight = (count / maxCount) * height;
+      const px = padding + i * barWidth;
+      const py = canvas.height - padding - barHeight;
+      ctx.fillRect(px, py, barWidth - 5, barHeight);
+    });
+
+    // ✅ NEW: X-axis values (bin ranges)
+    ctx.fillStyle = "#000";
+    ctx.font = "11px Arial";
+    ctx.textAlign = "center";
+    for (let i = 0; i <= bins; i++) {
+      const value = min + i * binSize;
+      const px = padding + (i / bins) * width;
+      ctx.fillText(value.toFixed(1), px, canvas.height - padding + 20);
+      
+      // Tick mark
+      ctx.beginPath();
+      ctx.moveTo(px, canvas.height - padding);
+      ctx.lineTo(px, canvas.height - padding + 5);
+      ctx.stroke();
     }
 
-    /* ======================
-       LINE / SCATTER
-    ====================== */
-    if (type === "line" || type === "scatter") {
-      const minX = Math.min(...x);
-      const maxX = Math.max(...x);
-      const minY = Math.min(...y);
-      const maxY = Math.max(...y);
+    // ✅ NEW: Y-axis values (counts)
+    ctx.textAlign = "right";
+    const numYTicks = 5;
+    for (let i = 0; i <= numYTicks; i++) {
+      const value = (maxCount / numYTicks) * i;
+      const py = canvas.height - padding - (i / numYTicks) * height;
+      ctx.fillText(Math.round(value).toString(), padding - 10, py + 4);
+      
+      // Tick mark
+      ctx.beginPath();
+      ctx.moveTo(padding - 5, py);
+      ctx.lineTo(padding, py);
+      ctx.stroke();
+    }
+  }
 
-      const scaleX = width / (maxX - minX || 1);
-      const scaleY = height / (maxY - minY || 1);
+  /* ======================
+     LINE / SCATTER
+  ====================== */
+  if (type === "line" || type === "scatter") {
+    const minX = Math.min(...x);
+    const maxX = Math.max(...x);
+    const minY = Math.min(...y);
+    const maxY = Math.max(...y);
+
+    const scaleX = width / (maxX - minX || 1);
+    const scaleY = height / (maxY - minY || 1);
+
+    if (type === "line") {
+      ctx.strokeStyle = "#2c3e50";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+    }
+
+    x.forEach((_, i) => {
+      const px = padding + (x[i] - minX) * scaleX;
+      const py =
+        canvas.height -
+        padding -
+        (y[i] - minY) * scaleY;
 
       if (type === "line") {
-        ctx.strokeStyle = "#2c3e50";
-        ctx.lineWidth = 2;
-        ctx.beginPath();
+        if (i === 0) ctx.moveTo(px, py);
+        else ctx.lineTo(px, py);
       }
 
-      x.forEach((_, i) => {
-        const px = padding + (x[i] - minX) * scaleX;
-        const py =
-          canvas.height -
-          padding -
-          (y[i] - minY) * scaleY;
+      if (type === "scatter") {
+        ctx.fillStyle = "#e74c3c";
+        ctx.beginPath();
+        ctx.arc(px, py, 4, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    });
 
-        if (type === "line") {
-          if (i === 0) ctx.moveTo(px, py);
-          else ctx.lineTo(px, py);
-        }
+    if (type === "line") ctx.stroke();
 
-        if (type === "scatter") {
-          ctx.fillStyle = "#e74c3c";
-          ctx.beginPath();
-          ctx.arc(px, py, 4, 0, Math.PI * 2);
-          ctx.fill();
-        }
-      });
-
-      if (type === "line") ctx.stroke();
+    // ✅ NEW: X-axis values
+    ctx.fillStyle = "#000";
+    ctx.font = "11px Arial";
+    ctx.textAlign = "center";
+    const numXTicks = 5;
+    for (let i = 0; i <= numXTicks; i++) {
+      const value = minX + (maxX - minX) * (i / numXTicks);
+      const px = padding + (i / numXTicks) * width;
+      ctx.fillText(value.toFixed(1), px, canvas.height - padding + 20);
+      
+      // Tick mark
+      ctx.strokeStyle = "#000";
+      ctx.beginPath();
+      ctx.moveTo(px, canvas.height - padding);
+      ctx.lineTo(px, canvas.height - padding + 5);
+      ctx.stroke();
     }
 
-    /* ======================
-       LABELS
-    ====================== */
-    ctx.fillStyle = "#000";
-    ctx.font = "14px Arial";
-    ctx.textAlign = "center";
-
-    // X label
-    ctx.fillText(labels.x || "X", canvas.width / 2, canvas.height - 15);
-
-    // Y label
-    ctx.save();
-    ctx.translate(15, canvas.height / 2);
-    ctx.rotate(-Math.PI / 2);
-    ctx.fillText(labels.y || "Y", 0, 0);
-    ctx.restore();
+    // ✅ NEW: Y-axis values
+    ctx.textAlign = "right";
+    const numYTicks = 5;
+    for (let i = 0; i <= numYTicks; i++) {
+      const value = minY + (maxY - minY) * (i / numYTicks);
+      const py = canvas.height - padding - (i / numYTicks) * height;
+      ctx.fillText(value.toFixed(1), padding - 10, py + 4);
+      
+      // Tick mark
+      ctx.beginPath();
+      ctx.moveTo(padding - 5, py);
+      ctx.lineTo(padding, py);
+      ctx.stroke();
+    }
   }
+
+  /* ======================
+     LABELS
+  ====================== */
+  ctx.fillStyle = "#000";
+  ctx.font = "14px Arial";
+  ctx.textAlign = "center";
+
+  // X label
+  ctx.fillText(labels.x || "X", canvas.width / 2, canvas.height - 15);
+
+  // Y label
+  ctx.save();
+  ctx.translate(15, canvas.height / 2);
+  ctx.rotate(-Math.PI / 2);
+  ctx.fillText(labels.y || "Y", 0, 0);
+  ctx.restore();
+}
 
   function renderPygalChart(chart) {
     const container = canvasContainerRef.current;
