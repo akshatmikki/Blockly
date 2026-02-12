@@ -418,9 +418,9 @@ const defineBlocks = () => {
 
   Blockly.Blocks['cv_put_text'] = {
     init: function () {
-      this.appendValueInput("TEXT")
-        .setCheck("String")
-        .appendField("Put Text:");
+      this.appendDummyInput()
+        .appendField("Put Text:")
+        .appendField(new Blockly.FieldTextInput("Hello"), "TEXT");
       this.appendDummyInput()
         .appendField("Position:")
         .appendField("x:")
@@ -597,9 +597,9 @@ const defineBlocks = () => {
 
   Blockly.Blocks['cv_show_image'] = {
     init: function () {
-      this.appendValueInput("NAME")
-        .setCheck("String")
-        .appendField("Show image as");
+      this.appendDummyInput()
+        .appendField("Show Image as")
+        .appendField(new Blockly.FieldTextInput("output"), "NAME");
       this.setPreviousStatement(true);
       this.setNextStatement(true);
       this.setColour(280);
@@ -608,9 +608,9 @@ const defineBlocks = () => {
 
   Blockly.Blocks['cv_save_image'] = {
     init: function () {
-      this.appendValueInput("NAME")
-        .setCheck("String")
-        .appendField("Save image as");
+      this.appendDummyInput()
+        .appendField("Save Image as")
+        .appendField(new Blockly.FieldTextInput("image.png"), "NAME");
       this.setPreviousStatement(true);
       this.setNextStatement(true);
       this.setColour(280);
@@ -3073,8 +3073,8 @@ const definePythonGenerators = () => {
     return `print("__CV_LOAD_IMAGE__")\n`;
   };
 
-  pythonGenerator.forBlock['cv_put_text'] = function (block, generator) {
-    const text = generator.valueToCode(block, 'TEXT', pythonGenerator.ORDER_ATOMIC) || '""';
+  pythonGenerator.forBlock['cv_put_text'] = function (block) {
+    const text = block.getFieldValue("TEXT") || "Hello";
     const x = block.getFieldValue("X");
     const y = block.getFieldValue("Y");
     const font = block.getFieldValue("FONT");
@@ -3140,13 +3140,13 @@ const definePythonGenerators = () => {
     return [`(${r}, ${g}, ${b})`, pythonGenerator.ORDER_ATOMIC];
   };
 
-  pythonGenerator.forBlock['cv_show_image'] = function (block, generator) {
-    const name = generator.valueToCode(block, 'NAME', pythonGenerator.ORDER_ATOMIC) || '""';
+  pythonGenerator.forBlock['cv_show_image'] = function (block) {
+    const name = block.getFieldValue('NAME') || 'output';
     return `print("__CV_SHOW__:${name}")\n`;
   };
 
-  pythonGenerator.forBlock['cv_save_image'] = function (block, generator) {
-    const name = generator.valueToCode(block, 'NAME', pythonGenerator.ORDER_ATOMIC) || '""';
+  pythonGenerator.forBlock['cv_save_image'] = function (block) {
+    const name = block.getFieldValue('NAME') || 'image.png';
     return `print("__CV_SAVE__:${name}")\n`;
   };
 
@@ -4296,6 +4296,84 @@ pythonGenerator.forBlock["turtle_show"] = function (block, gen) {
   };
 
 };
+
+/* =========================
+   AI LEARNING - MODULE-LEVEL STATE
+   (must be outside the component to survive re-renders)
+========================= */
+// Facial Features
+let facialImage = null;
+let facialDetections = [];
+let facialCountsArray = [];
+
+// Object Detection
+let objectImage = null;
+let objectDetections = [];
+let cocoModel = null;
+
+// Face Recognition
+let faceRecogImage = null;
+let faceRecogResult = null;
+
+// Finger Detection
+let fingerHands = null;
+let fingerCamera = null;
+let fingerResults = null;
+let fingerDelay = 0;
+let fingerDetecting = false;
+let fingerAnimationId = null;
+
+// Computer Vision (OpenCV)
+let cvImage = null;
+let cvMat = null;
+
+// Promise that resolves when OpenCV.js is fully initialized
+function isCvReady() {
+  try {
+    return !!(
+      typeof window !== 'undefined' &&
+      window.cv &&
+      typeof window.cv.imread === 'function' &&
+      typeof window.cv.Mat === 'function'
+    );
+  } catch {
+    return false;
+  }
+}
+
+const cvReady: Promise<void> = new Promise((resolve) => {
+  if (isCvReady()) {
+    resolve();
+    return;
+  }
+  // Poll every 100ms — works whether or not onRuntimeInitialized fires
+  const poll = setInterval(() => {
+    if (isCvReady()) {
+      clearInterval(poll);
+      resolve();
+    }
+  }, 100);
+  // Also hook onRuntimeInitialized as a secondary signal
+  if (typeof window !== 'undefined') {
+    const origCallback = (window as any).onOpenCvReady;
+    (window as any).onOpenCvReady = () => {
+      if (origCallback) origCallback();
+      if (isCvReady()) { clearInterval(poll); resolve(); }
+    };
+    if (window.cv) {
+      const orig = window.cv['onRuntimeInitialized'];
+      window.cv['onRuntimeInitialized'] = () => {
+        if (orig) orig();
+        clearInterval(poll);
+        resolve();
+      };
+    }
+  }
+});
+
+// Command Queue for async operations
+let commandQueue = [];
+let isProcessingQueue = false;
 
 function AICodingPage() {
   const fileInputRef = useRef(null);
@@ -5891,38 +5969,8 @@ ${currentPrediction} (${(currentConfidence * 100).toFixed(1)}%)
   }
 
   /* =========================
-     AI LEARNING - GLOBAL VARIABLES
+     AI LEARNING - GLOBAL VARIABLES (declared at module level above component)
   ========================= */
-
-  // Facial Features
-  let facialImage = null;
-  let facialDetections = [];
-  let facialCountsArray = [];
-
-  // Object Detection
-  let objectImage = null;
-  let objectDetections = [];
-  let cocoModel = null;
-
-  // Face Recognition
-  let faceRecogImage = null;
-  let faceRecogResult = null;
-
-  // Finger Detection
-  let fingerHands = null;
-  let fingerCamera = null;
-  let fingerResults = null;
-  let fingerDelay = 0;
-  let fingerDetecting = false;
-  let fingerAnimationId = null;
-
-  // Computer Vision (OpenCV)
-  let cvImage = null;
-  let cvMat = null;
-
-  // Command Queue for async operations
-  let commandQueue = [];
-  let isProcessingQueue = false;
 
   async function processCommandQueue() {
     if (isProcessingQueue || commandQueue.length === 0) return;
@@ -6434,7 +6482,20 @@ ${currentPrediction} (${(currentConfidence * 100).toFixed(1)}%)
       input.type = "file";
       input.accept = "image/*";
 
+      // Resolve if user cancels the file picker
+      const onFocus = () => {
+        window.removeEventListener("focus", onFocus);
+        setTimeout(() => {
+          if (!input.files || input.files.length === 0) {
+            outputCallback("⚠️ No file selected.");
+            resolve();
+          }
+        }, 500);
+      };
+      window.addEventListener("focus", onFocus);
+
       input.onchange = async (e) => {
+        window.removeEventListener("focus", onFocus);
         const file = e.target.files[0];
         if (!file) {
           resolve();
@@ -6442,25 +6503,49 @@ ${currentPrediction} (${(currentConfidence * 100).toFixed(1)}%)
         }
 
         const reader = new FileReader();
-        reader.onload = (event) => {
+        reader.onload = async (event) => {
           const img = new Image();
-          img.onload = () => {
+          img.onload = async () => {
             cvImage = img;
 
-            // Convert to OpenCV Mat
-            if (window.cv) {
-              const canvas = document.createElement("canvas");
-              canvas.width = img.width;
-              canvas.height = img.height;
-              const ctx = canvas.getContext("2d");
-              ctx.drawImage(img, 0, 0);
-              cvMat = window.cv.imread(canvas);
+            // Wait for OpenCV to be fully initialized
+            if (!isCvReady()) {
+              outputCallback("⏳ Waiting for OpenCV to load...");
+            }
+            const timeout = new Promise<void>((_, reject) =>
+              setTimeout(() => reject(new Error("timeout")), 60000)
+            );
+            try {
+              await Promise.race([cvReady, timeout]);
+            } catch {
+              outputCallback("❌ OpenCV failed to load. Please refresh the page and wait a few seconds before running.");
+              resolve();
+              return;
             }
 
-            outputCallback("âœ… Image loaded!");
+            // Convert to OpenCV Mat
+            const canvas = document.createElement("canvas");
+            canvas.width = img.width;
+            canvas.height = img.height;
+            const ctx = canvas.getContext("2d");
+            ctx.drawImage(img, 0, 0);
+            if (cvMat) {
+              try { cvMat.delete(); } catch (_) {}
+            }
+            cvMat = window.cv.imread(canvas);
+
+            outputCallback("✅ Image loaded! (" + img.width + "x" + img.height + ")");
+            resolve();
+          };
+          img.onerror = () => {
+            outputCallback("❌ Failed to load image file.");
             resolve();
           };
           img.src = event.target.result;
+        };
+        reader.onerror = () => {
+          outputCallback("❌ Failed to read file.");
+          resolve();
         };
         reader.readAsDataURL(file);
       };
@@ -6481,41 +6566,43 @@ ${currentPrediction} (${(currentConfidence * 100).toFixed(1)}%)
 
   function showCVImage(containerRef, name, outputCallback) {
     if (!cvMat || !window.cv) {
-      outputCallback("âŒ No image loaded");
+      outputCallback("❌ Show Image: no image loaded. Use Load Image first.");
       return;
     }
-
-    containerRef.current.innerHTML = "";
-
-    const canvas = document.createElement("canvas");
-    window.cv.imshow(canvas, cvMat);
-
-    canvas.style.maxWidth = "100%";
-    canvas.style.borderRadius = "12px";
-    canvas.style.display = "block";
-    canvas.style.margin = "auto";
-
-    containerRef.current.appendChild(canvas);
-    outputCallback(`âœ… Image displayed as: ${name}`);
+    try {
+      containerRef.current.innerHTML = "";
+      const canvas = document.createElement("canvas");
+      window.cv.imshow(canvas, cvMat);
+      canvas.style.maxWidth = "100%";
+      canvas.style.borderRadius = "12px";
+      canvas.style.display = "block";
+      canvas.style.margin = "auto";
+      containerRef.current.appendChild(canvas);
+      outputCallback(`✅ Image displayed as: ${name}`);
+    } catch (err) {
+      outputCallback(`❌ Show Image error: ${err.message}`);
+    }
   }
 
   function saveCVImage(name, outputCallback) {
     if (!cvMat || !window.cv) {
-      outputCallback("âŒ No image to save");
+      outputCallback("❌ Save Image: no image loaded. Use Load Image first.");
       return;
     }
-
-    const canvas = document.createElement("canvas");
-    window.cv.imshow(canvas, cvMat);
-
-    canvas.toBlob((blob) => {
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = name;
-      a.click();
-      outputCallback(`âœ… Image saved as: ${name}`);
-    });
+    try {
+      const canvas = document.createElement("canvas");
+      window.cv.imshow(canvas, cvMat);
+      canvas.toBlob((blob) => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = name || "image.png";
+        a.click();
+        outputCallback(`✅ Image saved as: ${name}`);
+      });
+    } catch (err) {
+      outputCallback(`❌ Save Image error: ${err.message}`);
+    }
   }
 
 function renderPlot(plot, labels) {
@@ -7106,17 +7193,26 @@ const usesTurtle = ws
         return;
       }
       if (cleanText.startsWith("__CV_PUT_TEXT__:")) {
-        const parts = cleanText.split(":");
-        const text = parts[1].replace(/"/g, '');
-        const x = parseInt(parts[2]);
-        const y = parseInt(parts[3]);
-        const font = parts[4];
-        const size = parseFloat(parts[5]);
-        const r = parseInt(parts[6]);
-        const g = parseInt(parts[7]);
-        const b = parseInt(parts[8]);
-        const thickness = parseInt(parts[9]);
-        if (cvMat && window.cv) {
+        if (!cvMat || !window.cv) {
+          setOutput(prev => prev + "\n❌ Put Text: no image loaded. Use Load Image first.");
+          return;
+        }
+        // Use indexOf-based split to safely handle colons in the text itself
+        const prefix = "__CV_PUT_TEXT__:";
+        const payload = cleanText.slice(prefix.length);
+        // Format: text:x:y:font:size:r:g:b:thickness  (9 fields, text is first)
+        // Split from the END to preserve text with colons
+        const tailParts = payload.split(":");
+        const thickness = parseInt(tailParts[tailParts.length - 1]);
+        const b = parseInt(tailParts[tailParts.length - 2]);
+        const g = parseInt(tailParts[tailParts.length - 3]);
+        const r = parseInt(tailParts[tailParts.length - 4]);
+        const size = parseFloat(tailParts[tailParts.length - 5]);
+        const font = tailParts[tailParts.length - 6];
+        const y = parseInt(tailParts[tailParts.length - 7]);
+        const x = parseInt(tailParts[tailParts.length - 8]);
+        const text = tailParts.slice(0, tailParts.length - 8).join(":");
+        try {
           const fontMap = {
             'SIMPLEX': window.cv.FONT_HERSHEY_SIMPLEX,
             'PLAIN': window.cv.FONT_HERSHEY_PLAIN,
@@ -7127,12 +7223,18 @@ const usesTurtle = ws
             'SCRIPT_SIMPLEX': window.cv.FONT_HERSHEY_SCRIPT_SIMPLEX,
             'SCRIPT_COMPLEX': window.cv.FONT_HERSHEY_SCRIPT_COMPLEX
           };
-          window.cv.putText(cvMat, text, new window.cv.Point(x, y), fontMap[font] || window.cv.FONT_HERSHEY_SIMPLEX, size, new window.cv.Scalar(b, g, r), thickness);
-          setOutput(prev => prev + `\nâœ… Text added: "${text}"`);
+          window.cv.putText(cvMat, text, new window.cv.Point(x, y), fontMap[font] || window.cv.FONT_HERSHEY_SIMPLEX, size, new window.cv.Scalar(b, g, r, 255), thickness);
+          setOutput(prev => prev + `\n✅ Text added: "${text}"`);
+        } catch (err) {
+          setOutput(prev => prev + `\n❌ Put Text error: ${err.message}`);
         }
         return;
       }
       if (cleanText.startsWith("__CV_DRAW_LINE__:")) {
+        if (!cvMat || !window.cv) {
+          setOutput(prev => prev + "\n❌ Draw Line: no image loaded. Use Load Image first.");
+          return;
+        }
         const parts = cleanText.split(":");
         const x1 = parseInt(parts[1]);
         const y1 = parseInt(parts[2]);
@@ -7142,9 +7244,11 @@ const usesTurtle = ws
         const g = parseInt(parts[6]);
         const b = parseInt(parts[7]);
         const thickness = parseInt(parts[8]);
-        if (cvMat && window.cv) {
-          window.cv.line(cvMat, new window.cv.Point(x1, y1), new window.cv.Point(x2, y2), new window.cv.Scalar(b, g, r), thickness);
-          setOutput(prev => prev + `\nâœ… Line drawn`);
+        try {
+          window.cv.line(cvMat, new window.cv.Point(x1, y1), new window.cv.Point(x2, y2), new window.cv.Scalar(b, g, r, 255), thickness);
+          setOutput(prev => prev + `\n✅ Line drawn from (${x1},${y1}) to (${x2},${y2})`);
+        } catch (err) {
+          setOutput(prev => prev + `\n❌ Draw Line error: ${err.message}`);
         }
         return;
       }
@@ -7181,7 +7285,11 @@ const usesTurtle = ws
         }
         return;
       }
-      if (cleanText.startsWith("__CV_DRAW_RECTANGLE__:")) {
+      if (cleanText.startsWith("__CV_DRAW_RECT__:")) {
+        if (!cvMat || !window.cv) {
+          setOutput(prev => prev + "\n❌ Draw Rectangle: no image loaded. Use Load Image first.");
+          return;
+        }
         const parts = cleanText.split(":");
         const x1 = parseInt(parts[1]);
         const y1 = parseInt(parts[2]);
@@ -7191,13 +7299,19 @@ const usesTurtle = ws
         const g = parseInt(parts[6]);
         const b = parseInt(parts[7]);
         const thickness = parseInt(parts[8]);
-        if (cvMat && window.cv) {
-          window.cv.rectangle(cvMat, new window.cv.Point(x1, y1), new window.cv.Point(x2, y2), new window.cv.Scalar(b, g, r), thickness);
-          setOutput(prev => prev + `\nâœ… Rectangle drawn`);
+        try {
+          window.cv.rectangle(cvMat, new window.cv.Point(x1, y1), new window.cv.Point(x2, y2), new window.cv.Scalar(b, g, r, 255), thickness);
+          setOutput(prev => prev + `\n✅ Rectangle drawn from (${x1},${y1}) to (${x2},${y2})`);
+        } catch (err) {
+          setOutput(prev => prev + `\n❌ Draw Rectangle error: ${err.message}`);
         }
         return;
       }
       if (cleanText.startsWith("__CV_DRAW_CIRCLE__:")) {
+        if (!cvMat || !window.cv) {
+          setOutput(prev => prev + "\n❌ Draw Circle: no image loaded. Use Load Image first.");
+          return;
+        }
         const parts = cleanText.split(":");
         const x = parseInt(parts[1]);
         const y = parseInt(parts[2]);
@@ -7206,32 +7320,41 @@ const usesTurtle = ws
         const g = parseInt(parts[5]);
         const b = parseInt(parts[6]);
         const thickness = parseInt(parts[7]);
-        if (cvMat && window.cv) {
-          window.cv.circle(cvMat, new window.cv.Point(x, y), radius, new window.cv.Scalar(b, g, r), thickness);
-          setOutput(prev => prev + `\nâœ… Circle drawn`);
+        try {
+          window.cv.circle(cvMat, new window.cv.Point(x, y), radius, new window.cv.Scalar(b, g, r, 255), thickness);
+          setOutput(prev => prev + `\n✅ Circle drawn at (${x},${y}) radius ${radius}`);
+        } catch (err) {
+          setOutput(prev => prev + `\n❌ Draw Circle error: ${err.message}`);
         }
         return;
       }
       if (cleanText.startsWith("__CV_RESIZE__:")) {
+        if (!cvMat || !window.cv) {
+          setOutput(prev => prev + "\n❌ Resize: no image loaded. Use Load Image first.");
+          return;
+        }
         const parts = cleanText.split(":");
         const width = parseInt(parts[1]);
         const height = parseInt(parts[2]);
-        if (cvMat && window.cv) {
+        try {
           const resized = new window.cv.Mat();
           window.cv.resize(cvMat, resized, new window.cv.Size(width, height));
           cvMat.delete();
           cvMat = resized;
-          setOutput(prev => prev + `\nâœ… Image resized to ${width}x${height}`);
+          setOutput(prev => prev + `\n✅ Image resized to ${width}x${height}`);
+        } catch (err) {
+          setOutput(prev => prev + `\n❌ Resize error: ${err.message}`);
         }
         return;
       }
       if (cleanText.startsWith("__CV_SHOW__:")) {
-        const border = cleanText.split(":")[1];
-        showCVImage(containerRef, border === "with", (msg) => setOutput(prev => prev + "\n" + msg));
+        const name = cleanText.slice("__CV_SHOW__:".length).replace(/"/g, '') || "image";
+        showCVImage(containerRef, name, (msg) => setOutput(prev => prev + "\n" + msg));
         return;
       }
-      if (cleanText === "__CV_SAVE__") {
-        saveCVImage((msg) => setOutput(prev => prev + "\n" + msg));
+      if (cleanText.startsWith("__CV_SAVE__:")) {
+        const name = cleanText.slice("__CV_SAVE__:".length).replace(/"/g, '') || "image.png";
+        saveCVImage(name, (msg) => setOutput(prev => prev + "\n" + msg));
         return;
       }
     }
@@ -8085,7 +8208,7 @@ plt = _FakePlt()
 
       <Script
         src="https://docs.opencv.org/4.x/opencv.js"
-        strategy="beforeInteractive"
+        strategy="afterInteractive"
       />
 
       <Script
