@@ -12,6 +12,17 @@ import Script from "next/script";
 import { Hands } from "@mediapipe/hands";
 import * as faceapi from "face-api.js";
 
+// TensorFlow and COCO-SSD are loaded via CDN Script tags (see bottom of file)
+// Access them via window.tf and window.cocoSsd
+declare global {
+  interface Window {
+    tf: any;
+    cocoSsd: any;
+    tmImage: any;
+    cv: any;
+  }
+}
+
 const turtleEngineRef = { current: null as any };
 
 
@@ -63,8 +74,8 @@ function showInputPrompt(prompt: string): Promise<string> {
 // Custom Blockly Blocks Definitions
 const defineBlocks = () => {
 
-   /* =========================
-   TEACHABLE MACHINE BLOCKS
+  /* =========================
+  TEACHABLE MACHINE BLOCKS
 ========================= */
 
   Blockly.Blocks['teachable_load_model'] = {
@@ -910,27 +921,27 @@ const defineBlocks = () => {
   // Turtle: Pen Color
 
   Blockly.Blocks["turtle_pencolor"] = {
-  init: function () {
-    this.appendValueInput("COLOR")
-      .appendField("set")
-      .appendField(new Blockly.FieldVariable("t"), "VAR")
-      .appendField("pen color");
-    this.setPreviousStatement(true);
-    this.setNextStatement(true);
-    this.setColour(330);
-  }
-};
+    init: function () {
+      this.appendValueInput("COLOR")
+        .appendField("set")
+        .appendField(new Blockly.FieldVariable("t"), "VAR")
+        .appendField("pen color");
+      this.setPreviousStatement(true);
+      this.setNextStatement(true);
+      this.setColour(330);
+    }
+  };
 
   // Turtle: Background Color
- Blockly.Blocks["turtle_bgcolor"] = {
-  init: function () {
-    this.appendValueInput("COLOR")
-      .appendField("set background color");
-    this.setPreviousStatement(true);
-    this.setNextStatement(true);
-    this.setColour(330);
-  }
-};
+  Blockly.Blocks["turtle_bgcolor"] = {
+    init: function () {
+      this.appendValueInput("COLOR")
+        .appendField("set background color");
+      this.setPreviousStatement(true);
+      this.setNextStatement(true);
+      this.setColour(330);
+    }
+  };
 
 
   // For Loop
@@ -1325,44 +1336,44 @@ const defineBlocks = () => {
     }
   };
 
- // Conversion: To Float
-Blockly.Blocks['convert_to_float'] = {
-  init: function () {
-    this.appendValueInput("VALUE")
-      .setCheck(null)
-      .appendField("float");
+  // Conversion: To Float
+  Blockly.Blocks['convert_to_float'] = {
+    init: function () {
+      this.appendValueInput("VALUE")
+        .setCheck(null)
+        .appendField("float");
 
-    this.setOutput(true, "Number");
-    this.setColour(100);
-    this.setTooltip("Convert value to float");
-  }
-};
+      this.setOutput(true, "Number");
+      this.setColour(100);
+      this.setTooltip("Convert value to float");
+    }
+  };
 
-// Conversion: To String
-Blockly.Blocks['convert_to_string'] = {
-  init: function () {
-    this.appendValueInput("VALUE")
-      .setCheck(null)
-      .appendField("str");
+  // Conversion: To String
+  Blockly.Blocks['convert_to_string'] = {
+    init: function () {
+      this.appendValueInput("VALUE")
+        .setCheck(null)
+        .appendField("str");
 
-    this.setOutput(true, "String");
-    this.setColour(100);
-    this.setTooltip("Convert value to string");
-  }
-};
+      this.setOutput(true, "String");
+      this.setColour(100);
+      this.setTooltip("Convert value to string");
+    }
+  };
 
-// Conversion: To Boolean
-Blockly.Blocks['convert_to_bool'] = {
-  init: function () {
-    this.appendValueInput("VALUE")
-      .setCheck(null)
-      .appendField("bool");
+  // Conversion: To Boolean
+  Blockly.Blocks['convert_to_bool'] = {
+    init: function () {
+      this.appendValueInput("VALUE")
+        .setCheck(null)
+        .appendField("bool");
 
-    this.setOutput(true, "Boolean");
-    this.setColour(100);
-    this.setTooltip("Convert value to boolean");
-  }
-};
+      this.setOutput(true, "Boolean");
+      this.setColour(100);
+      this.setTooltip("Convert value to boolean");
+    }
+  };
 
   // Conversion: Upper case
   Blockly.Blocks['convert_upper_case'] = {
@@ -2026,80 +2037,80 @@ Blockly.Blocks['convert_to_bool'] = {
   };
 
   // TURTLE: Shape
- Blockly.Blocks['turtle_shape'] = {
-  init: function () {
-    this.appendDummyInput()
-      .appendField("set turtle")
-      .appendField(new Blockly.FieldVariable("turtle"), "VAR")
-      .appendField("shape in")
-      .appendField(
-        new Blockly.FieldDropdown([
-          ["turtle", "turtle"],   // 🐢 added
-          ["triangle", "triangle"],
-          ["circle", "circle"],
-          ["square", "square"]
-        ]),
-        "SHAPE"
-      );
+  Blockly.Blocks['turtle_shape'] = {
+    init: function () {
+      this.appendDummyInput()
+        .appendField("set turtle")
+        .appendField(new Blockly.FieldVariable("turtle"), "VAR")
+        .appendField("shape in")
+        .appendField(
+          new Blockly.FieldDropdown([
+            ["turtle", "turtle"],   // 🐢 added
+            ["triangle", "triangle"],
+            ["circle", "circle"],
+            ["square", "square"]
+          ]),
+          "SHAPE"
+        );
 
-    this.setPreviousStatement(true, null);
-    this.setNextStatement(true, null);
-    this.setColour(330);
-    this.setTooltip("Set turtle shape");
-  }
-};
+      this.setPreviousStatement(true, null);
+      this.setNextStatement(true, null);
+      this.setColour(330);
+      this.setTooltip("Set turtle shape");
+    }
+  };
 
   // TURTLE: Speed
- Blockly.Blocks["turtle_speed"] = {
-  init: function () {
-    this.appendValueInput("SPEED")
-      .appendField("set")
-      .appendField(new Blockly.FieldVariable("t"), "VAR")
-      .appendField("speed");
-    this.setPreviousStatement(true);
-    this.setNextStatement(true);
-    this.setColour(330);
-  }
-};
+  Blockly.Blocks["turtle_speed"] = {
+    init: function () {
+      this.appendValueInput("SPEED")
+        .appendField("set")
+        .appendField(new Blockly.FieldVariable("t"), "VAR")
+        .appendField("speed");
+      this.setPreviousStatement(true);
+      this.setNextStatement(true);
+      this.setColour(330);
+    }
+  };
 
   // TURTLE: Width
- Blockly.Blocks["turtle_width"] = {
-  init: function () {
-    this.appendValueInput("WIDTH")
-      .appendField("set")
-      .appendField(new Blockly.FieldVariable("t"), "VAR")
-      .appendField("width");
-    this.setPreviousStatement(true);
-    this.setNextStatement(true);
-    this.setColour(330);
-  }
-};
+  Blockly.Blocks["turtle_width"] = {
+    init: function () {
+      this.appendValueInput("WIDTH")
+        .appendField("set")
+        .appendField(new Blockly.FieldVariable("t"), "VAR")
+        .appendField("width");
+      this.setPreviousStatement(true);
+      this.setNextStatement(true);
+      this.setColour(330);
+    }
+  };
 
   // TURTLE: Fill color
-Blockly.Blocks["turtle_fill_color"] = {
-  init: function () {
-    this.appendValueInput("COLOR")
-      .appendField("set")
-      .appendField(new Blockly.FieldVariable("t"), "VAR")
-      .appendField("fill color");
-    this.setPreviousStatement(true);
-    this.setNextStatement(true);
-    this.setColour(330);
-  }
-};
+  Blockly.Blocks["turtle_fill_color"] = {
+    init: function () {
+      this.appendValueInput("COLOR")
+        .appendField("set")
+        .appendField(new Blockly.FieldVariable("t"), "VAR")
+        .appendField("fill color");
+      this.setPreviousStatement(true);
+      this.setNextStatement(true);
+      this.setColour(330);
+    }
+  };
 
   // TURTLE: Color (pen color via value input)
- Blockly.Blocks["turtle_color"] = {
-  init: function () {
-    this.appendValueInput("COLOR")
-      .appendField("set")
-      .appendField(new Blockly.FieldVariable("t"), "VAR")
-      .appendField("color");
-    this.setPreviousStatement(true);
-    this.setNextStatement(true);
-    this.setColour(330);
-  }
-};
+  Blockly.Blocks["turtle_color"] = {
+    init: function () {
+      this.appendValueInput("COLOR")
+        .appendField("set")
+        .appendField(new Blockly.FieldVariable("t"), "VAR")
+        .appendField("color");
+      this.setPreviousStatement(true);
+      this.setNextStatement(true);
+      this.setColour(330);
+    }
+  };
 
 
   // CONTROL: On key press
@@ -2491,28 +2502,28 @@ Blockly.Blocks["turtle_fill_color"] = {
 
   // TURTLE: Hide
   Blockly.Blocks["turtle_hide"] = {
-  init: function () {
-    this.appendDummyInput()
-      .appendField("hide turtle")
-      .appendField(new Blockly.FieldVariable("t"), "VAR");
-    this.setPreviousStatement(true);
-    this.setNextStatement(true);
-    this.setColour(330);
-  }
-};
+    init: function () {
+      this.appendDummyInput()
+        .appendField("hide turtle")
+        .appendField(new Blockly.FieldVariable("t"), "VAR");
+      this.setPreviousStatement(true);
+      this.setNextStatement(true);
+      this.setColour(330);
+    }
+  };
 
 
   // TURTLE: Show
- Blockly.Blocks["turtle_show"] = {
-  init: function () {
-    this.appendDummyInput()
-      .appendField("show turtle")
-      .appendField(new Blockly.FieldVariable("t"), "VAR");
-    this.setPreviousStatement(true);
-    this.setNextStatement(true);
-    this.setColour(330);
-  }
-};
+  Blockly.Blocks["turtle_show"] = {
+    init: function () {
+      this.appendDummyInput()
+        .appendField("show turtle")
+        .appendField(new Blockly.FieldVariable("t"), "VAR");
+      this.setPreviousStatement(true);
+      this.setNextStatement(true);
+      this.setColour(330);
+    }
+  };
 
 
   // CONTROL: Listen
@@ -2759,38 +2770,38 @@ const defineJavascriptGenerators = () => {
   /* ==========================
      CREATE TURTLE (NO-OP)
      ========================== */
-javascriptGenerator.forBlock["turtle_create"] = function (block) {
-  return "";
-};
+  javascriptGenerator.forBlock["turtle_create"] = function (block) {
+    return "";
+  };
 
 
-javascriptGenerator.forBlock['colour_red'] = function () {
-  return ['"red"', javascriptGenerator.ORDER_ATOMIC];
-};
+  javascriptGenerator.forBlock['colour_red'] = function () {
+    return ['"red"', javascriptGenerator.ORDER_ATOMIC];
+  };
 
-javascriptGenerator.forBlock['colour_green'] = function () {
-  return ['"green"', javascriptGenerator.ORDER_ATOMIC];
-};
+  javascriptGenerator.forBlock['colour_green'] = function () {
+    return ['"green"', javascriptGenerator.ORDER_ATOMIC];
+  };
 
-javascriptGenerator.forBlock['colour_blue'] = function () {
-  return ['"blue"', javascriptGenerator.ORDER_ATOMIC];
-};
+  javascriptGenerator.forBlock['colour_blue'] = function () {
+    return ['"blue"', javascriptGenerator.ORDER_ATOMIC];
+  };
 
-javascriptGenerator.forBlock['colour_yellow'] = function () {
-  return ['"yellow"', javascriptGenerator.ORDER_ATOMIC];
-};
+  javascriptGenerator.forBlock['colour_yellow'] = function () {
+    return ['"yellow"', javascriptGenerator.ORDER_ATOMIC];
+  };
 
-javascriptGenerator.forBlock['colour_purple'] = function () {
-  return ['"purple"', javascriptGenerator.ORDER_ATOMIC];
-};
+  javascriptGenerator.forBlock['colour_purple'] = function () {
+    return ['"purple"', javascriptGenerator.ORDER_ATOMIC];
+  };
 
-javascriptGenerator.forBlock['colour_pink'] = function () {
-  return ['"pink"', javascriptGenerator.ORDER_ATOMIC];
-};
-javascriptGenerator.forBlock['colour_picker'] = function (block) {
-  const color = block.getFieldValue('COLOUR');
-  return [`"${color}"`, javascriptGenerator.ORDER_ATOMIC];
-};
+  javascriptGenerator.forBlock['colour_pink'] = function () {
+    return ['"pink"', javascriptGenerator.ORDER_ATOMIC];
+  };
+  javascriptGenerator.forBlock['colour_picker'] = function (block) {
+    const color = block.getFieldValue('COLOUR');
+    return [`"${color}"`, javascriptGenerator.ORDER_ATOMIC];
+  };
 
 
   /* ==========================
@@ -2873,33 +2884,33 @@ javascriptGenerator.forBlock['colour_picker'] = function (block) {
   javascriptGenerator.forBlock["turtle_pendown"] = () =>
     "__turtle.penDown();\n";
 
-javascriptGenerator.forBlock["turtle_width"] = function (block) {
-  const t = javascriptGenerator.nameDB_.getName(block.getFieldValue("VAR"), Blockly.Names.NameType.VARIABLE);
-  const w = javascriptGenerator.valueToCode(block, "WIDTH", javascriptGenerator.ORDER_NONE) || "1";
-  return `__turtle.width(${w});\n`;
-};
+  javascriptGenerator.forBlock["turtle_width"] = function (block) {
+    const t = javascriptGenerator.nameDB_.getName(block.getFieldValue("VAR"), Blockly.Names.NameType.VARIABLE);
+    const w = javascriptGenerator.valueToCode(block, "WIDTH", javascriptGenerator.ORDER_NONE) || "1";
+    return `__turtle.width(${w});\n`;
+  };
 
 
   /* ==========================
      COLORS
      ========================== */
- javascriptGenerator.forBlock["turtle_color"] =
-javascriptGenerator.forBlock["turtle_pencolor"] = function (block) {
-  const t = javascriptGenerator.nameDB_.getName(block.getFieldValue("VAR"), Blockly.Names.NameType.VARIABLE);
-  const c = javascriptGenerator.valueToCode(block, "COLOR", javascriptGenerator.ORDER_NONE) || '"#000000"';
-  return `__turtle.pencolor(${c});\n`;
-};
+  javascriptGenerator.forBlock["turtle_color"] =
+    javascriptGenerator.forBlock["turtle_pencolor"] = function (block) {
+      const t = javascriptGenerator.nameDB_.getName(block.getFieldValue("VAR"), Blockly.Names.NameType.VARIABLE);
+      const c = javascriptGenerator.valueToCode(block, "COLOR", javascriptGenerator.ORDER_NONE) || '"#000000"';
+      return `__turtle.pencolor(${c});\n`;
+    };
 
   javascriptGenerator.forBlock["turtle_fill_color"] = function (block) {
-  const t = javascriptGenerator.nameDB_.getName(block.getFieldValue("VAR"), Blockly.Names.NameType.VARIABLE);
-  const c = javascriptGenerator.valueToCode(block, "COLOR", javascriptGenerator.ORDER_NONE) || '"#000000"';
-  return `__turtle.fillcolor(${c});\n`;
-};
+    const t = javascriptGenerator.nameDB_.getName(block.getFieldValue("VAR"), Blockly.Names.NameType.VARIABLE);
+    const c = javascriptGenerator.valueToCode(block, "COLOR", javascriptGenerator.ORDER_NONE) || '"#000000"';
+    return `__turtle.fillcolor(${c});\n`;
+  };
 
- javascriptGenerator.forBlock["turtle_bgcolor"] = function (block) {
-  const c = javascriptGenerator.valueToCode(block, "COLOR", javascriptGenerator.ORDER_NONE) || '"#ffffff"';
-  return `__turtle.bgcolor(${c});\n`;
-};
+  javascriptGenerator.forBlock["turtle_bgcolor"] = function (block) {
+    const c = javascriptGenerator.valueToCode(block, "COLOR", javascriptGenerator.ORDER_NONE) || '"#ffffff"';
+    return `__turtle.bgcolor(${c});\n`;
+  };
 
   /* ==========================
      FILL
@@ -2913,39 +2924,39 @@ javascriptGenerator.forBlock["turtle_pencolor"] = function (block) {
   /* ==========================
      SHAPE
      ========================== */
- javascriptGenerator.forBlock["turtle_shape"] = function (block) {
-  const shape = block.getFieldValue("SHAPE");
-  return `__turtle.setShape("${shape}");\n`;
-};
+  javascriptGenerator.forBlock["turtle_shape"] = function (block) {
+    const shape = block.getFieldValue("SHAPE");
+    return `__turtle.setShape("${shape}");\n`;
+  };
 
   /* ==========================
      SPEED
      ========================== */
   javascriptGenerator.forBlock["turtle_speed"] = function (block) {
-  const t = javascriptGenerator.nameDB_.getName(block.getFieldValue("VAR"), Blockly.Names.NameType.VARIABLE);
-  const s = javascriptGenerator.valueToCode(block, "SPEED", javascriptGenerator.ORDER_NONE) || "5";
-  return `__turtle.speed(${s});\n`;
-};
+    const t = javascriptGenerator.nameDB_.getName(block.getFieldValue("VAR"), Blockly.Names.NameType.VARIABLE);
+    const s = javascriptGenerator.valueToCode(block, "SPEED", javascriptGenerator.ORDER_NONE) || "5";
+    return `__turtle.speed(${s});\n`;
+  };
 
   /* ==========================
      VISIBILITY
      ========================== */
- javascriptGenerator.forBlock["turtle_hide"] = function (block) {
-  const t = javascriptGenerator.nameDB_.getName(block.getFieldValue("VAR"), Blockly.Names.NameType.VARIABLE);
-  return `__turtle.hideturtle();\n`;
-};
+  javascriptGenerator.forBlock["turtle_hide"] = function (block) {
+    const t = javascriptGenerator.nameDB_.getName(block.getFieldValue("VAR"), Blockly.Names.NameType.VARIABLE);
+    return `__turtle.hideturtle();\n`;
+  };
 
- javascriptGenerator.forBlock["turtle_show"] = function (block) {
-  const t = javascriptGenerator.nameDB_.getName(block.getFieldValue("VAR"), Blockly.Names.NameType.VARIABLE);
-  return `__turtle.showturtle();\n`;
-};
+  javascriptGenerator.forBlock["turtle_show"] = function (block) {
+    const t = javascriptGenerator.nameDB_.getName(block.getFieldValue("VAR"), Blockly.Names.NameType.VARIABLE);
+    return `__turtle.showturtle();\n`;
+  };
 
 };
 
 const definePythonGenerators = () => {
-   /* =========================
-     TEACHABLE GENERATORS
-  ========================= */
+  /* =========================
+    TEACHABLE GENERATORS
+ ========================= */
 
   pythonGenerator.forBlock['teachable_load_model'] = function (block) {
     const url = block.getFieldValue("URL");
@@ -3367,30 +3378,30 @@ serial.send(${text})
     return ""; // ignored
   };
 
-pythonGenerator.forBlock["turtle_create"] = function (block, gen) {
-  gen.definitions_["import_turtle"] = `
+  pythonGenerator.forBlock["turtle_create"] = function (block, gen) {
+    gen.definitions_["import_turtle"] = `
 import turtle
 _screen = turtle.Screen()
 `;
 
-  const t = gen.nameDB_.getName(
-    block.getFieldValue("VAR"),
-    Blockly.Names.NameType.VARIABLE
-  );
+    const t = gen.nameDB_.getName(
+      block.getFieldValue("VAR"),
+      Blockly.Names.NameType.VARIABLE
+    );
 
-  return `${t} = turtle.Turtle()\n`;
-};
+    return `${t} = turtle.Turtle()\n`;
+  };
 
-pythonGenerator.forBlock['turtle_forward'] = function (block, generator) {
-  const varName = generator.nameDB_.getName(
-    block.getFieldValue('VAR'),
-    Blockly.Names.NameType.VARIABLE
-  );
-  const distance =
-    generator.valueToCode(block, 'DISTANCE', PythonOrder.ATOMIC) || '0';
+  pythonGenerator.forBlock['turtle_forward'] = function (block, generator) {
+    const varName = generator.nameDB_.getName(
+      block.getFieldValue('VAR'),
+      Blockly.Names.NameType.VARIABLE
+    );
+    const distance =
+      generator.valueToCode(block, 'DISTANCE', PythonOrder.ATOMIC) || '0';
 
-  return `${varName}.forward(${distance})\n`;
-};
+    return `${varName}.forward(${distance})\n`;
+  };
 
   pythonGenerator.forBlock['turtle_right'] = function (block, generator) {
     const varName = generator.nameDB_.getName(block.getFieldValue('VAR'), Blockly.Names.NameType.VARIABLE);
@@ -3410,31 +3421,31 @@ pythonGenerator.forBlock['turtle_forward'] = function (block, generator) {
      CONVERSION GENERATORS
   ========================= */
 
-pythonGenerator.forBlock['convert_to_int'] = function (block, generator) {
-  const value =
-    generator.valueToCode(block, 'VALUE', pythonGenerator.ORDER_FUNCTION_CALL) || '0';
+  pythonGenerator.forBlock['convert_to_int'] = function (block, generator) {
+    const value =
+      generator.valueToCode(block, 'VALUE', pythonGenerator.ORDER_FUNCTION_CALL) || '0';
 
-  const code = `int(${value})`;
-  return [code, pythonGenerator.ORDER_FUNCTION_CALL];
-};
+    const code = `int(${value})`;
+    return [code, pythonGenerator.ORDER_FUNCTION_CALL];
+  };
 
- pythonGenerator.forBlock['convert_to_float'] = function (block, generator) {
-  const value =
-    generator.valueToCode(block, 'VALUE', pythonGenerator.ORDER_FUNCTION_CALL) || '0';
-  return [`float(${value})`, pythonGenerator.ORDER_FUNCTION_CALL];
-};
+  pythonGenerator.forBlock['convert_to_float'] = function (block, generator) {
+    const value =
+      generator.valueToCode(block, 'VALUE', pythonGenerator.ORDER_FUNCTION_CALL) || '0';
+    return [`float(${value})`, pythonGenerator.ORDER_FUNCTION_CALL];
+  };
 
-pythonGenerator.forBlock['convert_to_string'] = function (block, generator) {
-  const value =
-    generator.valueToCode(block, 'VALUE', pythonGenerator.ORDER_FUNCTION_CALL) || '""';
-  return [`str(${value})`, pythonGenerator.ORDER_FUNCTION_CALL];
-};
+  pythonGenerator.forBlock['convert_to_string'] = function (block, generator) {
+    const value =
+      generator.valueToCode(block, 'VALUE', pythonGenerator.ORDER_FUNCTION_CALL) || '""';
+    return [`str(${value})`, pythonGenerator.ORDER_FUNCTION_CALL];
+  };
 
-pythonGenerator.forBlock['convert_to_bool'] = function (block, generator) {
-  const value =
-    generator.valueToCode(block, 'VALUE', pythonGenerator.ORDER_FUNCTION_CALL) || 'False';
-  return [`bool(${value})`, pythonGenerator.ORDER_FUNCTION_CALL];
-};
+  pythonGenerator.forBlock['convert_to_bool'] = function (block, generator) {
+    const value =
+      generator.valueToCode(block, 'VALUE', pythonGenerator.ORDER_FUNCTION_CALL) || 'False';
+    return [`bool(${value})`, pythonGenerator.ORDER_FUNCTION_CALL];
+  };
 
   pythonGenerator.forBlock['convert_upper_case'] = function (block, gen) {
     const value =
@@ -3448,10 +3459,10 @@ pythonGenerator.forBlock['convert_to_bool'] = function (block, generator) {
     return [`${value}.lower()`, gen.ORDER_MEMBER];
   };
 
-pythonGenerator.forBlock["turtle_bgcolor"] = function (block, gen) {
-  const c = gen.valueToCode(block, "COLOR", PythonOrder.NONE) || '"#ffffff"';
-  return `_screen.bgcolor(${c})\n`;
-};
+  pythonGenerator.forBlock["turtle_bgcolor"] = function (block, gen) {
+    const c = gen.valueToCode(block, "COLOR", PythonOrder.NONE) || '"#ffffff"';
+    return `_screen.bgcolor(${c})\n`;
+  };
 
 
   pythonGenerator.forBlock['controls_repeat'] = function (block, generator) {
@@ -4019,34 +4030,34 @@ pythonGenerator.forBlock["turtle_bgcolor"] = function (block, gen) {
 
   // Turtle: Speed
   pythonGenerator.forBlock["turtle_speed"] = function (block, gen) {
-  const t = gen.nameDB_.getName(block.getFieldValue("VAR"), Blockly.Names.NameType.VARIABLE);
-  const s = gen.valueToCode(block, "SPEED", PythonOrder.NONE) || "5";
-  return `${t}.speed(${s})\n`;
-};
+    const t = gen.nameDB_.getName(block.getFieldValue("VAR"), Blockly.Names.NameType.VARIABLE);
+    const s = gen.valueToCode(block, "SPEED", PythonOrder.NONE) || "5";
+    return `${t}.speed(${s})\n`;
+  };
 
 
   // Turtle: Width
- pythonGenerator.forBlock["turtle_width"] = function (block, gen) {
-  const t = gen.nameDB_.getName(block.getFieldValue("VAR"), Blockly.Names.NameType.VARIABLE);
-  const w = gen.valueToCode(block, "WIDTH", PythonOrder.NONE) || "1";
-  return `${t}.width(${w})\n`;
-};
+  pythonGenerator.forBlock["turtle_width"] = function (block, gen) {
+    const t = gen.nameDB_.getName(block.getFieldValue("VAR"), Blockly.Names.NameType.VARIABLE);
+    const w = gen.valueToCode(block, "WIDTH", PythonOrder.NONE) || "1";
+    return `${t}.width(${w})\n`;
+  };
 
 
   // Turtle: Fill color
   pythonGenerator.forBlock["turtle_fill_color"] = function (block, gen) {
-  const t = gen.nameDB_.getName(block.getFieldValue("VAR"), Blockly.Names.NameType.VARIABLE);
-  const c = gen.valueToCode(block, "COLOR", PythonOrder.NONE) || '"#000000"';
-  return `${t}.fillcolor(${c})\n`;
-};
+    const t = gen.nameDB_.getName(block.getFieldValue("VAR"), Blockly.Names.NameType.VARIABLE);
+    const c = gen.valueToCode(block, "COLOR", PythonOrder.NONE) || '"#000000"';
+    return `${t}.fillcolor(${c})\n`;
+  };
 
   // Turtle: Color (pen color)
   pythonGenerator.forBlock["turtle_color"] =
-pythonGenerator.forBlock["turtle_pencolor"] = function (block, gen) {
-  const t = gen.nameDB_.getName(block.getFieldValue("VAR"), Blockly.Names.NameType.VARIABLE);
-  const c = gen.valueToCode(block, "COLOR", PythonOrder.NONE) || '"#000000"';
-  return `${t}.color(${c})\n`;
-};
+    pythonGenerator.forBlock["turtle_pencolor"] = function (block, gen) {
+      const t = gen.nameDB_.getName(block.getFieldValue("VAR"), Blockly.Names.NameType.VARIABLE);
+      const c = gen.valueToCode(block, "COLOR", PythonOrder.NONE) || '"#000000"';
+      return `${t}.color(${c})\n`;
+    };
 
 
   // Control: On key press
@@ -4217,16 +4228,16 @@ pythonGenerator.forBlock["turtle_pencolor"] = function (block, gen) {
   };
 
   // Turtle: Hide
- pythonGenerator.forBlock["turtle_hide"] = function (block, gen) {
-  const t = gen.nameDB_.getName(block.getFieldValue("VAR"), Blockly.Names.NameType.VARIABLE);
-  return `${t}.hideturtle()\n`;
-};
+  pythonGenerator.forBlock["turtle_hide"] = function (block, gen) {
+    const t = gen.nameDB_.getName(block.getFieldValue("VAR"), Blockly.Names.NameType.VARIABLE);
+    return `${t}.hideturtle()\n`;
+  };
 
   // Turtle: Show
-pythonGenerator.forBlock["turtle_show"] = function (block, gen) {
-  const t = gen.nameDB_.getName(block.getFieldValue("VAR"), Blockly.Names.NameType.VARIABLE);
-  return `${t}.showturtle()\n`;
-};
+  pythonGenerator.forBlock["turtle_show"] = function (block, gen) {
+    const t = gen.nameDB_.getName(block.getFieldValue("VAR"), Blockly.Names.NameType.VARIABLE);
+    return `${t}.showturtle()\n`;
+  };
 
   // Control: Listen
   pythonGenerator.forBlock['controls_listen'] = function (block, generator) {
@@ -4361,6 +4372,56 @@ function AICodingPage() {
         .catch(console.error);
     }
   }, [workspaceReady, mode, activityId, projectId]);
+
+  // Initialize TensorFlow.js backend on component mount
+  useEffect(() => {
+    const initTensorFlow = async () => {
+      try {
+        // Wait for CDN script to load
+        let attempts = 0;
+        while (!window.tf && attempts < 50) {
+          await new Promise(resolve => setTimeout(resolve, 100));
+          attempts++;
+        }
+        
+        if (!window.tf) {
+          debugLog("❌ TensorFlow.js CDN script failed to load");
+          return;
+        }
+        
+        debugLog("🔧 Initializing TensorFlow.js from CDN...");
+        
+        const tf = window.tf;
+        await tf.ready();
+        
+        // Try WebGL first
+        try {
+          await tf.setBackend('webgl');
+          await tf.ready();
+          debugLog(`✅ TensorFlow.js ready (WebGL) - ${tf.getBackend()}`);
+        } catch (webglErr) {
+          // Fallback to CPU
+          debugLog("⚠️ WebGL failed, trying CPU...");
+          await tf.setBackend('cpu');
+          await tf.ready();
+          debugLog(`✅ TensorFlow.js ready (CPU) - ${tf.getBackend()}`);
+        }
+        
+        // Verify with a test operation
+        const testTensor = tf.tensor([1, 2, 3]);
+        const result = testTensor.square();
+        result.dispose();
+        testTensor.dispose();
+        debugLog("✅ TensorFlow.js backend verified");
+        
+      } catch (err) {
+        console.error("TensorFlow.js init failed:", err);
+        debugLog(`❌ TensorFlow.js init failed: ${err.message}`);
+      }
+    };
+    
+    initTensorFlow();
+  }, []);
 
   function getCanvasTextOutput() {
     let pre = canvasContainerRef.current.querySelector(".canvas-text-output");
@@ -4750,295 +4811,64 @@ function AICodingPage() {
         return null;
     }
   }
-function mapColorToBlockType(color: string) {
-  switch (color?.toUpperCase()) {
-    case "RED":
-      return "colour_red";
-    case "GREEN":
-      return "colour_green";
-    case "BLUE":
-      return "colour_blue";
-    case "YELLOW":
-      return "colour_yellow";
-    case "PURPLE":
-      return "colour_purple";
-    case "PINK":
-      return "colour_pink";
-    default:
-      return "colour_picker";
-  }
-}
-
-function createBlocklyBlock(workspace, row) {
-  const cfg = typeof row.block_config === "string"
-    ? JSON.parse(row.block_config)
-    : row.block_config;
-
-  if (!cfg) {
-    console.error("block_config is null or undefined for block:", row);
-    return null;
+  function mapColorToBlockType(color: string) {
+    switch (color?.toUpperCase()) {
+      case "RED":
+        return "colour_red";
+      case "GREEN":
+        return "colour_green";
+      case "BLUE":
+        return "colour_blue";
+      case "YELLOW":
+        return "colour_yellow";
+      case "PURPLE":
+        return "colour_purple";
+      case "PINK":
+        return "colour_pink";
+      default:
+        return "colour_picker";
+    }
   }
 
-  switch (row.block_type) {
+  function createBlocklyBlock(workspace, row) {
+    const cfg = typeof row.block_config === "string"
+      ? JSON.parse(row.block_config)
+      : row.block_config;
 
-    /* =====================
-       SET VARIABLE
-    ===================== */
-    case "SET_VARIABLE": {
+    if (!cfg) {
+      console.error("block_config is null or undefined for block:", row);
+      return null;
+    }
 
-      // CREATE TURTLE
-      if (cfg.type === "CREATE_TURTLE") {
-        const varId = ensureVariable(workspace, cfg.variable);
-        const block = workspace.newBlock("turtle_create");
-        block.setFieldValue(varId, "VAR");
+    switch (row.block_type) {
+
+      /* =====================
+         SET VARIABLE
+      ===================== */
+      case "FACIAL_LOAD_IMAGE": {
+        const block = workspace.newBlock("facial_load_image");
+        block.initSvg();
+        block.render();
         return block;
       }
 
-      // INPUT → variable
-      if (cfg.value?.type === "INPUT") {
-        const varId = ensureVariable(workspace, cfg.variable);
-        const block = workspace.newBlock("variables_set");
-        block.setFieldValue(varId, "VAR");
+      case "FACIAL_GET_COUNT": {
+        const block = workspace.newBlock("facial_get_count");
 
-        const inputBlock = workspace.newBlock("text_prompt");
-        inputBlock.setFieldValue(cfg.value.prompt, "TEXT");
-
-        inputBlock.initSvg();
-        inputBlock.render();
-
-        block.getInput("VALUE")
-          ?.connection
-          ?.connect(inputBlock.outputConnection);
-
-        return block;
-      }
-
-      // STRING → variable
-      if (cfg.type === "STRING") {
-        const varId = ensureVariable(workspace, cfg.variable);
-        const block = workspace.newBlock("variables_set");
-        block.setFieldValue(varId, "VAR");
-
-        const textBlock = workspace.newBlock("text");
-        textBlock.setFieldValue(cfg.value, "TEXT");
-
-        textBlock.initSvg();
-        textBlock.render();
-
-        block.getInput("VALUE")
-          ?.connection
-          ?.connect(textBlock.outputConnection);
-
-        return block;
-      }
-
-      // INT / VARIABLE / EXPRESSION → variable
-      if (
-        cfg.value?.type === "INT" ||
-        cfg.value?.type === "VARIABLE" ||
-        cfg.value?.type === "EXPRESSION"
-      ) {
-        const varId = ensureVariable(workspace, cfg.variable);
-        const block = workspace.newBlock("variables_set");
-        block.setFieldValue(varId, "VAR");
-
-        const valueBlock = createValueBlock(workspace, cfg.value);
+        // dropdown value from DB
+        if (cfg.feature) {
+          block.setFieldValue(cfg.feature, "FEATURE");
+        }
 
         block.initSvg();
         block.render();
-
-        if (valueBlock) {
-          block.getInput("VALUE")
-            ?.connection
-            ?.connect(valueBlock.outputConnection);
-        }
-
         return block;
       }
-
-      return null;
+      default:
+        console.warn("Unknown block_type:", row.block_type, row);
+        return null;
     }
-
-    /* =====================
-       PRINT
-    ===================== */
-    case "PRINT": {
-      const varId = ensureVariable(workspace, cfg.variable);
-      const block = workspace.newBlock("text_print");
-
-      const varBlock = workspace.newBlock("variables_get");
-      varBlock.setFieldValue(varId, "VAR");
-
-      varBlock.initSvg();
-      varBlock.render();
-
-      block.getInput("TEXT")
-        ?.connection
-        ?.connect(varBlock.outputConnection);
-
-      return block;
-    }
-
-    /* =====================
-       TURTLE MOVE (legacy)
-    ===================== */
-    case "TURTLE_MOVE": {
-      const varId = ensureVariable(workspace, cfg.variable);
-      const block = workspace.newBlock("turtle_move");
-
-      block.setFieldValue(varId, "VAR");
-      block.setFieldValue(cfg.direction, "DIRECTION");
-
-      const num = workspace.newBlock("math_number");
-      num.setFieldValue(String(cfg.value), "NUM");
-
-      num.initSvg();
-      num.render();
-
-      block.getInput("DISTANCE")
-        ?.connection
-        ?.connect(num.outputConnection);
-
-      return block;
-    }
-
-    /* =====================
-       TURTLE MOTION (DB version)
-    ===================== */
-    case "TURTLE_MOTION": {
-      if (cfg.action === "FORWARD") {
-        const varId = ensureVariable(workspace, cfg.variable);
-        const block = workspace.newBlock("turtle_forward");
-
-        block.setFieldValue(varId, "VAR");
-
-        const num = workspace.newBlock("math_number");
-        num.setFieldValue(String(cfg.distance), "NUM");
-
-        num.initSvg();
-        num.render();
-
-        block.getInput("DISTANCE")
-          ?.connection
-          ?.connect(num.outputConnection);
-
-        return block;
-      }
-
-      return null;
-    }
-
-    /* =====================
-       BACKGROUND COLOR
-    ===================== */
-   case "TURTLE_SCREEN": {
-  if (cfg.action === "SET_BACKGROUND_COLOR") {
-
-    const block = workspace.newBlock("turtle_bgcolor");
-
-    // Map DB color to Blockly block type
-    const colorBlockType = mapColorToBlockType(cfg.color);
-
-    const colorBlock = workspace.newBlock(colorBlockType);
-    colorBlock.initSvg();
-    colorBlock.render();
-
-    block.getInput("COLOR")
-      ?.connection
-      ?.connect(colorBlock.outputConnection);
-
-    return block;
   }
-  return null;
-}
-
-    /* =====================
-       TURTLE STYLE
-    ===================== */
-    case "TURTLE_STYLE": {
-
-      // SET FILL COLOR
-      if (cfg.action === "SET_FILL_COLOR") {
-        const varId = ensureVariable(workspace, cfg.variable);
-        const block = workspace.newBlock("turtle_fill_color");
-        block.setFieldValue(varId, "VAR");
-
-        const colorBlock = workspace.newBlock("colour_picker");
-        const hexColor = mapColorToHex(cfg.color);
-        colorBlock.setFieldValue(hexColor, "COLOUR");
-
-        colorBlock.initSvg();
-        colorBlock.render();
-
-        block.getInput("COLOR")
-          ?.connection
-          ?.connect(colorBlock.outputConnection);
-
-        return block;
-      }
-
-      // SET SHAPE
-      if (cfg.action === "SET_SHAPE") {
-        const varId = ensureVariable(workspace, cfg.variable);
-        const block = workspace.newBlock("turtle_shape");
-
-        block.setFieldValue(varId, "VAR");
-        block.setFieldValue(cfg.shape, "SHAPE");
-
-        return block;
-      }
-
-      // SET WIDTH
-      if (cfg.action === "SET_WIDTH") {
-        const varId = ensureVariable(workspace, cfg.variable);
-        const block = workspace.newBlock("turtle_width");
-        block.setFieldValue(varId, "VAR");
-
-        const num = workspace.newBlock("math_number");
-        num.setFieldValue(String(cfg.width), "NUM");
-
-        num.initSvg();
-        num.render();
-
-        block.getInput("WIDTH")
-          ?.connection
-          ?.connect(num.outputConnection);
-
-        return block;
-      }
-
-      return null;
-    }
-
-    /* =====================
-       DOT
-    ===================== */
-    case "TURTLE_DRAW": {
-      if (cfg.action === "DOT") {
-        const varId = ensureVariable(workspace, cfg.variable);
-        const block = workspace.newBlock("turtle_dot");
-        block.setFieldValue(varId, "VAR");
-
-        const num = workspace.newBlock("math_number");
-        num.setFieldValue(String(cfg.radius), "NUM");
-
-        num.initSvg();
-        num.render();
-
-        block.getInput("SIZE")
-          ?.connection
-          ?.connect(num.outputConnection);
-
-        return block;
-      }
-      return null;
-    }
-
-    default:
-      console.warn("Unknown block_type:", row.block_type, row);
-      return null;
-  }
-}
 
   function loadBlocksIntoWorkspace(blocks: any[]) {
     debugLog('Loading blocks into workspace', { count: blocks.length, blocks });
@@ -5111,7 +4941,7 @@ function createBlocklyBlock(workspace, row) {
       toolbox: toolboxXml,
       zoom: {
         controls: true,
-        wheel: true,
+        wheel: false, // Disable mouse wheel zoom to allow page scrolling
         startScale: 1.0,
         maxScale: 3,
         minScale: 0.3,
@@ -5153,6 +4983,32 @@ function createBlocklyBlock(workspace, row) {
         opacity: 0 !important;
       }
       
+      /* Prevent Blockly from blocking page scroll */
+      .blocklyWidgetDiv, .blocklyDropDownDiv {
+        pointer-events: auto !important;
+      }
+      
+      /* Allow both Blockly interactions AND page scrolling */
+      .blocklySvg {
+        pointer-events: auto !important;
+      }
+      
+      .blocklyBlockCanvas, .blocklyFlyout, .blocklyScrollbarHandle, 
+      .blocklyZoom, .blocklyTrash, .blocklyToolboxDiv {
+        pointer-events: auto !important;
+      }
+      
+      /* Ensure flyout scrollbar works properly */
+      .blocklyFlyoutScrollbar {
+        pointer-events: auto !important;
+      }
+      
+      /* Allow touch scrolling on mobile */
+      .blocklyFlyout {
+        touch-action: auto !important;
+        overscroll-behavior: none !important;
+      }
+      
       /* Keep flyout blocks at fixed size regardless of workspace zoom */
       .blocklyFlyout .blocklyBlockCanvas {
         transform: scale(1) !important;
@@ -5169,7 +5025,7 @@ function createBlocklyBlock(workspace, row) {
 
     workspaceRef.current = workspace;
     setWorkspaceReady(true);
-    
+
     // Listen for zoom changes and keep flyout blocks at fixed size
     workspace.addChangeListener((e: any) => {
       // Handle zoom events
@@ -5177,7 +5033,7 @@ function createBlocklyBlock(workspace, row) {
         // Enforce fixed flyout size whenever viewport changes (zoom/pan)
         enforceFlyoutFixedSize();
       }
-      
+
       if (e.type === Blockly.Events.TOOLBOX_ITEM_SELECT) {
         requestAnimationFrame(() => {
           // 1. Normal resize
@@ -5199,7 +5055,7 @@ function createBlocklyBlock(workspace, row) {
           // 5. Clean up flyout scrollbars properly
           const flyout = blocklyDiv.current?.querySelector('.blocklyFlyout');
           const scrollbars = blocklyDiv.current?.querySelectorAll('.blocklyFlyoutScrollbar');
-          
+
           scrollbars?.forEach((scrollbar) => {
             const el = scrollbar as HTMLElement;
             if (!flyout || flyout.classList.contains('blocklyHidden')) {
@@ -5211,7 +5067,7 @@ function createBlocklyBlock(workspace, row) {
               el.style.visibility = '';
             }
           });
-          
+
           // 6. Ensure flyout blocks stay at fixed size
           enforceFlyoutFixedSize();
 
@@ -5229,10 +5085,10 @@ function createBlocklyBlock(workspace, row) {
         const flyout = scrollbar.previousElementSibling as HTMLElement | null;
 
         // Hide scrollbar if flyout is hidden, doesn't exist, or has no content
-        if (!flyout || 
-            flyout.classList.contains('blocklyHidden') || 
-            flyout.style.display === 'none' ||
-            !flyout.querySelector('.blocklyBlockCanvas')) {
+        if (!flyout ||
+          flyout.classList.contains('blocklyHidden') ||
+          flyout.style.display === 'none' ||
+          !flyout.querySelector('.blocklyBlockCanvas')) {
           el.style.display = 'none';
           el.style.visibility = 'hidden';
           el.style.opacity = '0';
@@ -5248,13 +5104,13 @@ function createBlocklyBlock(workspace, row) {
     const enforceFlyoutFixedSize = () => {
       const flyout = blocklyDiv.current?.querySelector('.blocklyFlyout');
       if (!flyout || flyout.classList.contains('blocklyHidden')) return;
-      
+
       // Force all transform groups in flyout to scale(1)
       const flyoutSvgGroups = flyout.querySelectorAll('svg.blocklySvg > g');
       flyoutSvgGroups.forEach((group) => {
         (group as SVGElement).setAttribute('transform', 'scale(1)');
       });
-      
+
       // Also fix the canvas transform
       const flyoutCanvas = flyout.querySelector('.blocklyBlockCanvas');
       if (flyoutCanvas) {
@@ -5287,17 +5143,14 @@ function createBlocklyBlock(workspace, row) {
     };
 
     const preventToolboxScroll = () => {
-      const flyout = blocklyDiv.current?.querySelector('.blocklyFlyout');
-      const toolboxDiv = blocklyDiv.current?.querySelector('.blocklyToolboxDiv');
+      const toolboxDiv = blocklyDiv.current?.querySelector('.blocklyToolboxDiv') as HTMLElement;
 
-      if (flyout) {
-        flyout.addEventListener('wheel', (e) => e.stopPropagation(), { passive: true });
-        flyout.addEventListener('touchmove', (e) => e.stopPropagation(), { passive: true });
-      }
-
+      // Only prevent scroll on the toolbox menu itself
+      // Let the flyout scroll naturally with the page
       if (toolboxDiv) {
-        toolboxDiv.addEventListener('wheel', (e) => e.stopPropagation(), { passive: true });
-        toolboxDiv.addEventListener('touchmove', (e) => e.stopPropagation(), { passive: true });
+        toolboxDiv.addEventListener('wheel', (e) => {
+          e.stopPropagation();
+        }, { passive: false });
       }
     };
 
@@ -5368,7 +5221,7 @@ function createBlocklyBlock(workspace, row) {
     };
   }, [toolboxXml]);
 
- useEffect(() => {
+  useEffect(() => {
     const script1 = document.createElement("script");
     script1.src = "https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js";
     script1.async = true;
@@ -5385,7 +5238,7 @@ function createBlocklyBlock(workspace, row) {
     document.body.appendChild(script2);
     document.body.appendChild(script3);
   }, []);
-async function showSpriteWithWebcam(spriteName) {
+  async function showSpriteWithWebcam(spriteName) {
     if (!canvasContainerRef.current) return;
 
     canvasContainerRef.current.innerHTML = "";
@@ -6082,7 +5935,7 @@ ${currentPrediction} (${(currentConfidence * 100).toFixed(1)}%)
       ctx.strokeStyle = "#000000";
       ctx.lineWidth = 3;
       ctx.font = "bold 24px Arial";
-      
+
       let yOffset = 40;
       countsToDisplay.forEach(countInfo => {
         const text = `${countInfo.label}: ${countInfo.count}`;
@@ -6107,43 +5960,93 @@ ${currentPrediction} (${(currentConfidence * 100).toFixed(1)}%)
      OBJECT DETECTION FUNCTIONS
   ========================= */
 
-  async function loadObjectImage(containerRef, outputCallback) {
-    return new Promise((resolve) => {
-      const input = document.createElement("input");
-      input.type = "file";
-      input.accept = "image/*";
 
-      input.onchange = async (e) => {
-        const file = e.target.files[0];
-        if (!file) {
-          resolve();
-          return;
-        }
 
-        const reader = new FileReader();
-        reader.onload = async (event) => {
-          const img = new Image();
-          img.onload = async () => {
-            tmLoadedImage = img;
-            if (typeof window !== 'undefined') window.tmLoadedImage = img;
-            checkAndStartPrediction();
-            outputCallback("✅ Image loaded!");
+async function loadObjectImage(containerRef, outputCallback) {
+  return new Promise((resolve) => {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = "image/*";
 
-            if (tmModel && isModelReady) {
-              const predictions = await tmModel.predict(img);
-              containerRef.current.innerHTML = "";
-              showPredictionResult(predictions, "image", outputCallback, containerRef);
+    input.onchange = async (e) => {
+      const file = e.target.files[0];
+      if (!file) {
+        resolve();
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = async (event) => {
+        const img = new Image();
+
+        img.onload = async () => {
+          objectImage = img;
+
+          // Don't display the image yet - only store it
+          // Image will be displayed when __OBJECT_SHOW__ is called
+          containerRef.current.innerHTML = "";
+
+          outputCallback("✅ Image loaded!");
+
+          try {
+            // Use window.tf and window.cocoSsd from CDN
+            if (!window.tf || !window.cocoSsd) {
+              outputCallback("❌ TensorFlow.js libraries not loaded. Please refresh the page.");
+              resolve();
+              return;
             }
-          };
+            
+            const tf = window.tf;
+            const cocoSsd = window.cocoSsd;
+            
+            // Wait for TensorFlow to be ready
+            await tf.ready();
+            
+            const currentBackend = tf.getBackend();
+            outputCallback(`🔄 Loading detection model (${currentBackend} backend)...`);
 
-          img.src = event.target.result;
+            if (!cocoModel) {
+              // Load COCO-SSD model
+              cocoModel = await cocoSsd.load({
+                base: 'lite_mobilenet_v2'
+              });
+              outputCallback("✅ Model loaded!");
+            }
+
+            // Run detection
+            outputCallback("🔄 Detecting objects...");
+            const predictions = await cocoModel.detect(img);
+            objectDetections = predictions;
+
+            outputCallback(`✅ Object detection completed! Found ${predictions.length} objects.`);
+          } catch (err) {
+            console.error("Detection error:", err);
+            console.error("Error stack:", err.stack);
+            outputCallback(`❌ Detection failed: ${err.message}`);
+            
+            // Log TensorFlow state for debugging
+            if (window.tf) {
+              console.log("TensorFlow backend:", window.tf.getBackend());
+            }
+          }
+
+          resolve();
         };
-        reader.readAsDataURL(file);
+
+        img.onerror = () => {
+          outputCallback("❌ Failed to load image");
+          resolve();
+        };
+
+        img.src = event.target.result;
       };
 
-      input.click();
-    });
-  }
+      reader.readAsDataURL(file);
+    };
+
+    input.click();
+  });
+}
 
   function showObjectImage(containerRef, withBorder, outputCallback) {
     if (!objectImage) {
@@ -6272,7 +6175,7 @@ ${currentPrediction} (${(currentConfidence * 100).toFixed(1)}%)
       if (faceCount > 0) {
         faceRecogResult = `Face Detected - ${faceCount} face(s) found`;
         outputCallback(`âœ… ${faceRecogResult}`);
-        
+
       } else {
         faceRecogResult = "No Face Detected";
         outputCallback(`âŒ ${faceRecogResult}`);
@@ -6518,192 +6421,192 @@ ${currentPrediction} (${(currentConfidence * 100).toFixed(1)}%)
     });
   }
 
-function renderPlot(plot, labels) {
-  canvasContainerRef.current.innerHTML = "";
+  function renderPlot(plot, labels) {
+    canvasContainerRef.current.innerHTML = "";
 
-  const canvas = document.createElement("canvas");
-  const container = canvasContainerRef.current;
+    const canvas = document.createElement("canvas");
+    const container = canvasContainerRef.current;
 
-  const rect = container.getBoundingClientRect();
+    const rect = container.getBoundingClientRect();
 
-  canvas.width = rect.width;
-  canvas.height = Math.min(450, rect.height);
-  canvas.style.border = "2px solid #ccc";
-  canvasContainerRef.current.appendChild(canvas);
+    canvas.width = rect.width;
+    canvas.height = Math.min(450, rect.height);
+    canvas.style.border = "2px solid #ccc";
+    canvasContainerRef.current.appendChild(canvas);
 
-  const ctx = canvas.getContext("2d");
+    const ctx = canvas.getContext("2d");
 
-  const { type, x, y } = plot;
+    const { type, x, y } = plot;
 
-  const padding = 60;
-  const width = canvas.width - padding * 2;
-  const height = canvas.height - padding * 2;
+    const padding = 60;
+    const width = canvas.width - padding * 2;
+    const height = canvas.height - padding * 2;
 
-  /* ======================
-     AXIS DRAW
-  ====================== */
-  ctx.strokeStyle = "#000";
-  ctx.lineWidth = 1;
-  ctx.beginPath();
-  ctx.moveTo(padding, padding);
-  ctx.lineTo(padding, canvas.height - padding);
-  ctx.lineTo(canvas.width - padding, canvas.height - padding);
-  ctx.stroke();
+    /* ======================
+       AXIS DRAW
+    ====================== */
+    ctx.strokeStyle = "#000";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(padding, padding);
+    ctx.lineTo(padding, canvas.height - padding);
+    ctx.lineTo(canvas.width - padding, canvas.height - padding);
+    ctx.stroke();
 
-  /* ======================
-     HISTOGRAM
-  ====================== */
-  if (type === "hist") {
-    const data = x;
-    const bins = 5;
-    const min = Math.min(...data);
-    const max = Math.max(...data);
-    const binSize = (max - min) / bins;
+    /* ======================
+       HISTOGRAM
+    ====================== */
+    if (type === "hist") {
+      const data = x;
+      const bins = 5;
+      const min = Math.min(...data);
+      const max = Math.max(...data);
+      const binSize = (max - min) / bins;
 
-    const counts = Array(bins).fill(0);
-    data.forEach(v => {
-      const idx = Math.min(
-        bins - 1,
-        Math.floor((v - min) / binSize)
-      );
-      counts[idx]++;
-    });
+      const counts = Array(bins).fill(0);
+      data.forEach(v => {
+        const idx = Math.min(
+          bins - 1,
+          Math.floor((v - min) / binSize)
+        );
+        counts[idx]++;
+      });
 
-    const barWidth = width / bins;
-    const maxCount = Math.max(...counts);
+      const barWidth = width / bins;
+      const maxCount = Math.max(...counts);
 
-    ctx.fillStyle = "#3498db";
+      ctx.fillStyle = "#3498db";
 
-    counts.forEach((count, i) => {
-      const barHeight = (count / maxCount) * height;
-      const px = padding + i * barWidth;
-      const py = canvas.height - padding - barHeight;
-      ctx.fillRect(px, py, barWidth - 5, barHeight);
-    });
+      counts.forEach((count, i) => {
+        const barHeight = (count / maxCount) * height;
+        const px = padding + i * barWidth;
+        const py = canvas.height - padding - barHeight;
+        ctx.fillRect(px, py, barWidth - 5, barHeight);
+      });
 
-    // ✅ NEW: X-axis values (bin ranges)
-    ctx.fillStyle = "#000";
-    ctx.font = "11px Arial";
-    ctx.textAlign = "center";
-    for (let i = 0; i <= bins; i++) {
-      const value = min + i * binSize;
-      const px = padding + (i / bins) * width;
-      ctx.fillText(value.toFixed(1), px, canvas.height - padding + 20);
-      
-      // Tick mark
-      ctx.beginPath();
-      ctx.moveTo(px, canvas.height - padding);
-      ctx.lineTo(px, canvas.height - padding + 5);
-      ctx.stroke();
+      // ✅ NEW: X-axis values (bin ranges)
+      ctx.fillStyle = "#000";
+      ctx.font = "11px Arial";
+      ctx.textAlign = "center";
+      for (let i = 0; i <= bins; i++) {
+        const value = min + i * binSize;
+        const px = padding + (i / bins) * width;
+        ctx.fillText(value.toFixed(1), px, canvas.height - padding + 20);
+
+        // Tick mark
+        ctx.beginPath();
+        ctx.moveTo(px, canvas.height - padding);
+        ctx.lineTo(px, canvas.height - padding + 5);
+        ctx.stroke();
+      }
+
+      // ✅ NEW: Y-axis values (counts)
+      ctx.textAlign = "right";
+      const numYTicks = 5;
+      for (let i = 0; i <= numYTicks; i++) {
+        const value = (maxCount / numYTicks) * i;
+        const py = canvas.height - padding - (i / numYTicks) * height;
+        ctx.fillText(Math.round(value).toString(), padding - 10, py + 4);
+
+        // Tick mark
+        ctx.beginPath();
+        ctx.moveTo(padding - 5, py);
+        ctx.lineTo(padding, py);
+        ctx.stroke();
+      }
     }
 
-    // ✅ NEW: Y-axis values (counts)
-    ctx.textAlign = "right";
-    const numYTicks = 5;
-    for (let i = 0; i <= numYTicks; i++) {
-      const value = (maxCount / numYTicks) * i;
-      const py = canvas.height - padding - (i / numYTicks) * height;
-      ctx.fillText(Math.round(value).toString(), padding - 10, py + 4);
-      
-      // Tick mark
-      ctx.beginPath();
-      ctx.moveTo(padding - 5, py);
-      ctx.lineTo(padding, py);
-      ctx.stroke();
-    }
-  }
+    /* ======================
+       LINE / SCATTER
+    ====================== */
+    if (type === "line" || type === "scatter") {
+      const minX = Math.min(...x);
+      const maxX = Math.max(...x);
+      const minY = Math.min(...y);
+      const maxY = Math.max(...y);
 
-  /* ======================
-     LINE / SCATTER
-  ====================== */
-  if (type === "line" || type === "scatter") {
-    const minX = Math.min(...x);
-    const maxX = Math.max(...x);
-    const minY = Math.min(...y);
-    const maxY = Math.max(...y);
-
-    const scaleX = width / (maxX - minX || 1);
-    const scaleY = height / (maxY - minY || 1);
-
-    if (type === "line") {
-      ctx.strokeStyle = "#2c3e50";
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-    }
-
-    x.forEach((_, i) => {
-      const px = padding + (x[i] - minX) * scaleX;
-      const py =
-        canvas.height -
-        padding -
-        (y[i] - minY) * scaleY;
+      const scaleX = width / (maxX - minX || 1);
+      const scaleY = height / (maxY - minY || 1);
 
       if (type === "line") {
-        if (i === 0) ctx.moveTo(px, py);
-        else ctx.lineTo(px, py);
-      }
-
-      if (type === "scatter") {
-        ctx.fillStyle = "#e74c3c";
+        ctx.strokeStyle = "#2c3e50";
+        ctx.lineWidth = 2;
         ctx.beginPath();
-        ctx.arc(px, py, 4, 0, Math.PI * 2);
-        ctx.fill();
       }
-    });
 
-    if (type === "line") ctx.stroke();
+      x.forEach((_, i) => {
+        const px = padding + (x[i] - minX) * scaleX;
+        const py =
+          canvas.height -
+          padding -
+          (y[i] - minY) * scaleY;
 
-    // ✅ NEW: X-axis values
+        if (type === "line") {
+          if (i === 0) ctx.moveTo(px, py);
+          else ctx.lineTo(px, py);
+        }
+
+        if (type === "scatter") {
+          ctx.fillStyle = "#e74c3c";
+          ctx.beginPath();
+          ctx.arc(px, py, 4, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      });
+
+      if (type === "line") ctx.stroke();
+
+      // ✅ NEW: X-axis values
+      ctx.fillStyle = "#000";
+      ctx.font = "11px Arial";
+      ctx.textAlign = "center";
+      const numXTicks = 5;
+      for (let i = 0; i <= numXTicks; i++) {
+        const value = minX + (maxX - minX) * (i / numXTicks);
+        const px = padding + (i / numXTicks) * width;
+        ctx.fillText(value.toFixed(1), px, canvas.height - padding + 20);
+
+        // Tick mark
+        ctx.strokeStyle = "#000";
+        ctx.beginPath();
+        ctx.moveTo(px, canvas.height - padding);
+        ctx.lineTo(px, canvas.height - padding + 5);
+        ctx.stroke();
+      }
+
+      // ✅ NEW: Y-axis values
+      ctx.textAlign = "right";
+      const numYTicks = 5;
+      for (let i = 0; i <= numYTicks; i++) {
+        const value = minY + (maxY - minY) * (i / numYTicks);
+        const py = canvas.height - padding - (i / numYTicks) * height;
+        ctx.fillText(value.toFixed(1), padding - 10, py + 4);
+
+        // Tick mark
+        ctx.beginPath();
+        ctx.moveTo(padding - 5, py);
+        ctx.lineTo(padding, py);
+        ctx.stroke();
+      }
+    }
+
+    /* ======================
+       LABELS
+    ====================== */
     ctx.fillStyle = "#000";
-    ctx.font = "11px Arial";
+    ctx.font = "14px Arial";
     ctx.textAlign = "center";
-    const numXTicks = 5;
-    for (let i = 0; i <= numXTicks; i++) {
-      const value = minX + (maxX - minX) * (i / numXTicks);
-      const px = padding + (i / numXTicks) * width;
-      ctx.fillText(value.toFixed(1), px, canvas.height - padding + 20);
-      
-      // Tick mark
-      ctx.strokeStyle = "#000";
-      ctx.beginPath();
-      ctx.moveTo(px, canvas.height - padding);
-      ctx.lineTo(px, canvas.height - padding + 5);
-      ctx.stroke();
-    }
 
-    // ✅ NEW: Y-axis values
-    ctx.textAlign = "right";
-    const numYTicks = 5;
-    for (let i = 0; i <= numYTicks; i++) {
-      const value = minY + (maxY - minY) * (i / numYTicks);
-      const py = canvas.height - padding - (i / numYTicks) * height;
-      ctx.fillText(value.toFixed(1), padding - 10, py + 4);
-      
-      // Tick mark
-      ctx.beginPath();
-      ctx.moveTo(padding - 5, py);
-      ctx.lineTo(padding, py);
-      ctx.stroke();
-    }
+    // X label
+    ctx.fillText(labels.x || "X", canvas.width / 2, canvas.height - 15);
+
+    // Y label
+    ctx.save();
+    ctx.translate(15, canvas.height / 2);
+    ctx.rotate(-Math.PI / 2);
+    ctx.fillText(labels.y || "Y", 0, 0);
+    ctx.restore();
   }
-
-  /* ======================
-     LABELS
-  ====================== */
-  ctx.fillStyle = "#000";
-  ctx.font = "14px Arial";
-  ctx.textAlign = "center";
-
-  // X label
-  ctx.fillText(labels.x || "X", canvas.width / 2, canvas.height - 15);
-
-  // Y label
-  ctx.save();
-  ctx.translate(15, canvas.height / 2);
-  ctx.rotate(-Math.PI / 2);
-  ctx.fillText(labels.y || "Y", 0, 0);
-  ctx.restore();
-}
 
   function renderPygalChart(chart) {
     const container = canvasContainerRef.current;
@@ -6943,34 +6846,34 @@ file_handle = None
     commandQueue = [];
     isProcessingQueue = false;
     setOutput("Running...\n");
-const ws = workspaceRef.current;
-const usesTurtle = ws
-  ? ws.getAllBlocks(false).some(b => b.type.startsWith("turtle_"))
-  : false;
-  
+    const ws = workspaceRef.current;
+    const usesTurtle = ws
+      ? ws.getAllBlocks(false).some(b => b.type.startsWith("turtle_"))
+      : false;
+
     const usesMath = /\bmath\./.test(code);
     const usesMatplotlib = /\bplt\./.test(code);
     const usesPygal = /\bpygal\b/.test(code);
     // Clear previous canvas
     canvasContainerRef.current.innerHTML = "";
-  if (usesTurtle) {
-  const canvas = document.createElement("canvas");
-  canvas.id = "turtleCanvas";
-  // ✅ Let CSS control size
-  canvas.style.width = "100%";
-  canvas.style.height = "100%";
-  canvas.style.display = "block";
-  canvas.style.border = "2px solid #5566AA";
-  canvas.style.borderRadius = "8px";
-  canvas.style.backgroundColor = "#ffffff";
-  canvasContainerRef.current.appendChild(canvas);
-  // ✅ Sync real resolution AFTER append
-  const rect = canvas.getBoundingClientRect();
-  const dpr = window.devicePixelRatio || 1;
-  canvas.width = rect.width * dpr;
-  canvas.height = rect.height * dpr;
-  const ctx = canvas.getContext("2d");
-  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    if (usesTurtle) {
+      const canvas = document.createElement("canvas");
+      canvas.id = "turtleCanvas";
+      // ✅ Let CSS control size
+      canvas.style.width = "100%";
+      canvas.style.height = "100%";
+      canvas.style.display = "block";
+      canvas.style.border = "2px solid #5566AA";
+      canvas.style.borderRadius = "8px";
+      canvas.style.backgroundColor = "#ffffff";
+      canvasContainerRef.current.appendChild(canvas);
+      // ✅ Sync real resolution AFTER append
+      const rect = canvas.getBoundingClientRect();
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = rect.width * dpr;
+      canvas.height = rect.height * dpr;
+      const ctx = canvas.getContext("2d");
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       const turtleDiv = document.createElement("div");
       turtleDiv.id = "turtleCanvas";
       turtleDiv.style.width = "100%";
@@ -6985,7 +6888,7 @@ const usesTurtle = ws
       Sk.TurtleGraphics.target = "turtleCanvas";
       Sk.TurtleGraphics.width = 800;
       Sk.TurtleGraphics.height = 500;
-}
+    }
     let pendingPlot = null;
     let plotLabels = { x: "", y: "" };
     // Add AI Learning helper functions to Skulpt
@@ -7530,12 +7433,29 @@ const usesTurtle = ws
           const object = cleanText.split(":")[1];
           let count = 0;
           if (!objectDetections || objectDetections.length === 0) {
-            setOutput(prev => prev + `\n${object} count: 0`);
-            return;
+            count = 0;
+          } else {
+            objectDetections.forEach(d => {
+              if (d.class === object) count++;
+            });
           }
-          objectDetections.forEach(d => {
-            if (d.class === object) count++;
-          });
+          
+          // Display count on canvas
+          canvasContainerRef.current.innerHTML = "";
+          const countDisplay = document.createElement("div");
+          countDisplay.style.cssText = `
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            font-size: 48px;
+            font-weight: bold;
+            color: #333;
+            font-family: Arial, sans-serif;
+          `;
+          countDisplay.textContent = `${object}: ${count}`;
+          canvasContainerRef.current.appendChild(countDisplay);
+          
           setOutput(prev => prev + `\n${object} count: ${count}`);
           return;
         }
@@ -7992,16 +7912,16 @@ plt = _FakePlt()
     }
     if (!usesTurtle) {
       const fullCode = injectUploadedFiles(initCode + cleanedCode);
-    
-    console.log("[App] Generated code:\n", fullCode);
-    setOutput((prev) => prev + "Generated code:\n" + fullCode + "\n\n");
+
+      console.log("[App] Generated code:\n", fullCode);
+      setOutput((prev) => prev + "Generated code:\n" + fullCode + "\n\n");
       const myPromise = Sk.misceval.asyncToPromise(() => {
-      console.log("[App] Starting execution...");
+        console.log("[App] Starting execution...");
         return Sk.importMainWithBody("<stdin>", false, fullCode, true);
       });
       myPromise.then(
         () => {
-        console.log("[App] Code executed successfully!");
+          console.log("[App] Code executed successfully!");
           setOutput((prev) => prev + "\nCode executed successfully!");
         },
         (err: any) => {
@@ -8011,11 +7931,11 @@ plt = _FakePlt()
             errorMessage += ": " + err.args.v.map((x: any) => x.v).join(", ");
           }
           setOutput((prev) => prev + "\nError: " + errorMessage);
-      (err) => {
-        console.error("[App] Execution error:", err);
-        setOutput((prev) => prev + "\nError: " + err.toString());
+          (err) => {
+            console.error("[App] Execution error:", err);
+            setOutput((prev) => prev + "\nError: " + err.toString());
+          }
         }
-      }
       );
     }
   };
@@ -8053,7 +7973,7 @@ plt = _FakePlt()
 
   return (
     <>
-    <Script
+      <Script
         src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"
         strategy="afterInteractive"
       />
@@ -8093,7 +8013,37 @@ plt = _FakePlt()
         strategy="beforeInteractive"
         onError={() => console.error('Failed to load face-api.js from CDN')}
       />
-
+ <Script
+        src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.11.0/dist/tf.min.js"
+        strategy="beforeInteractive"
+        onLoad={() => {
+          console.log('TensorFlow.js loaded successfully');
+          appendConsole('✅ TensorFlow.js loaded');
+        }}
+        onError={(e) => {
+          console.error('Failed to load TensorFlow.js:', e);
+          appendConsole('❌ Failed to load TensorFlow.js');
+        }}
+      />
+      <Script
+        src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@2.2.3/dist/coco-ssd.min.js"
+        strategy="beforeInteractive"
+        onLoad={() => {
+          console.log('COCO-SSD loaded successfully');
+          appendConsole('✅ COCO-SSD loaded');
+        }}
+        onError={(e) => {
+          console.error('Failed to load COCO-SSD:', e);
+          appendConsole('❌ Failed to load COCO-SSD');
+        }}
+      />
+      <Script
+        src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@0.8/dist/tf-teachablemachine-image.min.js"
+        strategy="beforeInteractive"
+        onLoad={() => {
+          console.log('Teachable Machine loaded successfully');
+        }}
+      />
       <input
         ref={fileInputRef}
         type="file"
@@ -8416,6 +8366,9 @@ plt = _FakePlt()
           </div>
         </div>
       </div>
+
+      {/* Load TensorFlow.js and COCO-SSD */}
+     
     </>
   );
 

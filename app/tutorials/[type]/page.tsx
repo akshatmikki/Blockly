@@ -84,7 +84,7 @@ export default function TutorialActivitiesPage() {
                     className="px-6 py-4 text-blue-600 cursor-pointer hover:underline"
                     onClick={() =>
                       router.push(
-                        `/workspace/basic-coding?activityId=${a.id}`
+                        `/workspace/${type?.toString().toLowerCase()}-coding?activityId=${a.id}`
                       )
                     }
                   >
