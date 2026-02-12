@@ -4362,133 +4362,6 @@ function AICodingPage() {
     }
   }, [workspaceReady, mode, activityId, projectId]);
 
-//   async function executeBlock(block: Blockly.Block) {
-//     const variables = variablesRef.current
-
-//     /* ==========================
-//        SET VARIABLE
-//     ========================== */
-//     if (block.type === "variables_set") {
-//       const varId = block.getFieldValue("VAR")
-//       const variable = block.workspace.getVariableById(varId)
-//       const varName = variable?.name ?? varId
-
-//       const valueBlock = block.getInputTargetBlock("VALUE")
-//       let value: any = null
-
-//       if (valueBlock?.type === "text") {
-//         value = valueBlock.getFieldValue("TEXT")
-//       }
-
-//       if (valueBlock?.type === "input_prompt") {
-//         value = await showInputPrompt(
-//           valueBlock.getFieldValue("TEXT")
-//         )
-//       }
-
-//       variables[varName] = value
-//       appendConsole(`[DEBUG] ${varName} = ${value}`)
-//     }
-
-//     /* ==========================
-//        PRINT
-//     ========================== */
-//     if (block.type === "text_print") {
-//       const valueBlock = block.getInputTargetBlock("TEXT")
-
-//       if (valueBlock?.type === "variables_get") {
-//         const varId = valueBlock.getFieldValue("VAR")
-//         const variable = block.workspace.getVariableById(varId)
-//         const varName = variable?.name ?? varId
-
-//         appendOutput(String(variables[varName] ?? ""))
-//       }
-//     }
-//     /* ==========================
-//    CREATE TURTLE
-// ========================== */
-//     if (block.type === "turtle_create") {
-//       const varId = block.getFieldValue("VAR");
-//       const variable = block.workspace.getVariableById(varId);
-//       const varName = variable?.name ?? varId;
-
-//       // create canvas turtle
-//       if (!turtleEngineRef.current) {
-//         turtleEngineRef.current = createTurtle("turtleCanvas");
-//         turtleEngineRef.current.reset();
-//       }
-
-//       // store reference in variables
-//       variables[varName] = turtleEngineRef.current;
-
-//       appendConsole(`[DEBUG] created turtle '${varName}'`);
-//     }
-
-//     /* ==========================
-//        TURTLE BACKGROUND COLOR
-//     ========================== */
-//     if (block.type === "turtle_bgcolor") {
-//       const color = block.getFieldValue("COLOR");
-
-//       turtleEngineRef.current?.bgcolor(color);
-
-//       appendConsole(`[DEBUG] set background color ${color}`);
-//     }
-//     /* ==========================
-//        TURTLE FILL COLOR
-//     ========================== */
-//     if (block.type === "turtle_color") {
-//       const varId = block.getFieldValue("VAR");
-//       const variable = block.workspace.getVariableById(varId);
-//       const varName = variable?.name ?? varId;
-
-//       const color = block.getFieldValue("COLOR");
-
-//       variables[varName]?.fillcolor(color);
-
-//       appendConsole(`[DEBUG] ${varName}.fillcolor(${color})`);
-//     }
-//     /* ==========================
-//        TURTLE DOT
-//     ========================== */
-//     if (block.type === "turtle_dot") {
-//       const varId = block.getFieldValue("VAR");
-//       const variable = block.workspace.getVariableById(varId);
-//       const varName = variable?.name ?? varId;
-
-//       const radiusBlock = block.getInputTargetBlock("RADIUS");
-//       let radius = 10;
-
-//       if (radiusBlock?.type === "math_number") {
-//         radius = Number(radiusBlock.getFieldValue("NUM"));
-//       }
-
-//       variables[varName]?.dot(radius);
-
-//       appendConsole(`[DEBUG] ${varName}.dot(${radius})`);
-//     }
-
-
-//     /* ==========================
-//        NEXT BLOCK
-//     ========================== */
-//     const next = block.getNextBlock()
-//     if (next) {
-//       await executeBlock(next)
-//     }
-//   }
-
-  // async function runWorkspace(workspace: Blockly.Workspace) {
-  //   variablesRef.current = {};
-  //   turtleEngineRef.current = null; // 🔴 IMPORTANT
-
-  //   const topBlocks = workspace.getTopBlocks(true);
-
-  //   for (const block of topBlocks) {
-  //     await executeBlock(block);
-  //   }
-  // }
-
   function getCanvasTextOutput() {
     let pre = canvasContainerRef.current.querySelector(".canvas-text-output");
 
@@ -6399,6 +6272,7 @@ ${currentPrediction} (${(currentConfidence * 100).toFixed(1)}%)
       if (faceCount > 0) {
         faceRecogResult = `Face Detected - ${faceCount} face(s) found`;
         outputCallback(`âœ… ${faceRecogResult}`);
+        
       } else {
         faceRecogResult = "No Face Detected";
         outputCallback(`âŒ ${faceRecogResult}`);
@@ -7127,6 +7001,7 @@ const usesTurtle = ws
         let count = 0;
         if (!facialDetections || facialDetections.length === 0) {
           setOutput(prev => prev + `\n${feature} count: 0`);
+          canvasContainerRef.current.innerHTML = "<div>No faces detected</div>";
           return;
         }
         if (feature === "face") {
@@ -7145,6 +7020,7 @@ const usesTurtle = ws
           });
         }
         setOutput(prev => prev + `\n${feature} count: ${count}`);
+        canvasContainerRef.current.innerHTML = `<div>${feature} count: ${count}</div>`;
         return;
       }
       if (cleanText.startsWith("__FACIAL_GET_GENDER__:")) {
