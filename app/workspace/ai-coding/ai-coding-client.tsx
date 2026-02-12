@@ -4132,29 +4132,18 @@ function AICodingPage() {
 
     const loadFaceApi = async () => {
       try {
-        // Wait for face-api.js to be available
-        let attempts = 0;
-        while (typeof window.faceapi === 'undefined' && attempts < 50) {
-          await new Promise(resolve => setTimeout(resolve, 100));
-          attempts++;
-        }
-
-        if (typeof window.faceapi === 'undefined') {
-          throw new Error('face-api.js failed to load from CDN');
-        }
-
         console.log('[FaceAPI] Library loaded, loading models...');
         setOutput((prev) => prev + '⏳ Loading face detection models...\n');
 
-        // Use CDN path for models instead of local "/models"
-        const MODEL_URL = 'https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js';
+        // Use local models from /public/models directory
+        const MODEL_URL = '/models';
 
         await Promise.all([
-          window.faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
-          window.faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
-          window.faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL),
-          window.faceapi.nets.faceExpressionNet.loadFromUri(MODEL_URL),
-          window.faceapi.nets.ageGenderNet.loadFromUri(MODEL_URL),
+          faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
+          faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
+          faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL),
+          faceapi.nets.faceExpressionNet.loadFromUri(MODEL_URL),
+          faceapi.nets.ageGenderNet.loadFromUri(MODEL_URL),
         ]);
 
         console.log('[FaceAPI] All models loaded successfully');
@@ -4179,8 +4168,8 @@ function AICodingPage() {
     }
 
     try {
-      const detections = await window.faceapi
-        .detectAllFaces(imgElement, new window.faceapi.TinyFaceDetectorOptions())
+      const detections = await faceapi
+        .detectAllFaces(imgElement, new faceapi.TinyFaceDetectorOptions())
         .withFaceLandmarks()
         .withFaceExpressions()
         .withAgeAndGender();
@@ -5459,15 +5448,15 @@ ${currentPrediction} (${(currentConfidence * 100).toFixed(1)}%)
             facialImage = img;
 
             // Wait for face-api.js to load
-            if (typeof window.faceapi === 'undefined') {
+            if (typeof faceapi === 'undefined') {
               outputCallback("â³ Waiting for face-api.js to load...");
               let attempts = 0;
-              while (typeof window.faceapi === 'undefined' && attempts < 50) {
+              while (typeof faceapi === 'undefined' && attempts < 50) {
                 await new Promise(r => setTimeout(r, 100));
                 attempts++;
               }
 
-              if (typeof window.faceapi === 'undefined') {
+              if (typeof faceapi === 'undefined') {
                 outputCallback("âŒ Error: face-api.js failed to load. Please refresh the page.");
                 resolve();
                 return;
@@ -5476,33 +5465,26 @@ ${currentPrediction} (${(currentConfidence * 100).toFixed(1)}%)
 
             // Load face-api models if not loaded
             try {
-              if (!window.faceapi.nets.tinyFaceDetector.isLoaded) {
+              if (!faceapi.nets.tinyFaceDetector.isLoaded) {
                 outputCallback("Loading face detection models... (this may take 10-20 seconds)");
 
-                // Try to load from multiple CDN sources
-                const MODEL_URLS = [
-                  'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model',
-                  'https://justadudewhohacks.github.io/face-api.js/models',
-                ];
+                // Load models from local path
+                const MODEL_URL = '/models';
 
                 let modelsLoaded = false;
-                for (const MODEL_URL of MODEL_URLS) {
-                  try {
-                    await Promise.race([
-                      Promise.all([
-                        window.faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
-                        window.faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
-                        window.faceapi.nets.faceExpressionNet.loadFromUri(MODEL_URL),
-                        window.faceapi.nets.ageGenderNet.loadFromUri(MODEL_URL),
-                      ]),
-                      new Promise((_, reject) => setTimeout(() => reject(new Error('Model loading timeout')), 30000))
-                    ]);
-                    modelsLoaded = true;
-                    break;
-                  } catch (err) {
-                    console.warn(`Failed to load models from ${MODEL_URL}:`, err);
-                    continue;
-                  }
+                try {
+                  await Promise.race([
+                    Promise.all([
+                      faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
+                      faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
+                      faceapi.nets.faceExpressionNet.loadFromUri(MODEL_URL),
+                      faceapi.nets.ageGenderNet.loadFromUri(MODEL_URL),
+                    ]),
+                    new Promise((_, reject) => setTimeout(() => reject(new Error('Model loading timeout')), 30000))
+                  ]);
+                  modelsLoaded = true;
+                } catch (err) {
+                  console.warn(`Failed to load models from ${MODEL_URL}:`, err);
                 }
 
                 if (!modelsLoaded) {
@@ -5517,11 +5499,11 @@ ${currentPrediction} (${(currentConfidence * 100).toFixed(1)}%)
               outputCallback("Detecting faces...");
               console.log("Starting face detection...");
               console.log("Image size:", img.width, "x", img.height);
-              console.log("TinyFaceDetector loaded:", window.faceapi.nets.tinyFaceDetector.isLoaded);
+              console.log("TinyFaceDetector loaded:", faceapi.nets.tinyFaceDetector.isLoaded);
 
               const detections = await Promise.race([
-                window.faceapi
-                  .detectAllFaces(img, new window.faceapi.TinyFaceDetectorOptions())
+                faceapi
+                  .detectAllFaces(img, new faceapi.TinyFaceDetectorOptions())
                   .withFaceLandmarks()
                   .withFaceExpressions()
                   .withAgeAndGender(),
@@ -5710,42 +5692,36 @@ ${currentPrediction} (${(currentConfidence * 100).toFixed(1)}%)
     }
 
     // Wait for face-api.js to load
-    if (typeof window.faceapi === 'undefined') {
+    if (typeof faceapi === 'undefined') {
       outputCallback("â³ Waiting for face-api.js to load...");
       let attempts = 0;
-      while (typeof window.faceapi === 'undefined' && attempts < 50) {
+      while (typeof faceapi === 'undefined' && attempts < 50) {
         await new Promise(r => setTimeout(r, 100));
         attempts++;
       }
 
-      if (typeof window.faceapi === 'undefined') {
+      if (typeof faceapi === 'undefined') {
         outputCallback("âŒ Error: face-api.js failed to load. Please refresh the page.");
         return;
       }
     }
 
     try {
-      if (!window.faceapi.nets.tinyFaceDetector.isLoaded) {
+      if (!faceapi.nets.tinyFaceDetector.isLoaded) {
         outputCallback("Loading face detection models... (this may take 10-20 seconds)");
 
-        const MODEL_URLS = [
-          'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model',
-          'https://justadudewhohacks.github.io/face-api.js/models',
-        ];
+        // Load models from local path
+        const MODEL_URL = '/models';
 
         let modelsLoaded = false;
-        for (const MODEL_URL of MODEL_URLS) {
-          try {
-            await Promise.race([
-              window.faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
-              new Promise((_, reject) => setTimeout(() => reject(new Error('Model loading timeout')), 30000))
-            ]);
-            modelsLoaded = true;
-            break;
-          } catch (err) {
-            console.warn(`Failed to load models from ${MODEL_URL}:`, err);
-            continue;
-          }
+        try {
+          await Promise.race([
+            faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
+            new Promise((_, reject) => setTimeout(() => reject(new Error('Model loading timeout')), 30000))
+          ]);
+          modelsLoaded = true;
+        } catch (err) {
+          console.warn(`Failed to load models from ${MODEL_URL}:`, err);
         }
 
         if (!modelsLoaded) {
@@ -5756,7 +5732,7 @@ ${currentPrediction} (${(currentConfidence * 100).toFixed(1)}%)
 
       outputCallback("Detecting faces...");
       const detections = await Promise.race([
-        window.faceapi.detectAllFaces(faceRecogImage, new window.faceapi.TinyFaceDetectorOptions()),
+        faceapi.detectAllFaces(faceRecogImage, new faceapi.TinyFaceDetectorOptions()),
         new Promise((_, reject) => setTimeout(() => reject(new Error('Face detection timeout')), 10000))
       ]);
 
@@ -7292,8 +7268,9 @@ plt = _FakePlt()
       />
 
       <Script
-        src="https://cdn.jsdelivr.net/npm/face-api.js@latest/dist/face-api.min.js"
+        src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"
         strategy="beforeInteractive"
+        onError={() => console.error('Failed to load face-api.js from CDN')}
       />
 
       <input
