@@ -1,18 +1,69 @@
 "use client";
 import { useEffect, useRef, useState, useMemo } from 'react';
 import * as Blockly from 'blockly';
-import { pythonGenerator } from 'blockly/python';
+import { pythonGenerator, Order as PythonOrder } from 'blockly/python';
 import 'blockly/msg/en';
 import 'blockly/blocks';
 import Sk from 'skulpt';
-import Script from "next/script";
 import 'skulpt/dist/skulpt-stdlib.js';
+import { useSearchParams } from "next/navigation"
+import { javascriptGenerator } from "blockly/javascript";
+import Script from "next/script";
 import { Hands } from "@mediapipe/hands";
 import * as faceapi from "face-api.js";
 
+const turtleEngineRef = { current: null as any };
+
+
+const variablesRef = { current: {} as Record<string, any> }
+class CleanNumberInput extends Blockly.FieldNumber {
+  showEditor_() {
+    // Hide SVG text
+    this.textElement_.style.display = 'none';
+
+    super.showEditor_();
+
+    const oldDispose = this.htmlInput_.onblur;
+    this.htmlInput_.onblur = (e) => {
+      this.textElement_.style.display = '';
+      oldDispose?.(e);
+    };
+  }
+}
+
+class CleanTextInput extends Blockly.FieldTextInput {
+  showEditor_() {
+    // Hide SVG text
+    this.textElement_.style.display = 'none';
+
+    super.showEditor_();
+
+    // When editing ends, show SVG text again
+    const oldDispose = this.htmlInput_.onblur;
+    this.htmlInput_.onblur = (e) => {
+      this.textElement_.style.display = '';
+      oldDispose?.(e);
+    };
+  }
+}
+
+
+function appendConsole(text: string) {
+  console.log(text)
+}
+
+function showInputPrompt(prompt: string): Promise<string> {
+  return new Promise((resolve) => {
+    const value = window.prompt(prompt) ?? ""
+    resolve(value)
+  })
+}
+
+
 // Custom Blockly Blocks Definitions
 const defineBlocks = () => {
-  /* =========================
+
+   /* =========================
    TEACHABLE MACHINE BLOCKS
 ========================= */
 
@@ -566,6 +617,16 @@ const defineBlocks = () => {
     }
   };
 
+  Blockly.Blocks['math_number'] = {
+    init: function () {
+      this.appendDummyInput()
+        .appendField(new CleanNumberInput(0), 'NUM');
+
+      this.setOutput(true, 'Number');
+      this.setColour(230);
+    }
+  };
+
   /* =========================
      SPEAK BLOCK
   ========================= */
@@ -614,10 +675,6 @@ const defineBlocks = () => {
   /* =========================
      FILE HANDLING
   ========================= */
-  /* =========================
-     FILE UPLOAD BLOCK
-  ========================= */
-
   Blockly.Blocks['file_upload'] = {
     init: function () {
       this.appendDummyInput()
@@ -637,6 +694,7 @@ const defineBlocks = () => {
       this.setTooltip("Upload a file from your device");
     }
   };
+
 
   Blockly.Blocks['file_open'] = {
     init: function () {
@@ -829,48 +887,51 @@ const defineBlocks = () => {
     }
   };
 
+  Blockly.Blocks["turtle_move"] = {
+    init() {
+      this.appendValueInput("DISTANCE")
+        .setCheck("Number")
+        .appendField(new Blockly.FieldVariable("turtle"), "VAR")
+        .appendField(
+          new Blockly.FieldDropdown([
+            ["forward", "FORWARD"],
+            ["backward", "BACKWARD"]
+          ]),
+          "DIRECTION"
+        );
+
+      this.setPreviousStatement(true, null);
+      this.setNextStatement(true, null);
+      this.setColour(330);
+      this.setTooltip("Move turtle forward or backward");
+    },
+  }
+
   // Turtle: Pen Color
 
-  Blockly.Blocks['turtle_pencolor'] = {
-    init: function () {
-      this.appendDummyInput()
-        .appendField(new Blockly.FieldVariable("turtle"), "VAR")
-        .appendField("pen color")
-        .appendField(
-          new Blockly.FieldDropdown([
-            ["red", "#ff0000"],
-            ["green", "#00ff00"],
-            ["blue", "#0000ff"],
-            ["black", "#000000"]
-          ]),
-          "COLOR"
-        );
-      this.setPreviousStatement(true, null);
-      this.setNextStatement(true, null);
-      this.setColour(330);
-      this.setTooltip("Set pen color");
-    }
-  };
+  Blockly.Blocks["turtle_pencolor"] = {
+  init: function () {
+    this.appendValueInput("COLOR")
+      .appendField("set")
+      .appendField(new Blockly.FieldVariable("t"), "VAR")
+      .appendField("pen color");
+    this.setPreviousStatement(true);
+    this.setNextStatement(true);
+    this.setColour(330);
+  }
+};
 
   // Turtle: Background Color
-  Blockly.Blocks['turtle_bgcolor'] = {
-    init: function () {
-      this.appendDummyInput()
-        .appendField("set background color")
-        .appendField(
-          new Blockly.FieldDropdown([
-            ["white", "#ffffff"],
-            ["black", "#000000"],
-            ["blue", "#0000ff"]
-          ]),
-          "COLOR"
-        );
-      this.setPreviousStatement(true, null);
-      this.setNextStatement(true, null);
-      this.setColour(330);
-      this.setTooltip("Set background color");
-    }
-  };
+ Blockly.Blocks["turtle_bgcolor"] = {
+  init: function () {
+    this.appendValueInput("COLOR")
+      .appendField("set background color");
+    this.setPreviousStatement(true);
+    this.setNextStatement(true);
+    this.setColour(330);
+  }
+};
+
 
   // For Loop
   Blockly.Blocks['controls_repeat'] = {
@@ -1115,31 +1176,35 @@ const defineBlocks = () => {
     init: function () {
       this.appendDummyInput()
         .appendField("define")
-        .appendField(new Blockly.FieldTextInput("do something"), "NAME");
+        .appendField(new CleanTextInput("do_something"), "NAME");
+
       this.appendStatementInput("STACK");
+
       this.setColour(290);
       this.setTooltip("Define a new function");
-      this.setPreviousStatement(true, null);
-      this.setNextStatement(true, null);
+      this.setPreviousStatement(true);
+      this.setNextStatement(true);
     }
   };
 
-  // Functions: Define with return
   Blockly.Blocks['procedures_defreturn'] = {
     init: function () {
       this.appendDummyInput()
         .appendField("define")
-        .appendField(new Blockly.FieldTextInput("do something"), "NAME");
+        .appendField(new CleanTextInput("do_something"), "NAME");
+
       this.appendStatementInput("STACK");
+
       this.appendValueInput("RETURN")
-        .setCheck(null)
         .appendField("return");
+
       this.setColour(290);
       this.setTooltip("Define function with return");
-      this.setPreviousStatement(true, null);
-      this.setNextStatement(true, null);
+      this.setPreviousStatement(true);
+      this.setNextStatement(true);
     }
   };
+
 
   // Functions: Return
   Blockly.Blocks['procedures_return'] = {
@@ -1260,44 +1325,44 @@ const defineBlocks = () => {
     }
   };
 
-  // Conversion: To Float
-  Blockly.Blocks['convert_to_float'] = {
-    init: function () {
-      this.appendDummyInput()
-        .appendField("Float");
-      this.appendValueInput("VALUE")
-        .setCheck(null);
-      this.setOutput(true, "Number");
-      this.setColour(100);
-      this.setTooltip("Convert to float");
-    }
-  };
+ // Conversion: To Float
+Blockly.Blocks['convert_to_float'] = {
+  init: function () {
+    this.appendValueInput("VALUE")
+      .setCheck(null)
+      .appendField("float");
 
-  // Conversion: To String
-  Blockly.Blocks['convert_to_string'] = {
-    init: function () {
-      this.appendDummyInput()
-        .appendField("String");
-      this.appendValueInput("VALUE")
-        .setCheck(null);
-      this.setOutput(true, "String");
-      this.setColour(100);
-      this.setTooltip("Convert to string");
-    }
-  };
+    this.setOutput(true, "Number");
+    this.setColour(100);
+    this.setTooltip("Convert value to float");
+  }
+};
 
-  // Conversion: To Boolean
-  Blockly.Blocks['convert_to_bool'] = {
-    init: function () {
-      this.appendDummyInput()
-        .appendField("Boolean");
-      this.appendValueInput("VALUE")
-        .setCheck(null);
-      this.setOutput(true, "Boolean");
-      this.setColour(100);
-      this.setTooltip("Convert to boolean");
-    }
-  };
+// Conversion: To String
+Blockly.Blocks['convert_to_string'] = {
+  init: function () {
+    this.appendValueInput("VALUE")
+      .setCheck(null)
+      .appendField("str");
+
+    this.setOutput(true, "String");
+    this.setColour(100);
+    this.setTooltip("Convert value to string");
+  }
+};
+
+// Conversion: To Boolean
+Blockly.Blocks['convert_to_bool'] = {
+  init: function () {
+    this.appendValueInput("VALUE")
+      .setCheck(null)
+      .appendField("bool");
+
+    this.setOutput(true, "Boolean");
+    this.setColour(100);
+    this.setTooltip("Convert value to boolean");
+  }
+};
 
   // Conversion: Upper case
   Blockly.Blocks['convert_upper_case'] = {
@@ -1465,7 +1530,7 @@ const defineBlocks = () => {
   Blockly.Blocks['math_pi'] = {
     init: function () {
       this.appendDummyInput()
-        .appendField("Ï€");
+        .appendField("π");
       this.setOutput(true, "Number");
       this.setColour(230);
       this.setTooltip("Pi constant");
@@ -1493,7 +1558,7 @@ const defineBlocks = () => {
         .appendField("remainder of");
       this.appendValueInput("DIVISOR")
         .setCheck("Number")
-        .appendField("Ã·");
+        .appendField("÷");
       this.setOutput(true, "Number");
       this.setColour(230);
       this.setTooltip("Remainder (modulo)");
@@ -1532,53 +1597,6 @@ const defineBlocks = () => {
    CONVERSION BLOCKS
 ========================= */
 
-  // Convert to Int
-  Blockly.Blocks['convert_to_int'] = {
-    init: function () {
-      this.appendValueInput("VALUE")
-        .setCheck(null)
-        .appendField("Int");
-      this.setOutput(true, "Number");
-      this.setColour(100);
-      this.setTooltip("Convert value to integer");
-    }
-  };
-
-  // Convert to Float
-  Blockly.Blocks['convert_to_float'] = {
-    init: function () {
-      this.appendValueInput("VALUE")
-        .setCheck(null)
-        .appendField("Float");
-      this.setOutput(true, "Number");
-      this.setColour(100);
-      this.setTooltip("Convert value to float");
-    }
-  };
-
-  // Convert to String
-  Blockly.Blocks['convert_to_string'] = {
-    init: function () {
-      this.appendValueInput("VALUE")
-        .setCheck(null)
-        .appendField("String");
-      this.setOutput(true, "String");
-      this.setColour(100);
-      this.setTooltip("Convert value to string");
-    }
-  };
-
-  // Convert to Boolean
-  Blockly.Blocks['convert_to_bool'] = {
-    init: function () {
-      this.appendValueInput("VALUE")
-        .setCheck(null)
-        .appendField("Boolean");
-      this.setOutput(true, "Boolean");
-      this.setColour(100);
-      this.setTooltip("Convert value to boolean");
-    }
-  };
 
   // Convert to Upper Case
   Blockly.Blocks['convert_upper_case'] = {
@@ -2008,88 +2026,81 @@ const defineBlocks = () => {
   };
 
   // TURTLE: Shape
-  Blockly.Blocks['turtle_shape'] = {
-    init: function () {
-      this.appendDummyInput()
-        .appendField("set turtle")
-        .appendField(new Blockly.FieldVariable("turtle"), "VAR")
-        .appendField("shape in")
-        .appendField(
-          new Blockly.FieldDropdown([
-            ["triangle", "triangle"],
-            ["circle", "circle"],
-            ["square", "square"]
-          ]),
-          "SHAPE"
-        );
-      this.setPreviousStatement(true, null);
-      this.setNextStatement(true, null);
-      this.setColour(330);
-      this.setTooltip("Set turtle shape");
-    }
-  };
+ Blockly.Blocks['turtle_shape'] = {
+  init: function () {
+    this.appendDummyInput()
+      .appendField("set turtle")
+      .appendField(new Blockly.FieldVariable("turtle"), "VAR")
+      .appendField("shape in")
+      .appendField(
+        new Blockly.FieldDropdown([
+          ["turtle", "turtle"],   // 🐢 added
+          ["triangle", "triangle"],
+          ["circle", "circle"],
+          ["square", "square"]
+        ]),
+        "SHAPE"
+      );
+
+    this.setPreviousStatement(true, null);
+    this.setNextStatement(true, null);
+    this.setColour(330);
+    this.setTooltip("Set turtle shape");
+  }
+};
 
   // TURTLE: Speed
-  Blockly.Blocks['turtle_speed'] = {
-    init: function () {
-      this.appendDummyInput()
-        .appendField("make turtle")
-        .appendField(new Blockly.FieldVariable("turtle"), "VAR")
-        .appendField("set speed");
-      this.appendValueInput("SPEED")
-        .setCheck("Number");
-      this.setPreviousStatement(true, null);
-      this.setNextStatement(true, null);
-      this.setColour(330);
-      this.setTooltip("Set turtle speed");
-    }
-  };
+ Blockly.Blocks["turtle_speed"] = {
+  init: function () {
+    this.appendValueInput("SPEED")
+      .appendField("set")
+      .appendField(new Blockly.FieldVariable("t"), "VAR")
+      .appendField("speed");
+    this.setPreviousStatement(true);
+    this.setNextStatement(true);
+    this.setColour(330);
+  }
+};
 
   // TURTLE: Width
-  Blockly.Blocks['turtle_width'] = {
-    init: function () {
-      this.appendDummyInput()
-        .appendField("make turtle")
-        .appendField(new Blockly.FieldVariable("turtle"), "VAR")
-        .appendField("wide to");
-      this.appendValueInput("WIDTH")
-        .setCheck("Number");
-      this.setPreviousStatement(true, null);
-      this.setNextStatement(true, null);
-      this.setColour(330);
-      this.setTooltip("Set turtle width");
-    }
-  };
+ Blockly.Blocks["turtle_width"] = {
+  init: function () {
+    this.appendValueInput("WIDTH")
+      .appendField("set")
+      .appendField(new Blockly.FieldVariable("t"), "VAR")
+      .appendField("width");
+    this.setPreviousStatement(true);
+    this.setNextStatement(true);
+    this.setColour(330);
+  }
+};
 
   // TURTLE: Fill color
-  Blockly.Blocks['turtle_fill_color'] = {
-    init: function () {
-      this.appendDummyInput()
-        .appendField("make turtle")
-        .appendField(new Blockly.FieldVariable("turtle"), "VAR")
-        .appendField("fill color");
-      this.appendValueInput("COLOR");
-      this.setPreviousStatement(true, null);
-      this.setNextStatement(true, null);
-      this.setColour(330);
-      this.setTooltip("Set fill color");
-    }
-  };
+Blockly.Blocks["turtle_fill_color"] = {
+  init: function () {
+    this.appendValueInput("COLOR")
+      .appendField("set")
+      .appendField(new Blockly.FieldVariable("t"), "VAR")
+      .appendField("fill color");
+    this.setPreviousStatement(true);
+    this.setNextStatement(true);
+    this.setColour(330);
+  }
+};
 
   // TURTLE: Color (pen color via value input)
-  Blockly.Blocks['turtle_color'] = {
-    init: function () {
-      this.appendDummyInput()
-        .appendField("make turtle")
-        .appendField(new Blockly.FieldVariable("turtle"), "VAR")
-        .appendField("color");
-      this.appendValueInput("COLOR");
-      this.setPreviousStatement(true, null);
-      this.setNextStatement(true, null);
-      this.setColour(330);
-      this.setTooltip("Set turtle color");
-    }
-  };
+ Blockly.Blocks["turtle_color"] = {
+  init: function () {
+    this.appendValueInput("COLOR")
+      .appendField("set")
+      .appendField(new Blockly.FieldVariable("t"), "VAR")
+      .appendField("color");
+    this.setPreviousStatement(true);
+    this.setNextStatement(true);
+    this.setColour(330);
+  }
+};
+
 
   // CONTROL: On key press
   Blockly.Blocks['controls_onkey'] = {
@@ -2208,7 +2219,7 @@ const defineBlocks = () => {
   Blockly.Blocks['colour_picker'] = {
     init: function () {
       this.appendDummyInput()
-        .appendField("Select Color")
+        .appendField("Select Colour")
         .appendField(
           new Blockly.FieldDropdown([
             ["Red", "#ff0000"],
@@ -2479,31 +2490,30 @@ const defineBlocks = () => {
   };
 
   // TURTLE: Hide
-  Blockly.Blocks['turtle_hide'] = {
-    init: function () {
-      this.appendDummyInput()
-        .appendField("make turtle")
-        .appendField(new Blockly.FieldVariable("turtle"), "VAR")
-        .appendField("hide");
-      this.setPreviousStatement(true, null);
-      this.setNextStatement(true, null);
-      this.setColour(330);
-      this.setTooltip("Hide turtle");
-    }
-  };
+  Blockly.Blocks["turtle_hide"] = {
+  init: function () {
+    this.appendDummyInput()
+      .appendField("hide turtle")
+      .appendField(new Blockly.FieldVariable("t"), "VAR");
+    this.setPreviousStatement(true);
+    this.setNextStatement(true);
+    this.setColour(330);
+  }
+};
+
 
   // TURTLE: Show
-  Blockly.Blocks['turtle_show'] = {
-    init: function () {
-      this.appendDummyInput()
-        .appendField("show turtle")
-        .appendField(new Blockly.FieldVariable("turtle"), "VAR");
-      this.setPreviousStatement(true, null);
-      this.setNextStatement(true, null);
-      this.setColour(330);
-      this.setTooltip("Show turtle");
-    }
-  };
+ Blockly.Blocks["turtle_show"] = {
+  init: function () {
+    this.appendDummyInput()
+      .appendField("show turtle")
+      .appendField(new Blockly.FieldVariable("t"), "VAR");
+    this.setPreviousStatement(true);
+    this.setNextStatement(true);
+    this.setColour(330);
+  }
+};
+
 
   // CONTROL: Listen
   Blockly.Blocks['controls_listen'] = {
@@ -2659,21 +2669,26 @@ const defineBlocks = () => {
     init: function () {
       this.appendDummyInput()
         .appendField('"')
-        .appendField(new Blockly.FieldTextInput(""), "TEXT")
+        .appendField(new CleanTextInput('text'), 'VALUE')
         .appendField('"');
-      this.setOutput(true, "String");
-      this.setColour(30);
+
+      this.setOutput(true, 'String');
+      this.setColour(160);
     }
   };
 
   Blockly.Blocks['number_literal'] = {
     init: function () {
       this.appendDummyInput()
-        .appendField(new Blockly.FieldNumber(0), "NUM");
-      this.setOutput(true, "Number");
-      this.setColour(30);
+        .appendField(new Blockly.FieldNumber(0, -Infinity, Infinity, 1), 'VALUE');
+
+      this.setOutput(true, 'Number');
+      this.setColour(120);
+      this.setTooltip('Integer number');
+      this.setHelpUrl('');
     }
   };
+
 
   Blockly.Blocks['boolean_literal'] = {
     init: function () {
@@ -2737,209 +2752,198 @@ const defineBlocks = () => {
       this.setColour(210);
     }
   };
+};
 
+const defineJavascriptGenerators = () => {
+
+  /* ==========================
+     CREATE TURTLE (NO-OP)
+     ========================== */
+javascriptGenerator.forBlock["turtle_create"] = function (block) {
+  return "";
+};
+
+
+javascriptGenerator.forBlock['colour_red'] = function () {
+  return ['"red"', javascriptGenerator.ORDER_ATOMIC];
+};
+
+javascriptGenerator.forBlock['colour_green'] = function () {
+  return ['"green"', javascriptGenerator.ORDER_ATOMIC];
+};
+
+javascriptGenerator.forBlock['colour_blue'] = function () {
+  return ['"blue"', javascriptGenerator.ORDER_ATOMIC];
+};
+
+javascriptGenerator.forBlock['colour_yellow'] = function () {
+  return ['"yellow"', javascriptGenerator.ORDER_ATOMIC];
+};
+
+javascriptGenerator.forBlock['colour_purple'] = function () {
+  return ['"purple"', javascriptGenerator.ORDER_ATOMIC];
+};
+
+javascriptGenerator.forBlock['colour_pink'] = function () {
+  return ['"pink"', javascriptGenerator.ORDER_ATOMIC];
+};
+javascriptGenerator.forBlock['colour_picker'] = function (block) {
+  const color = block.getFieldValue('COLOUR');
+  return [`"${color}"`, javascriptGenerator.ORDER_ATOMIC];
+};
+
+
+  /* ==========================
+     MOVE (FORWARD / BACKWARD)
+     ========================== */
+  javascriptGenerator.forBlock["turtle_move"] = function (block) {
+    const distance =
+      javascriptGenerator.valueToCode(block, "DISTANCE", 0) || "0";
+    const direction = block.getFieldValue("DIRECTION");
+
+    if (direction === "BACKWARD") {
+      return `__turtle.backward(${distance});\n`;
+    }
+
+    return `__turtle.forward(${distance});\n`;
+  };
+
+  javascriptGenerator.forBlock["turtle_forward"] = function (block) {
+    const distance =
+      javascriptGenerator.valueToCode(block, "DISTANCE", 0) || "0";
+    return `__turtle.forward(${distance});\n`;
+  };
+
+  javascriptGenerator.forBlock["turtle_backward"] = function (block) {
+    const distance =
+      javascriptGenerator.valueToCode(block, "DISTANCE", 0) || "0";
+    return `__turtle.backward(${distance});\n`;
+  };
+
+  /* ==========================
+     TURN
+     ========================== */
+  javascriptGenerator.forBlock["turtle_right"] = function (block) {
+    const angle =
+      javascriptGenerator.valueToCode(block, "ANGLE", 0) || "0";
+    return `__turtle.right(${angle});\n`;
+  };
+
+  javascriptGenerator.forBlock["turtle_left"] = function (block) {
+    const angle =
+      javascriptGenerator.valueToCode(block, "ANGLE", 0) || "0";
+    return `__turtle.left(${angle});\n`;
+  };
+
+  /* ==========================
+     HEADING
+     ========================== */
+  javascriptGenerator.forBlock["turtle_heading"] = function (block) {
+    const angle =
+      javascriptGenerator.valueToCode(block, "ANGLE", 0) || "0";
+    return `__turtle.setHeading(${angle});\n`;
+  };
+
+  /* ==========================
+     POSITION
+     ========================== */
+  javascriptGenerator.forBlock["turtle_position"] = function (block) {
+    const x =
+      javascriptGenerator.valueToCode(block, "X", 0) || "0";
+    const y =
+      javascriptGenerator.valueToCode(block, "Y", 0) || "0";
+    return `__turtle.goto(${x}, ${y});\n`;
+  };
+
+  /* ==========================
+     DOT
+     ========================== */
+  javascriptGenerator.forBlock["turtle_dot"] = function (block) {
+    const size =
+      javascriptGenerator.valueToCode(block, "SIZE", 0) || "10";
+    return `__turtle.dot(${size});\n`;
+  };
+
+  /* ==========================
+     PEN CONTROL
+     ========================== */
+  javascriptGenerator.forBlock["turtle_penup"] = () =>
+    "__turtle.penUp();\n";
+
+  javascriptGenerator.forBlock["turtle_pendown"] = () =>
+    "__turtle.penDown();\n";
+
+javascriptGenerator.forBlock["turtle_width"] = function (block) {
+  const t = javascriptGenerator.nameDB_.getName(block.getFieldValue("VAR"), Blockly.Names.NameType.VARIABLE);
+  const w = javascriptGenerator.valueToCode(block, "WIDTH", javascriptGenerator.ORDER_NONE) || "1";
+  return `__turtle.width(${w});\n`;
+};
+
+
+  /* ==========================
+     COLORS
+     ========================== */
+ javascriptGenerator.forBlock["turtle_color"] =
+javascriptGenerator.forBlock["turtle_pencolor"] = function (block) {
+  const t = javascriptGenerator.nameDB_.getName(block.getFieldValue("VAR"), Blockly.Names.NameType.VARIABLE);
+  const c = javascriptGenerator.valueToCode(block, "COLOR", javascriptGenerator.ORDER_NONE) || '"#000000"';
+  return `__turtle.pencolor(${c});\n`;
+};
+
+  javascriptGenerator.forBlock["turtle_fill_color"] = function (block) {
+  const t = javascriptGenerator.nameDB_.getName(block.getFieldValue("VAR"), Blockly.Names.NameType.VARIABLE);
+  const c = javascriptGenerator.valueToCode(block, "COLOR", javascriptGenerator.ORDER_NONE) || '"#000000"';
+  return `__turtle.fillcolor(${c});\n`;
+};
+
+ javascriptGenerator.forBlock["turtle_bgcolor"] = function (block) {
+  const c = javascriptGenerator.valueToCode(block, "COLOR", javascriptGenerator.ORDER_NONE) || '"#ffffff"';
+  return `__turtle.bgcolor(${c});\n`;
+};
+
+  /* ==========================
+     FILL
+     ========================== */
+  javascriptGenerator.forBlock["turtle_begin_fill"] = () =>
+    "__turtle.beginFill();\n";
+
+  javascriptGenerator.forBlock["turtle_end_fill"] = () =>
+    "__turtle.endFill();\n";
+
+  /* ==========================
+     SHAPE
+     ========================== */
+ javascriptGenerator.forBlock["turtle_shape"] = function (block) {
+  const shape = block.getFieldValue("SHAPE");
+  return `__turtle.setShape("${shape}");\n`;
+};
+
+  /* ==========================
+     SPEED
+     ========================== */
+  javascriptGenerator.forBlock["turtle_speed"] = function (block) {
+  const t = javascriptGenerator.nameDB_.getName(block.getFieldValue("VAR"), Blockly.Names.NameType.VARIABLE);
+  const s = javascriptGenerator.valueToCode(block, "SPEED", javascriptGenerator.ORDER_NONE) || "5";
+  return `__turtle.speed(${s});\n`;
+};
+
+  /* ==========================
+     VISIBILITY
+     ========================== */
+ javascriptGenerator.forBlock["turtle_hide"] = function (block) {
+  const t = javascriptGenerator.nameDB_.getName(block.getFieldValue("VAR"), Blockly.Names.NameType.VARIABLE);
+  return `__turtle.hideturtle();\n`;
+};
+
+ javascriptGenerator.forBlock["turtle_show"] = function (block) {
+  const t = javascriptGenerator.nameDB_.getName(block.getFieldValue("VAR"), Blockly.Names.NameType.VARIABLE);
+  return `__turtle.showturtle();\n`;
+};
 
 };
 
-// Python Code Generators for Custom Blocks
 const definePythonGenerators = () => {
-  /* =========================
-     PYGAL GENERATORS
-  ========================= */
-  pythonGenerator.forBlock['speak_text'] = function (block, gen) {
-    const text =
-      gen.valueToCode(block, "TEXT", gen.ORDER_NONE) || '""';
-
-    return `playsound.say(${text})\n`;
-  };
-
-  pythonGenerator.forBlock['sprite_show'] = function (block) {
-    const sprite = block.getFieldValue("SPRITE"); // Laugh
-    const cam = block.getFieldValue("CAM");       // on / off
-
-    return `sprites.show("${sprite}", "${cam}")\n`;
-  };
-
-  /* =========================
-   FILE HANDLING GENERATORS
-========================= */
-
-  pythonGenerator.forBlock['file_upload'] = function () {
-    // Marker only â€“ handled in JS
-    return "__UPLOAD_FILE__\n";
-  };
-
-  pythonGenerator.forBlock['file_open'] = function (block) {
-    const filename = block.getFieldValue("FILENAME");
-    const mode = block.getFieldValue("MODE");
-    return `file = open("${filename}", "${mode}")\n`;
-  };
-
-  pythonGenerator.forBlock['file_read'] = function () {
-    return `print(file.read())\n`;
-  };
-
-  pythonGenerator.forBlock['file_write'] = function (block, gen) {
-    const text =
-      gen.valueToCode(block, "TEXT", gen.ORDER_NONE) || '""';
-    return `file.write(${text})\n`;
-  };
-
-  pythonGenerator.forBlock['file_close'] = function () {
-    return `file.close()\n`;
-  };
-
-  pythonGenerator.forBlock['serial_send'] = function (block, gen) {
-    const text =
-      gen.valueToCode(block, "TEXT", gen.ORDER_NONE) || '""';
-    return `
-import serial
-serial.send(${text})
-`;
-  };
-
-  let currentPygalChartVar = "chart";
-  let currentPygalChartType = "Bar";
-  pythonGenerator.forBlock['pygal_bar'] = function () {
-    currentPygalChartVar = "bar_chart";
-    currentPygalChartType = "Bar";
-    return `${currentPygalChartVar} = pygal.Bar()\n`;
-  };
-
-  pythonGenerator.forBlock['pygal_hbar'] = function () {
-    currentPygalChartVar = "bar_chart";
-    currentPygalChartType = "HorizontalBar";
-    return `${currentPygalChartVar} = pygal.HorizontalBar()\n`;
-  };
-
-  pythonGenerator.forBlock['pygal_line'] = function () {
-    currentPygalChartVar = "line_chart";
-    currentPygalChartType = "Line";
-    return `${currentPygalChartVar} = pygal.Line()\n`;
-  };
-
-  pythonGenerator.forBlock['pygal_pie'] = function () {
-    currentPygalChartVar = "pie_chart";
-    currentPygalChartType = "Pie";
-    return `${currentPygalChartVar} = pygal.Pie()\n`;
-  };
-
-  pythonGenerator.forBlock['pygal_radar'] = function () {
-    currentPygalChartVar = "radar_chart";
-    currentPygalChartType = "Radar";
-    return `${currentPygalChartVar} = pygal.Radar()\n`;
-  };
-
-  pythonGenerator.forBlock['pygal_stacked_bar'] = function () {
-    currentPygalChartVar = "stacked_bar_chart";
-    currentPygalChartType = "StackedBar";
-    return `${currentPygalChartVar} = pygal.StackedBar()\n`;
-  };
-
-  pythonGenerator.forBlock['pygal_stacked_line'] = function () {
-    currentPygalChartVar = "stacked_line_chart";
-    currentPygalChartType = "StackedLine";
-    return `${currentPygalChartVar} = pygal.StackedLine()\n`;
-  };
-
-  pythonGenerator.forBlock['pygal_xy'] = function () {
-    currentPygalChartVar = "xy_chart";
-    currentPygalChartType = "XY";
-    return `${currentPygalChartVar} = pygal.XY()\n`;
-  };
-  pythonGenerator.forBlock['pygal_add'] = function (block, gen) {
-    const label =
-      gen.valueToCode(block, "LABEL", gen.ORDER_NONE) || "''";
-    const values =
-      gen.valueToCode(block, "VALUES", gen.ORDER_NONE) || "[]";
-
-    return `${currentPygalChartVar}.add(${label}, ${values})\n`;
-  };
-  pythonGenerator.forBlock['pygal_title'] = function (block, gen) {
-    const title =
-      gen.valueToCode(block, "TITLE", gen.ORDER_NONE) || "''";
-
-    return `${currentPygalChartVar}.title = ${title}\n`;
-  };
-  pythonGenerator.forBlock['pygal_xlabels'] = function (block, gen) {
-    const labels =
-      gen.valueToCode(block, "LABELS", gen.ORDER_NONE) || "[]";
-
-    return `${currentPygalChartVar}.x_labels = ${labels}\n`;
-  };
-  pythonGenerator.forBlock['pygal_render'] = function () {
-    return `${currentPygalChartVar}.render()\n`;
-  };
-
-
-  pythonGenerator.forBlock['input_prompt'] = function (block, gen) {
-    const text =
-      gen.valueToCode(block, "TEXT", gen.ORDER_NONE) || '""';
-    return [`input(${text})`, gen.ORDER_ATOMIC];
-  };
-
-  pythonGenerator.forBlock['string_literal'] = function (block) {
-    const text = block.getFieldValue("TEXT");
-    return [`"${text}"`, pythonGenerator.ORDER_ATOMIC];
-  };
-
-  pythonGenerator.forBlock['number_literal'] = function (block) {
-    return [block.getFieldValue("NUM"), pythonGenerator.ORDER_ATOMIC];
-  };
-
-  pythonGenerator.forBlock['boolean_literal'] = function (block) {
-    return [block.getFieldValue("BOOL"), pythonGenerator.ORDER_ATOMIC];
-  };
-  pythonGenerator.forBlock['print_simple'] = function (block, gen) {
-    const value =
-      gen.valueToCode(block, "VALUE", gen.ORDER_NONE) || "";
-    return `print(${value})\n`;
-  };
-
-  pythonGenerator.forBlock['print_sep'] = function (block, gen) {
-    const value =
-      gen.valueToCode(block, "VALUE", gen.ORDER_NONE) || "";
-    const sep =
-      gen.valueToCode(block, "SEP", gen.ORDER_NONE) || '" "';
-    return `print(${value}, sep=${sep})\n`;
-  };
-
-  pythonGenerator.forBlock['print_end'] = function (block, gen) {
-    const value =
-      gen.valueToCode(block, "VALUE", gen.ORDER_NONE) || "";
-    const end =
-      gen.valueToCode(block, "END", gen.ORDER_NONE) || '""';
-    return `print(${value}, end=${end})\n`;
-  };
-
-  pythonGenerator.forBlock['comment'] = function () {
-    return ""; // ignored
-  };
-
-  pythonGenerator.forBlock['turtle_create'] = function (block, generator) {
-    const varName = generator.nameDB_.getName(
-      block.getFieldValue('VAR'),
-      Blockly.Names.NameType.VARIABLE
-    );
-
-    return `${varName} = turtle.Turtle()\n`;
-  };
-
-
-  pythonGenerator.forBlock['turtle_forward'] = function (block, generator) {
-    const varName = generator.nameDB_.getName(block.getFieldValue('VAR'), Blockly.Names.NameType.VARIABLE);
-    const distance = generator.valueToCode(block, 'DISTANCE', pythonGenerator.ORDER_ATOMIC) || '0';
-    const code = `${varName}.forward(${distance})\n`;
-    return code;
-  };
-
-  pythonGenerator.forBlock['turtle_right'] = function (block, generator) {
-    const varName = generator.nameDB_.getName(block.getFieldValue('VAR'), Blockly.Names.NameType.VARIABLE);
-    const angle = generator.valueToCode(block, 'ANGLE', pythonGenerator.ORDER_ATOMIC) || '0';
-    const code = `${varName}.right(${angle})\n`;
-    return code;
-  };
-  /* =========================
+   /* =========================
      TEACHABLE GENERATORS
   ========================= */
 
@@ -3159,33 +3163,278 @@ serial.send(${text})
     const code = `${varName}.pencolor('${color}')\n`;
     return code;
   };
+
+  /* =========================
+     PYGAL GENERATORS
+  ========================= */
+  pythonGenerator.forBlock['speak_text'] = function (block, gen) {
+    const text =
+      gen.valueToCode(block, "TEXT", PythonOrder.NONE) || '""';
+
+    return `playsound.say(${text})\n`;
+  };
+
+  pythonGenerator.forBlock['sprite_show'] = function (block) {
+    const sprite = block.getFieldValue("SPRITE"); // Laugh
+    const cam = block.getFieldValue("CAM");       // on / off
+
+    return `sprites.show("${sprite}", "${cam}")\n`;
+  };
+
+  /* =========================
+   FILE HANDLING GENERATORS
+========================= */
+
+  pythonGenerator.forBlock['file_upload'] = function () {
+    // Marker only – handled in JS
+    return "__UPLOAD_FILE__\n";
+  };
+
+  pythonGenerator.forBlock['file_open'] = function (block, generator) {
+    generator.definitions_['file_runtime'] =
+      `from io import StringIO
+def open_uploaded(filename, mode="r"):
+print("DEBUG FILES:", list(__uploaded_files.keys()))
+    if filename not in __uploaded_files:
+        raise FileNotFoundError(filename)
+    return StringIO(__uploaded_files[filename])
+
+file_handle = None
+`;
+
+
+    const filename = block.getFieldValue("FILENAME");
+    const mode = block.getFieldValue("MODE");
+
+    return `file_handle = open_uploaded("${filename}", "${mode}")\n`;
+  };
+
+  pythonGenerator.forBlock['file_read'] = function () {
+    return `print(file_handle.read())\n`;
+  };
+
+  pythonGenerator.forBlock['file_write'] = function (block, gen) {
+    const text =
+      gen.valueToCode(block, "TEXT", PythonOrder.NONE) || '""';
+    return `file_handle.write(${text})\n`;
+  };
+
+  pythonGenerator.forBlock['file_close'] = function () {
+    return `file_handle.close()\n`;
+  };
+
+  pythonGenerator.forBlock['serial_send'] = function (block, gen) {
+    const text =
+      gen.valueToCode(block, "TEXT", PythonOrder.NONE) || '""';
+    return `
+import serial
+serial.send(${text})
+`;
+  };
+
+  let currentPygalChartVar = "chart";
+  let currentPygalChartType = "Bar";
+  pythonGenerator.forBlock['pygal_bar'] = function () {
+    currentPygalChartVar = "bar_chart";
+    currentPygalChartType = "Bar";
+    return `${currentPygalChartVar} = pygal.Bar()\n`;
+  };
+
+  pythonGenerator.forBlock['pygal_hbar'] = function () {
+    currentPygalChartVar = "bar_chart";
+    currentPygalChartType = "HorizontalBar";
+    return `${currentPygalChartVar} = pygal.HorizontalBar()\n`;
+  };
+
+  pythonGenerator.forBlock['pygal_line'] = function () {
+    currentPygalChartVar = "line_chart";
+    currentPygalChartType = "Line";
+    return `${currentPygalChartVar} = pygal.Line()\n`;
+  };
+
+  pythonGenerator.forBlock['pygal_pie'] = function () {
+    currentPygalChartVar = "pie_chart";
+    currentPygalChartType = "Pie";
+    return `${currentPygalChartVar} = pygal.Pie()\n`;
+  };
+
+  pythonGenerator.forBlock['pygal_radar'] = function () {
+    currentPygalChartVar = "radar_chart";
+    currentPygalChartType = "Radar";
+    return `${currentPygalChartVar} = pygal.Radar()\n`;
+  };
+
+  pythonGenerator.forBlock['pygal_stacked_bar'] = function () {
+    currentPygalChartVar = "stacked_bar_chart";
+    currentPygalChartType = "StackedBar";
+    return `${currentPygalChartVar} = pygal.StackedBar()\n`;
+  };
+
+  pythonGenerator.forBlock['pygal_stacked_line'] = function () {
+    currentPygalChartVar = "stacked_line_chart";
+    currentPygalChartType = "StackedLine";
+    return `${currentPygalChartVar} = pygal.StackedLine()\n`;
+  };
+
+  pythonGenerator.forBlock['pygal_xy'] = function () {
+    currentPygalChartVar = "xy_chart";
+    currentPygalChartType = "XY";
+    return `${currentPygalChartVar} = pygal.XY()\n`;
+  };
+  pythonGenerator.forBlock['pygal_add'] = function (block, gen) {
+    const label =
+      gen.valueToCode(block, "LABEL", PythonOrder.NONE) || "''";
+    const values =
+      gen.valueToCode(block, "VALUES", PythonOrder.NONE) || "[]";
+
+    return `${currentPygalChartVar}.add(${label}, ${values})\n`;
+  };
+  pythonGenerator.forBlock['pygal_title'] = function (block, gen) {
+    const title =
+      gen.valueToCode(block, "TITLE", PythonOrder.NONE) || "''";
+
+    return `${currentPygalChartVar}.title = ${title}\n`;
+  };
+  pythonGenerator.forBlock['pygal_xlabels'] = function (block, gen) {
+    const labels =
+      gen.valueToCode(block, "LABELS", PythonOrder.NONE) || "[]";
+
+    return `${currentPygalChartVar}.x_labels = ${labels}\n`;
+  };
+  pythonGenerator.forBlock['pygal_render'] = function () {
+    return `${currentPygalChartVar}.render()\n`;
+  };
+
+
+  pythonGenerator.forBlock['input_prompt'] = function (block, gen) {
+    const text =
+      gen.valueToCode(block, "TEXT", PythonOrder.NONE) || '""';
+    return [`input(${text})`, PythonOrder.ATOMIC];
+  };
+
+  pythonGenerator.forBlock['string_literal'] = function (block) {
+    const text = block.getFieldValue("VALUE");
+    return [`"${text}"`, PythonOrder.ATOMIC];
+  };
+
+  pythonGenerator.forBlock['turtle_move'] = function (block, generator) {
+    const varName = generator.nameDB_?.getName(
+      block.getFieldValue('VAR'),
+      Blockly.Names.NameType.VARIABLE
+    );
+    const distance =
+      generator.valueToCode(block, 'DISTANCE', PythonOrder.NONE) || '0';
+    const direction = block.getFieldValue('DIRECTION');
+
+    if (direction === 'BACKWARD') {
+      return `${varName}.backward(${distance})\n`;
+    }
+
+    return `${varName}.forward(${distance})\n`;
+  };
+
+  pythonGenerator.forBlock['number_literal'] = function (block) {
+    const value = parseInt(block.getFieldValue("NUM"), 10);
+    return [value.toString(), PythonOrder.ATOMIC];
+  };
+
+  pythonGenerator.forBlock['boolean_literal'] = function (block) {
+    return [block.getFieldValue("BOOL"), PythonOrder.ATOMIC];
+  };
+  pythonGenerator.forBlock['print_simple'] = function (block, gen) {
+    const value =
+      gen.valueToCode(block, "VALUE", PythonOrder.NONE) || "";
+    return `print(${value})\n`;
+  };
+
+  pythonGenerator.forBlock['print_sep'] = function (block, gen) {
+    const value =
+      gen.valueToCode(block, "VALUE", PythonOrder.NONE) || "";
+    const sep =
+      gen.valueToCode(block, "SEP", PythonOrder.NONE) || '" "';
+    return `print(${value}, sep=${sep})\n`;
+  };
+
+  pythonGenerator.forBlock['print_end'] = function (block, gen) {
+    const value =
+      gen.valueToCode(block, "VALUE", PythonOrder.NONE) || "";
+    const end =
+      gen.valueToCode(block, "END", PythonOrder.NONE) || '""';
+    return `print(${value}, end=${end})\n`;
+  };
+
+  pythonGenerator.forBlock['comment'] = function () {
+    return ""; // ignored
+  };
+
+pythonGenerator.forBlock["turtle_create"] = function (block, gen) {
+  gen.definitions_["import_turtle"] = `
+import turtle
+_screen = turtle.Screen()
+`;
+
+  const t = gen.nameDB_.getName(
+    block.getFieldValue("VAR"),
+    Blockly.Names.NameType.VARIABLE
+  );
+
+  return `${t} = turtle.Turtle()\n`;
+};
+
+pythonGenerator.forBlock['turtle_forward'] = function (block, generator) {
+  const varName = generator.nameDB_.getName(
+    block.getFieldValue('VAR'),
+    Blockly.Names.NameType.VARIABLE
+  );
+  const distance =
+    generator.valueToCode(block, 'DISTANCE', PythonOrder.ATOMIC) || '0';
+
+  return `${varName}.forward(${distance})\n`;
+};
+
+  pythonGenerator.forBlock['turtle_right'] = function (block, generator) {
+    const varName = generator.nameDB_.getName(block.getFieldValue('VAR'), Blockly.Names.NameType.VARIABLE);
+    const angle = generator.valueToCode(block, 'ANGLE', PythonOrder.ATOMIC) || '0';
+    const code = `${varName}.right(${angle})\n`;
+    return code;
+  };
+
+  pythonGenerator.forBlock['turtle_left'] = function (block, generator) {
+    const varName = generator.nameDB_.getName(block.getFieldValue('VAR'), Blockly.Names.NameType.VARIABLE);
+    const angle = generator.valueToCode(block, 'ANGLE', PythonOrder.ATOMIC) || '0';
+    const code = `${varName}.left(${angle})\n`;
+    return code;
+  };
+
   /* =========================
      CONVERSION GENERATORS
   ========================= */
 
-  pythonGenerator.forBlock['convert_to_int'] = function (block, gen) {
-    const value =
-      gen.valueToCode(block, 'VALUE', gen.ORDER_NONE) || '0';
-    return [`int(${value})`, gen.ORDER_ATOMIC];
-  };
+pythonGenerator.forBlock['convert_to_int'] = function (block, generator) {
+  const value =
+    generator.valueToCode(block, 'VALUE', pythonGenerator.ORDER_FUNCTION_CALL) || '0';
 
-  pythonGenerator.forBlock['convert_to_float'] = function (block, gen) {
-    const value =
-      gen.valueToCode(block, 'VALUE', gen.ORDER_NONE) || '0';
-    return [`float(${value})`, gen.ORDER_ATOMIC];
-  };
+  const code = `int(${value})`;
+  return [code, pythonGenerator.ORDER_FUNCTION_CALL];
+};
 
-  pythonGenerator.forBlock['convert_to_string'] = function (block, gen) {
-    const value =
-      gen.valueToCode(block, 'VALUE', gen.ORDER_NONE) || '""';
-    return [`str(${value})`, gen.ORDER_ATOMIC];
-  };
+ pythonGenerator.forBlock['convert_to_float'] = function (block, generator) {
+  const value =
+    generator.valueToCode(block, 'VALUE', pythonGenerator.ORDER_FUNCTION_CALL) || '0';
+  return [`float(${value})`, pythonGenerator.ORDER_FUNCTION_CALL];
+};
 
-  pythonGenerator.forBlock['convert_to_bool'] = function (block, gen) {
-    const value =
-      gen.valueToCode(block, 'VALUE', gen.ORDER_NONE) || 'False';
-    return [`bool(${value})`, gen.ORDER_ATOMIC];
-  };
+pythonGenerator.forBlock['convert_to_string'] = function (block, generator) {
+  const value =
+    generator.valueToCode(block, 'VALUE', pythonGenerator.ORDER_FUNCTION_CALL) || '""';
+  return [`str(${value})`, pythonGenerator.ORDER_FUNCTION_CALL];
+};
+
+pythonGenerator.forBlock['convert_to_bool'] = function (block, generator) {
+  const value =
+    generator.valueToCode(block, 'VALUE', pythonGenerator.ORDER_FUNCTION_CALL) || 'False';
+  return [`bool(${value})`, pythonGenerator.ORDER_FUNCTION_CALL];
+};
 
   pythonGenerator.forBlock['convert_upper_case'] = function (block, gen) {
     const value =
@@ -3199,14 +3448,14 @@ serial.send(${text})
     return [`${value}.lower()`, gen.ORDER_MEMBER];
   };
 
-  pythonGenerator.forBlock['turtle_bgcolor'] = function (block, generator) {
-    const color = block.getFieldValue('COLOR');
-    const code = `_s.bgcolor('${color}')\n`;
-    return code;
-  };
+pythonGenerator.forBlock["turtle_bgcolor"] = function (block, gen) {
+  const c = gen.valueToCode(block, "COLOR", PythonOrder.NONE) || '"#ffffff"';
+  return `_screen.bgcolor(${c})\n`;
+};
+
 
   pythonGenerator.forBlock['controls_repeat'] = function (block, generator) {
-    const times = generator.valueToCode(block, 'TIMES', pythonGenerator.ORDER_ATOMIC) || '0';
+    const times = generator.valueToCode(block, 'TIMES', PythonOrder.ATOMIC) || '0';
     let branch = generator.statementToCode(block, 'DO');
     branch = generator.addLoopTrap(branch, block.id) || generator.PASS;
     const code = `for __count in range(int(${times})):\n${branch}`;
@@ -3217,7 +3466,7 @@ serial.send(${text})
   pythonGenerator.forBlock['math_number'] = function (block, generator) {
     const num = block.getFieldValue('NUM');
     const code = num;
-    return [code, pythonGenerator.ORDER_ATOMIC];
+    return [code, PythonOrder.ATOMIC];
   };
 
   pythonGenerator.forBlock['math_arithmetic'] = function (block, generator) {
@@ -3233,38 +3482,44 @@ serial.send(${text})
       'POWER': [arg0 + ' ** ' + arg1, pythonGenerator.ORDER_EXPONENTIATION]
     };
 
-    return operations[operator] || [arg0, pythonGenerator.ORDER_ATOMIC];
+    return operations[operator] || [arg0, PythonOrder.ATOMIC];
   };
 
   // Variable blocks (these are built-in Blockly blocks)
   pythonGenerator.forBlock['variables_get'] = function (block, generator) {
     const varName = generator.nameDB_.getName(block.getFieldValue('VAR'), Blockly.Names.NameType.VARIABLE);
-    return [varName, pythonGenerator.ORDER_ATOMIC];
+    return [varName, PythonOrder.ATOMIC];
   };
 
   pythonGenerator.forBlock['variables_set'] = function (block, generator) {
-    const varName = generator.nameDB_.getName(block.getFieldValue('VAR'), Blockly.Names.NameType.VARIABLE);
-    const arg0 = generator.valueToCode(block, 'VALUE', pythonGenerator.ORDER_ATOMIC) || '0';
-    const code = `print(f"[DEBUG] Setting variable ${varName} = {${arg0}}")\n${varName} = ${arg0}\nprint("[DEBUG] Variable set")\n`;
-    return code;
+    const varName = generator.nameDB_.getName(
+      block.getFieldValue('VAR'),
+      Blockly.Names.NameType.VARIABLE
+    );
+
+    const arg0 =
+      generator.valueToCode(block, 'VALUE', PythonOrder.NONE) || 'None';
+
+    return `${varName} = ${arg0}\n`;
   };
+
 
   // Input blocks
   pythonGenerator.forBlock['text'] = function (block, generator) {
     const text = block.getFieldValue('TEXT');
     const code = `"${text}"`;
-    return [code, pythonGenerator.ORDER_ATOMIC];
+    return [code, PythonOrder.ATOMIC];
   };
 
   pythonGenerator.forBlock['input_prompt'] = function (block, generator) {
-    const prompt = generator.valueToCode(block, 'PROMPT', pythonGenerator.ORDER_ATOMIC) || '""';
+    const prompt = generator.valueToCode(block, 'PROMPT', PythonOrder.ATOMIC) || '""';
     const code = `input(${prompt})`;
-    return [code, pythonGenerator.ORDER_ATOMIC];
+    return [code, PythonOrder.ATOMIC];
   };
 
   // Output blocks
   pythonGenerator.forBlock['output_print'] = function (block, generator) {
-    const text = generator.valueToCode(block, 'TEXT', pythonGenerator.ORDER_ATOMIC) || '""';
+    const text = generator.valueToCode(block, 'TEXT', PythonOrder.ATOMIC) || '""';
     const code = `print(${text})\n`;
     return code;
   };
@@ -3290,7 +3545,7 @@ serial.send(${text})
   };
 
   pythonGenerator.forBlock['output_print_item'] = function (block, generator) {
-    const value = generator.valueToCode(block, 'VALUE', pythonGenerator.ORDER_ATOMIC) || '""';
+    const value = generator.valueToCode(block, 'VALUE', PythonOrder.ATOMIC) || '""';
     const code = `__print_items.append(${value})\n`;
     return code;
   };
@@ -3299,25 +3554,25 @@ serial.send(${text})
   pythonGenerator.forBlock['text_input'] = function (block, generator) {
     const text = block.getFieldValue('TEXT');
     const code = `"${text.replace(/"/g, '\\"')}"`;
-    return [code, pythonGenerator.ORDER_ATOMIC];
+    return [code, PythonOrder.ATOMIC];
   };
 
   // Boolean generators
   pythonGenerator.forBlock['logic_true'] = function (block, generator) {
-    return ['True', pythonGenerator.ORDER_ATOMIC];
+    return ['True', PythonOrder.ATOMIC];
   };
 
   pythonGenerator.forBlock['logic_false'] = function (block, generator) {
-    return ['False', pythonGenerator.ORDER_ATOMIC];
+    return ['False', PythonOrder.ATOMIC];
   };
 
   pythonGenerator.forBlock['logic_null'] = function (block, generator) {
-    return ['None', pythonGenerator.ORDER_ATOMIC];
+    return ['None', PythonOrder.ATOMIC];
   };
 
   // Logic generators
   pythonGenerator.forBlock['logic_if'] = function (block, generator) {
-    const condition = generator.valueToCode(block, 'IF0', pythonGenerator.ORDER_ATOMIC) || 'True';
+    const condition = generator.valueToCode(block, 'IF0', PythonOrder.ATOMIC) || 'True';
     let statements = generator.statementToCode(block, 'DO0');
     const code = `if ${condition}:\n${statements}`;
     return code;
@@ -3380,7 +3635,7 @@ serial.send(${text})
   pythonGenerator.forBlock['procedures_defreturn'] = function (block, generator) {
     const funcName = block.getFieldValue('NAME');
     let branch = generator.statementToCode(block, 'STACK');
-    const returnVal = generator.valueToCode(block, 'RETURN', pythonGenerator.ORDER_ATOMIC) || 'None';
+    const returnVal = generator.valueToCode(block, 'RETURN', PythonOrder.ATOMIC) || 'None';
     if (!branch) {
       branch = '    pass\n';
     }
@@ -3389,76 +3644,53 @@ serial.send(${text})
   };
 
   pythonGenerator.forBlock['procedures_return'] = function (block, generator) {
-    const value = generator.valueToCode(block, 'VALUE', pythonGenerator.ORDER_ATOMIC) || 'None';
+    const value = generator.valueToCode(block, 'VALUE', PythonOrder.ATOMIC) || 'None';
     const code = `return ${value}\n`;
     return code;
   };
 
   pythonGenerator.forBlock['procedures_ifreturn'] = function (block, generator) {
-    const condition = generator.valueToCode(block, 'CONDITION', pythonGenerator.ORDER_ATOMIC) || 'True';
-    const value = generator.valueToCode(block, 'VALUE', pythonGenerator.ORDER_ATOMIC) || 'None';
+    const condition = generator.valueToCode(block, 'CONDITION', PythonOrder.ATOMIC) || 'True';
+    const value = generator.valueToCode(block, 'VALUE', PythonOrder.ATOMIC) || 'None';
     const code = `if ${condition}:\n    return ${value}\n`;
     return code;
   };
 
   // Tuple generators
   pythonGenerator.forBlock['tuples_create'] = function (block, generator) {
-    const item1 = generator.valueToCode(block, 'ITEM1', pythonGenerator.ORDER_ATOMIC) || 'None';
+    const item1 = generator.valueToCode(block, 'ITEM1', PythonOrder.ATOMIC) || 'None';
     const code = `(${item1},)`;
-    return [code, pythonGenerator.ORDER_ATOMIC];
+    return [code, PythonOrder.ATOMIC];
   };
 
   pythonGenerator.forBlock['tuples_get_item'] = function (block, generator) {
-    const index = generator.valueToCode(block, 'INDEX', pythonGenerator.ORDER_ATOMIC) || '0';
-    const tuple = generator.valueToCode(block, 'TUPLE', pythonGenerator.ORDER_ATOMIC) || '()';
+    const index = generator.valueToCode(block, 'INDEX', PythonOrder.ATOMIC) || '0';
+    const tuple = generator.valueToCode(block, 'TUPLE', PythonOrder.ATOMIC) || '()';
     const code = `${tuple}[${index}]`;
     return [code, pythonGenerator.ORDER_MEMBER];
   };
 
   pythonGenerator.forBlock['tuples_count'] = function (block, generator) {
-    const element = generator.valueToCode(block, 'ELEMENT', pythonGenerator.ORDER_ATOMIC) || 'None';
-    const tuple = generator.valueToCode(block, 'TUPLE', pythonGenerator.ORDER_ATOMIC) || '()';
+    const element = generator.valueToCode(block, 'ELEMENT', PythonOrder.ATOMIC) || 'None';
+    const tuple = generator.valueToCode(block, 'TUPLE', PythonOrder.ATOMIC) || '()';
     const code = `${tuple}.count(${element})`;
     return [code, pythonGenerator.ORDER_MEMBER];
   };
 
   pythonGenerator.forBlock['tuples_position'] = function (block, generator) {
-    const element = generator.valueToCode(block, 'ELEMENT', pythonGenerator.ORDER_ATOMIC) || 'None';
-    const tuple = generator.valueToCode(block, 'TUPLE', pythonGenerator.ORDER_ATOMIC) || '()';
+    const element = generator.valueToCode(block, 'ELEMENT', PythonOrder.ATOMIC) || 'None';
+    const tuple = generator.valueToCode(block, 'TUPLE', PythonOrder.ATOMIC) || '()';
     const code = `${tuple}.index(${element})`;
     return [code, pythonGenerator.ORDER_MEMBER];
   };
 
   pythonGenerator.forBlock['tuples_length'] = function (block, generator) {
-    const tuple = generator.valueToCode(block, 'TUPLE', pythonGenerator.ORDER_ATOMIC) || '()';
+    const tuple = generator.valueToCode(block, 'TUPLE', PythonOrder.ATOMIC) || '()';
     const code = `len(${tuple})`;
     return [code, pythonGenerator.ORDER_MEMBER];
   };
 
   // Conversion generators
-  pythonGenerator.forBlock['convert_to_int'] = function (block, generator) {
-    const value = generator.valueToCode(block, 'VALUE', pythonGenerator.ORDER_UNARY_POSTFIX) || '0';
-    const code = `int(${value})`;
-    return [code, pythonGenerator.ORDER_UNARY_POSTFIX];
-  };
-
-  pythonGenerator.forBlock['convert_to_float'] = function (block, generator) {
-    const value = generator.valueToCode(block, 'VALUE', pythonGenerator.ORDER_UNARY_POSTFIX) || '0';
-    const code = `float(${value})`;
-    return [code, pythonGenerator.ORDER_UNARY_POSTFIX];
-  };
-
-  pythonGenerator.forBlock['convert_to_string'] = function (block, generator) {
-    const value = generator.valueToCode(block, 'VALUE', pythonGenerator.ORDER_UNARY_POSTFIX) || '""';
-    const code = `str(${value})`;
-    return [code, pythonGenerator.ORDER_UNARY_POSTFIX];
-  };
-
-  pythonGenerator.forBlock['convert_to_bool'] = function (block, generator) {
-    const value = generator.valueToCode(block, 'VALUE', pythonGenerator.ORDER_UNARY_POSTFIX) || 'True';
-    const code = `bool(${value})`;
-    return [code, pythonGenerator.ORDER_UNARY_POSTFIX];
-  };
 
   pythonGenerator.forBlock['convert_upper_case'] = function (block, generator) {
     const value = generator.valueToCode(block, 'VALUE', pythonGenerator.ORDER_MEMBER) || '""';
@@ -3474,7 +3706,7 @@ serial.send(${text})
 
   // Loops: Repeat while
   pythonGenerator.forBlock['controls_repeat_while'] = function (block, generator) {
-    const condition = generator.valueToCode(block, 'CONDITION', pythonGenerator.ORDER_NONE) || 'False';
+    const condition = generator.valueToCode(block, 'CONDITION', PythonOrder.NONE) || 'False';
     const body = generator.statementToCode(block, 'DO');
     const code = `while ${condition}:\n${body}`;
     return code;
@@ -3483,9 +3715,9 @@ serial.send(${text})
   // Loops: For (count with from/to)
   pythonGenerator.forBlock['controls_for'] = function (block, generator) {
     const varName = generator.nameDB_.getName(block.getFieldValue('VAR'), Blockly.Names.NameType.VARIABLE);
-    const start = generator.valueToCode(block, 'FROM', pythonGenerator.ORDER_NONE) || '0';
-    const end = generator.valueToCode(block, 'TO', pythonGenerator.ORDER_NONE) || '10';
-    const by = generator.valueToCode(block, 'BY', pythonGenerator.ORDER_NONE) || '1';
+    const start = generator.valueToCode(block, 'FROM', PythonOrder.NONE) || '0';
+    const end = generator.valueToCode(block, 'TO', PythonOrder.NONE) || '10';
+    const by = generator.valueToCode(block, 'BY', PythonOrder.NONE) || '1';
     const body = generator.statementToCode(block, 'DO');
     const code = `for ${varName} in range(${start}, ${end}, ${by}):\n${body}`;
     return code;
@@ -3494,7 +3726,7 @@ serial.send(${text})
   // Loops: For each
   pythonGenerator.forBlock['controls_forEach'] = function (block, generator) {
     const varName = generator.nameDB_.getName(block.getFieldValue('VAR'), Blockly.Names.NameType.VARIABLE);
-    const list = generator.valueToCode(block, 'LIST', pythonGenerator.ORDER_NONE) || '[]';
+    const list = generator.valueToCode(block, 'LIST', PythonOrder.NONE) || '[]';
     const body = generator.statementToCode(block, 'DO');
     const code = `for ${varName} in ${list}:\n${body}`;
     return code;
@@ -3507,15 +3739,15 @@ serial.send(${text})
 
   // Math: Range
   pythonGenerator.forBlock['math_range'] = function (block, generator) {
-    return ['range(10)', pythonGenerator.ORDER_ATOMIC];
+    return ['range(10)', PythonOrder.ATOMIC];
   };
 
   // Math: Range with to
   pythonGenerator.forBlock['math_range_to'] = function (block, generator) {
-    const start = generator.valueToCode(block, 'START', pythonGenerator.ORDER_NONE) || '0';
-    const end = generator.valueToCode(block, 'END', pythonGenerator.ORDER_NONE) || '10';
+    const start = generator.valueToCode(block, 'START', PythonOrder.NONE) || '0';
+    const end = generator.valueToCode(block, 'END', PythonOrder.NONE) || '10';
     const code = `range(${start}, ${end})`;
-    return [code, pythonGenerator.ORDER_ATOMIC];
+    return [code, PythonOrder.ATOMIC];
   };
 
   // Math: Square root
@@ -3561,26 +3793,35 @@ serial.send(${text})
 
   // Math: Random integer
   pythonGenerator.forBlock['math_random_int'] = function (block, generator) {
-    const from = generator.valueToCode(block, 'FROM', pythonGenerator.ORDER_NONE) || '1';
-    const to = generator.valueToCode(block, 'TO', pythonGenerator.ORDER_NONE) || '100';
+    // Ensure import is added once at top
+    generator.definitions_['import_random'] = 'import random';
+
+    const from =
+      generator.valueToCode(block, 'FROM', PythonOrder.NONE) || '1';
+    const to =
+      generator.valueToCode(block, 'TO', PythonOrder.NONE) || '100';
+
     const code = `random.randint(${from}, ${to})`;
-    return [code, pythonGenerator.ORDER_MEMBER];
+    return [code, pythonGenerator.ORDER_FUNCTION_CALL];
   };
 
   // Math: Random fraction
   pythonGenerator.forBlock['math_random_fraction'] = function (block, generator) {
-    return ['random.random()', pythonGenerator.ORDER_MEMBER];
+    // ✅ ensure import added once
+    generator.definitions_['import_random'] = 'import random';
+
+    return ['random.random()', pythonGenerator.ORDER_FUNCTION_CALL];
   };
 
   // Lists: Create list
   pythonGenerator.forBlock['lists_create_with'] = function (block, generator) {
     const code = `[]`;
-    return [code, pythonGenerator.ORDER_ATOMIC];
+    return [code, PythonOrder.ATOMIC];
   };
 
   // Lists: Get item
   pythonGenerator.forBlock['lists_getIndex'] = function (block, generator) {
-    const index = generator.valueToCode(block, 'INDEX', pythonGenerator.ORDER_NONE) || '0';
+    const index = generator.valueToCode(block, 'INDEX', PythonOrder.NONE) || '0';
     const list = generator.valueToCode(block, 'LIST', pythonGenerator.ORDER_MEMBER) || '[]';
     const code = `${list}[${index}]`;
     return [code, pythonGenerator.ORDER_MEMBER];
@@ -3589,7 +3830,7 @@ serial.send(${text})
   // Lists: Append item
   pythonGenerator.forBlock['lists_append'] = function (block, generator) {
     const list = generator.valueToCode(block, 'LIST', pythonGenerator.ORDER_MEMBER) || '[]';
-    const item = generator.valueToCode(block, 'ITEM', pythonGenerator.ORDER_NONE) || 'None';
+    const item = generator.valueToCode(block, 'ITEM', PythonOrder.NONE) || 'None';
     const code = `${list}.append(${item})\n`;
     return code;
   };
@@ -3597,7 +3838,7 @@ serial.send(${text})
   // Lists: Remove item
   pythonGenerator.forBlock['lists_remove_item'] = function (block, generator) {
     const list = generator.valueToCode(block, 'LIST', pythonGenerator.ORDER_MEMBER) || '[]';
-    const item = generator.valueToCode(block, 'ITEM', pythonGenerator.ORDER_NONE) || 'None';
+    const item = generator.valueToCode(block, 'ITEM', PythonOrder.NONE) || 'None';
     const code = `${list}.remove(${item})\n`;
     return code;
   };
@@ -3605,7 +3846,7 @@ serial.send(${text})
   // Lists: Remove at position
   pythonGenerator.forBlock['lists_remove_at'] = function (block, generator) {
     const list = generator.valueToCode(block, 'LIST', pythonGenerator.ORDER_MEMBER) || '[]';
-    const index = generator.valueToCode(block, 'INDEX', pythonGenerator.ORDER_NONE) || '0';
+    const index = generator.valueToCode(block, 'INDEX', PythonOrder.NONE) || '0';
     const code = `${list}.pop(${index})\n`;
     return code;
   };
@@ -3627,21 +3868,21 @@ serial.send(${text})
   // Lists: Insert at position
   pythonGenerator.forBlock['lists_insert_at'] = function (block, generator) {
     const list = generator.valueToCode(block, 'LIST', pythonGenerator.ORDER_MEMBER) || '[]';
-    const index = generator.valueToCode(block, 'INDEX', pythonGenerator.ORDER_NONE) || '0';
-    const item = generator.valueToCode(block, 'ITEM', pythonGenerator.ORDER_NONE) || 'None';
+    const index = generator.valueToCode(block, 'INDEX', PythonOrder.NONE) || '0';
+    const item = generator.valueToCode(block, 'ITEM', PythonOrder.NONE) || 'None';
     const code = `${list}.insert(${index}, ${item})\n`;
     return code;
   };
 
   // Sets: Create set
   pythonGenerator.forBlock['sets_create_with'] = function (block, generator) {
-    return ['set()', pythonGenerator.ORDER_ATOMIC];
+    return ['set()', PythonOrder.ATOMIC];
   };
 
   // Sets: Add item
   pythonGenerator.forBlock['sets_add_item'] = function (block, generator) {
     const set = generator.valueToCode(block, 'SET', pythonGenerator.ORDER_MEMBER) || 'set()';
-    const item = generator.valueToCode(block, 'ITEM', pythonGenerator.ORDER_NONE) || 'None';
+    const item = generator.valueToCode(block, 'ITEM', PythonOrder.NONE) || 'None';
     const code = `${set}.add(${item})\n`;
     return code;
   };
@@ -3672,16 +3913,16 @@ serial.send(${text})
 
   // Dictionaries: Create dict
   pythonGenerator.forBlock['dicts_create_with'] = function (block, generator) {
-    const key1 = generator.valueToCode(block, 'KEY1', pythonGenerator.ORDER_NONE) || '"key1"';
-    const value1 = generator.valueToCode(block, 'VALUE1', pythonGenerator.ORDER_NONE) || 'None';
+    const key1 = generator.valueToCode(block, 'KEY1', PythonOrder.NONE) || '"key1"';
+    const value1 = generator.valueToCode(block, 'VALUE1', PythonOrder.NONE) || 'None';
     const code = `{${key1}: ${value1}}`;
-    return [code, pythonGenerator.ORDER_ATOMIC];
+    return [code, PythonOrder.ATOMIC];
   };
 
   // Dictionaries: Get value by key
   pythonGenerator.forBlock['dicts_get_value'] = function (block, generator) {
     const dict = generator.valueToCode(block, 'DICT', pythonGenerator.ORDER_MEMBER) || '{}';
-    const key = generator.valueToCode(block, 'KEY', pythonGenerator.ORDER_NONE) || '"key"';
+    const key = generator.valueToCode(block, 'KEY', PythonOrder.NONE) || '"key"';
     const code = `${dict}[${key}]`;
     return [code, pythonGenerator.ORDER_MEMBER];
   };
@@ -3710,7 +3951,7 @@ serial.send(${text})
   // Motion: Backward
   pythonGenerator.forBlock['turtle_backward'] = function (block, generator) {
     const varName = generator.nameDB_.getName(block.getFieldValue('VAR'), Blockly.Names.NameType.VARIABLE);
-    const distance = generator.valueToCode(block, 'DISTANCE', pythonGenerator.ORDER_NONE) || '50';
+    const distance = generator.valueToCode(block, 'DISTANCE', PythonOrder.NONE) || '50';
     const code = `print(f"[DEBUG] Moving ${varName} backward by {${distance}}")\n${varName}.backward(${distance})\nprint("[DEBUG] Backward move complete")\n`;
     return code;
   };
@@ -3718,7 +3959,7 @@ serial.send(${text})
   // Motion: Dot
   pythonGenerator.forBlock['turtle_dot'] = function (block, generator) {
     const varName = generator.nameDB_.getName(block.getFieldValue('VAR'), Blockly.Names.NameType.VARIABLE);
-    const size = generator.valueToCode(block, 'SIZE', pythonGenerator.ORDER_NONE) || '10';
+    const size = generator.valueToCode(block, 'SIZE', PythonOrder.NONE) || '10';
     const code = `${varName}.dot(${size})\n`;
     return code;
   };
@@ -3726,7 +3967,7 @@ serial.send(${text})
   // Motion: Heading
   pythonGenerator.forBlock['turtle_heading'] = function (block, generator) {
     const varName = generator.nameDB_.getName(block.getFieldValue('VAR'), Blockly.Names.NameType.VARIABLE);
-    const angle = generator.valueToCode(block, 'ANGLE', pythonGenerator.ORDER_NONE) || '0';
+    const angle = generator.valueToCode(block, 'ANGLE', PythonOrder.NONE) || '0';
     const code = `${varName}.setheading(${angle})\n`;
     return code;
   };
@@ -3734,8 +3975,8 @@ serial.send(${text})
   // Motion: Position
   pythonGenerator.forBlock['turtle_position'] = function (block, generator) {
     const varName = generator.nameDB_.getName(block.getFieldValue('VAR'), Blockly.Names.NameType.VARIABLE);
-    const x = generator.valueToCode(block, 'X', pythonGenerator.ORDER_NONE) || '0';
-    const y = generator.valueToCode(block, 'Y', pythonGenerator.ORDER_NONE) || '0';
+    const x = generator.valueToCode(block, 'X', PythonOrder.NONE) || '0';
+    const y = generator.valueToCode(block, 'Y', PythonOrder.NONE) || '0';
     const code = `${varName}.goto(${x}, ${y})\n`;
     return code;
   };
@@ -3777,36 +4018,36 @@ serial.send(${text})
   };
 
   // Turtle: Speed
-  pythonGenerator.forBlock['turtle_speed'] = function (block, generator) {
-    const varName = generator.nameDB_.getName(block.getFieldValue('VAR'), Blockly.Names.NameType.VARIABLE);
-    const speed = generator.valueToCode(block, 'SPEED', pythonGenerator.ORDER_NONE) || '5';
-    const code = `${varName}.speed(${speed})\n`;
-    return code;
-  };
+  pythonGenerator.forBlock["turtle_speed"] = function (block, gen) {
+  const t = gen.nameDB_.getName(block.getFieldValue("VAR"), Blockly.Names.NameType.VARIABLE);
+  const s = gen.valueToCode(block, "SPEED", PythonOrder.NONE) || "5";
+  return `${t}.speed(${s})\n`;
+};
+
 
   // Turtle: Width
-  pythonGenerator.forBlock['turtle_width'] = function (block, generator) {
-    const varName = generator.nameDB_.getName(block.getFieldValue('VAR'), Blockly.Names.NameType.VARIABLE);
-    const width = generator.valueToCode(block, 'WIDTH', pythonGenerator.ORDER_NONE) || '5';
-    const code = `${varName}.pensize(${width})\n`;
-    return code;
-  };
+ pythonGenerator.forBlock["turtle_width"] = function (block, gen) {
+  const t = gen.nameDB_.getName(block.getFieldValue("VAR"), Blockly.Names.NameType.VARIABLE);
+  const w = gen.valueToCode(block, "WIDTH", PythonOrder.NONE) || "1";
+  return `${t}.width(${w})\n`;
+};
+
 
   // Turtle: Fill color
-  pythonGenerator.forBlock['turtle_fill_color'] = function (block, generator) {
-    const varName = generator.nameDB_.getName(block.getFieldValue('VAR'), Blockly.Names.NameType.VARIABLE);
-    const color = generator.valueToCode(block, 'COLOR', pythonGenerator.ORDER_NONE) || '"red"';
-    const code = `${varName}.fillcolor(${color})\n`;
-    return code;
-  };
+  pythonGenerator.forBlock["turtle_fill_color"] = function (block, gen) {
+  const t = gen.nameDB_.getName(block.getFieldValue("VAR"), Blockly.Names.NameType.VARIABLE);
+  const c = gen.valueToCode(block, "COLOR", PythonOrder.NONE) || '"#000000"';
+  return `${t}.fillcolor(${c})\n`;
+};
 
   // Turtle: Color (pen color)
-  pythonGenerator.forBlock['turtle_color'] = function (block, generator) {
-    const varName = generator.nameDB_.getName(block.getFieldValue('VAR'), Blockly.Names.NameType.VARIABLE);
-    const color = generator.valueToCode(block, 'COLOR', pythonGenerator.ORDER_NONE) || '"black"';
-    const code = `${varName}.color(${color})\n`;
-    return code;
-  };
+  pythonGenerator.forBlock["turtle_color"] =
+pythonGenerator.forBlock["turtle_pencolor"] = function (block, gen) {
+  const t = gen.nameDB_.getName(block.getFieldValue("VAR"), Blockly.Names.NameType.VARIABLE);
+  const c = gen.valueToCode(block, "COLOR", PythonOrder.NONE) || '"#000000"';
+  return `${t}.color(${c})\n`;
+};
+
 
   // Control: On key press
   pythonGenerator.forBlock['controls_onkey'] = function (block, generator) {
@@ -3829,44 +4070,44 @@ serial.send(${text})
 
   // Colors: Red
   pythonGenerator.forBlock['colour_red'] = function (block, generator) {
-    return ['"red"', pythonGenerator.ORDER_ATOMIC];
+    return ['"red"', PythonOrder.ATOMIC];
   };
 
   // Colors: Green
   pythonGenerator.forBlock['colour_green'] = function (block, generator) {
-    return ['"green"', pythonGenerator.ORDER_ATOMIC];
+    return ['"green"', PythonOrder.ATOMIC];
   };
 
   // Colors: Blue
   pythonGenerator.forBlock['colour_blue'] = function (block, generator) {
-    return ['"blue"', pythonGenerator.ORDER_ATOMIC];
+    return ['"blue"', PythonOrder.ATOMIC];
   };
 
   // Colors: Yellow
   pythonGenerator.forBlock['colour_yellow'] = function (block, generator) {
-    return ['"yellow"', pythonGenerator.ORDER_ATOMIC];
+    return ['"yellow"', PythonOrder.ATOMIC];
   };
 
   // Colors: Purple
   pythonGenerator.forBlock['colour_purple'] = function (block, generator) {
-    return ['"purple"', pythonGenerator.ORDER_ATOMIC];
+    return ['"purple"', PythonOrder.ATOMIC];
   };
 
   // Colors: Pink
   pythonGenerator.forBlock['colour_pink'] = function (block, generator) {
-    return ['"pink"', pythonGenerator.ORDER_ATOMIC];
+    return ['"pink"', PythonOrder.ATOMIC];
   };
 
   // Colors: Picker
   pythonGenerator.forBlock['colour_picker'] = function (block, generator) {
     const color = block.getFieldValue('COLOUR');
-    return [`'${color}'`, pythonGenerator.ORDER_ATOMIC];
+    return [`'${color}'`, PythonOrder.ATOMIC];
   };
 
   // Lists: First occurrence
   pythonGenerator.forBlock['lists_first_occurrence'] = function (block, generator) {
     const list = generator.valueToCode(block, 'LIST', pythonGenerator.ORDER_MEMBER) || '[]';
-    const item = generator.valueToCode(block, 'ITEM', pythonGenerator.ORDER_NONE) || 'None';
+    const item = generator.valueToCode(block, 'ITEM', PythonOrder.NONE) || 'None';
     const code = `${list}.index(${item})`;
     return [code, pythonGenerator.ORDER_MEMBER];
   };
@@ -3874,7 +4115,7 @@ serial.send(${text})
   // Lists: Count element
   pythonGenerator.forBlock['lists_count_element'] = function (block, generator) {
     const list = generator.valueToCode(block, 'LIST', pythonGenerator.ORDER_MEMBER) || '[]';
-    const item = generator.valueToCode(block, 'ITEM', pythonGenerator.ORDER_NONE) || 'None';
+    const item = generator.valueToCode(block, 'ITEM', PythonOrder.NONE) || 'None';
     const code = `${list}.count(${item})`;
     return [code, pythonGenerator.ORDER_MEMBER];
   };
@@ -3890,8 +4131,8 @@ serial.send(${text})
   // Lists: Get sub-list
   pythonGenerator.forBlock['lists_sub_list'] = function (block, generator) {
     const list = generator.valueToCode(block, 'LIST', pythonGenerator.ORDER_MEMBER) || '[]';
-    const start = generator.valueToCode(block, 'START', pythonGenerator.ORDER_NONE) || '0';
-    const end = generator.valueToCode(block, 'END', pythonGenerator.ORDER_NONE) || 'len(list)';
+    const start = generator.valueToCode(block, 'START', PythonOrder.NONE) || '0';
+    const end = generator.valueToCode(block, 'END', PythonOrder.NONE) || 'len(list)';
     const code = `${list}[${start}:${end}]`;
     return [code, pythonGenerator.ORDER_MEMBER];
   };
@@ -3961,7 +4202,7 @@ serial.send(${text})
   // Dictionaries: Remove key
   pythonGenerator.forBlock['dicts_remove_key'] = function (block, generator) {
     const dict = generator.valueToCode(block, 'DICT', pythonGenerator.ORDER_MEMBER) || '{}';
-    const key = generator.valueToCode(block, 'KEY', pythonGenerator.ORDER_NONE) || '"key"';
+    const key = generator.valueToCode(block, 'KEY', PythonOrder.NONE) || '"key"';
     const code = `del ${dict}[${key}]\n`;
     return code;
   };
@@ -3969,25 +4210,23 @@ serial.send(${text})
   // Dictionaries: Update dictionary
   pythonGenerator.forBlock['dicts_update'] = function (block, generator) {
     const dict = generator.valueToCode(block, 'DICT', pythonGenerator.ORDER_MEMBER) || '{}';
-    const key = generator.valueToCode(block, 'KEY', pythonGenerator.ORDER_NONE) || '"key"';
-    const value = generator.valueToCode(block, 'VALUE', pythonGenerator.ORDER_NONE) || 'None';
+    const key = generator.valueToCode(block, 'KEY', PythonOrder.NONE) || '"key"';
+    const value = generator.valueToCode(block, 'VALUE', PythonOrder.NONE) || 'None';
     const code = `${dict}[${key}] = ${value}\n`;
     return code;
   };
 
   // Turtle: Hide
-  pythonGenerator.forBlock['turtle_hide'] = function (block, generator) {
-    const varName = generator.nameDB_.getName(block.getFieldValue('VAR'), Blockly.Names.NameType.VARIABLE);
-    const code = `${varName}.hideturtle()\n`;
-    return code;
-  };
+ pythonGenerator.forBlock["turtle_hide"] = function (block, gen) {
+  const t = gen.nameDB_.getName(block.getFieldValue("VAR"), Blockly.Names.NameType.VARIABLE);
+  return `${t}.hideturtle()\n`;
+};
 
   // Turtle: Show
-  pythonGenerator.forBlock['turtle_show'] = function (block, generator) {
-    const varName = generator.nameDB_.getName(block.getFieldValue('VAR'), Blockly.Names.NameType.VARIABLE);
-    const code = `${varName}.showturtle()\n`;
-    return code;
-  };
+pythonGenerator.forBlock["turtle_show"] = function (block, gen) {
+  const t = gen.nameDB_.getName(block.getFieldValue("VAR"), Blockly.Names.NameType.VARIABLE);
+  return `${t}.showturtle()\n`;
+};
 
   // Control: Listen
   pythonGenerator.forBlock['controls_listen'] = function (block, generator) {
@@ -3998,7 +4237,7 @@ serial.send(${text})
   // Control: Button
   pythonGenerator.forBlock['controls_button'] = function (block, generator) {
     const direction = block.getFieldValue('DIRECTION');
-    return [`"${direction}"`, pythonGenerator.ORDER_ATOMIC];
+    return [`"${direction}"`, PythonOrder.ATOMIC];
   };
   /* =========================
    MATPLOTLIB GENERATORS
@@ -4010,27 +4249,27 @@ serial.send(${text})
 
   // plot line (Y only)
   pythonGenerator.forBlock['plot_line'] = function (block, gen) {
-    const y = gen.valueToCode(block, "Y", gen.ORDER_NONE) || "[]";
+    const y = gen.valueToCode(block, "Y", PythonOrder.NONE) || "[]";
     return `plt.plot(${y}, ${y})\n`;
   };
 
   // plot X vs Y
   pythonGenerator.forBlock['plot_xs_ys'] = function (block, gen) {
-    const x = gen.valueToCode(block, "X", gen.ORDER_NONE) || "[]";
-    const y = gen.valueToCode(block, "Y", gen.ORDER_NONE) || "[]";
+    const x = gen.valueToCode(block, "X", PythonOrder.NONE) || "[]";
+    const y = gen.valueToCode(block, "Y", PythonOrder.NONE) || "[]";
     return `plt.plot(${x}, ${y})\n`;
   };
 
   // scatter
   pythonGenerator.forBlock['plot_scatter'] = function (block, gen) {
-    const x = gen.valueToCode(block, "X", gen.ORDER_NONE) || "[]";
-    const y = gen.valueToCode(block, "Y", gen.ORDER_NONE) || "[]";
+    const x = gen.valueToCode(block, "X", PythonOrder.NONE) || "[]";
+    const y = gen.valueToCode(block, "Y", PythonOrder.NONE) || "[]";
     return `plt.scatter(${x}, ${y})\n`;
   };
 
   // histogram
   pythonGenerator.forBlock['plot_histogram'] = function (block, gen) {
-    const d = gen.valueToCode(block, "DATA", gen.ORDER_NONE) || "[]";
+    const d = gen.valueToCode(block, "DATA", PythonOrder.NONE) || "[]";
     return `plt.hist(${d})\n`;
   };
 
@@ -4041,43 +4280,214 @@ serial.send(${text})
 
   // title
   pythonGenerator.forBlock['plot_title'] = function (block, gen) {
-    const t = gen.valueToCode(block, "TITLE", gen.ORDER_NONE) || "''";
+    const t = gen.valueToCode(block, "TITLE", PythonOrder.NONE) || "''";
     return `plt.title(${t})\n`;
   };
 
   // labels
   pythonGenerator.forBlock['plot_xlabel'] = function (block, gen) {
-    const l = gen.valueToCode(block, "LABEL", gen.ORDER_NONE) || "''";
+    const l = gen.valueToCode(block, "LABEL", PythonOrder.NONE) || "''";
     return `plt.xlabel(${l})\n`;
   };
 
   pythonGenerator.forBlock['plot_ylabel'] = function (block, gen) {
-    const l = gen.valueToCode(block, "LABEL", gen.ORDER_NONE) || "''";
+    const l = gen.valueToCode(block, "LABEL", PythonOrder.NONE) || "''";
     return `plt.ylabel(${l})\n`;
   };
 
 };
 
-
 function AICodingPage() {
   const fileInputRef = useRef(null);
   const blocklyDiv = useRef(null);
   const canvasContainerRef = useRef(null);
-  const workspaceRef = useRef(null);
   const [code, setCode] = useState('');
   const [view, setView] = useState('blocks');
   const [output, setOutput] = useState('');
-  let fingerCameraInstance = null;
-  let fingerInterval = null;
-  let fingerDelaySeconds = 1;
-  let fingerLoopLimit = 30; // default
-  let fingerLoopCounter = 0;
-  let fingerResultsArray = [];
-  let fingerCollected = [];
-  let fingerLoopCurrent = 0;
-  let handsInstance = null;
-  let cameraInstance = null;
-  let isDetectionRunning = false;
+  const [debugLogs, setDebugLogs] = useState<string[]>([]);
+  const [showDebug, setShowDebug] = useState(true);
+  const searchParams = useSearchParams()
+
+  const projectId = searchParams?.get("projectId")
+  const activityId = searchParams?.get("activityId")
+  const [workspaceReady, setWorkspaceReady] = useState(false);
+
+  const mode = projectId
+    ? "PROJECT"
+    : activityId
+      ? "ACTIVITY"
+      : "INVALID"
+
+
+  const workspaceRef = useRef<Blockly.WorkspaceSvg | null>(null)
+
+  // hidden input
+  function debugLog(message: string, data?: any) {
+    const timestamp = new Date().toLocaleTimeString();
+    const logMessage = `[${timestamp}] ${message}`;
+    console.log(logMessage, data || '');
+    setDebugLogs(prev => [...prev.slice(-20), logMessage + (data ? ` ${JSON.stringify(data)}` : '')]);
+  }
+
+  function appendOutput(text: string) {
+    setOutput(prev => prev + text + "\n")
+  }
+
+  useEffect(() => {
+    if (!workspaceReady) {
+      debugLog("⏳ Waiting for workspaceReady");
+      return;
+    }
+
+    const workspace = workspaceRef.current;
+    if (!workspace) {
+      debugLog("❌ workspaceReady but workspace missing");
+      return;
+    }
+
+    if (mode === "ACTIVITY" && activityId) {
+      debugLog(`📦 Loading blocks for activity ${activityId}`);
+      fetch(`/api/tutorials/activity/${activityId}/blocks`)
+        .then(res => res.json())
+        .then(loadBlocksIntoWorkspace)
+        .catch(console.error);
+    }
+
+    if (mode === "PROJECT" && projectId) {
+      debugLog(`📦 Loading blocks for project ${projectId}`);
+      fetch(`/api/project/${projectId}/blocks`)
+        .then(res => res.json())
+        .then(loadBlocksIntoWorkspace)
+        .catch(console.error);
+    }
+  }, [workspaceReady, mode, activityId, projectId]);
+
+//   async function executeBlock(block: Blockly.Block) {
+//     const variables = variablesRef.current
+
+//     /* ==========================
+//        SET VARIABLE
+//     ========================== */
+//     if (block.type === "variables_set") {
+//       const varId = block.getFieldValue("VAR")
+//       const variable = block.workspace.getVariableById(varId)
+//       const varName = variable?.name ?? varId
+
+//       const valueBlock = block.getInputTargetBlock("VALUE")
+//       let value: any = null
+
+//       if (valueBlock?.type === "text") {
+//         value = valueBlock.getFieldValue("TEXT")
+//       }
+
+//       if (valueBlock?.type === "input_prompt") {
+//         value = await showInputPrompt(
+//           valueBlock.getFieldValue("TEXT")
+//         )
+//       }
+
+//       variables[varName] = value
+//       appendConsole(`[DEBUG] ${varName} = ${value}`)
+//     }
+
+//     /* ==========================
+//        PRINT
+//     ========================== */
+//     if (block.type === "text_print") {
+//       const valueBlock = block.getInputTargetBlock("TEXT")
+
+//       if (valueBlock?.type === "variables_get") {
+//         const varId = valueBlock.getFieldValue("VAR")
+//         const variable = block.workspace.getVariableById(varId)
+//         const varName = variable?.name ?? varId
+
+//         appendOutput(String(variables[varName] ?? ""))
+//       }
+//     }
+//     /* ==========================
+//    CREATE TURTLE
+// ========================== */
+//     if (block.type === "turtle_create") {
+//       const varId = block.getFieldValue("VAR");
+//       const variable = block.workspace.getVariableById(varId);
+//       const varName = variable?.name ?? varId;
+
+//       // create canvas turtle
+//       if (!turtleEngineRef.current) {
+//         turtleEngineRef.current = createTurtle("turtleCanvas");
+//         turtleEngineRef.current.reset();
+//       }
+
+//       // store reference in variables
+//       variables[varName] = turtleEngineRef.current;
+
+//       appendConsole(`[DEBUG] created turtle '${varName}'`);
+//     }
+
+//     /* ==========================
+//        TURTLE BACKGROUND COLOR
+//     ========================== */
+//     if (block.type === "turtle_bgcolor") {
+//       const color = block.getFieldValue("COLOR");
+
+//       turtleEngineRef.current?.bgcolor(color);
+
+//       appendConsole(`[DEBUG] set background color ${color}`);
+//     }
+//     /* ==========================
+//        TURTLE FILL COLOR
+//     ========================== */
+//     if (block.type === "turtle_color") {
+//       const varId = block.getFieldValue("VAR");
+//       const variable = block.workspace.getVariableById(varId);
+//       const varName = variable?.name ?? varId;
+
+//       const color = block.getFieldValue("COLOR");
+
+//       variables[varName]?.fillcolor(color);
+
+//       appendConsole(`[DEBUG] ${varName}.fillcolor(${color})`);
+//     }
+//     /* ==========================
+//        TURTLE DOT
+//     ========================== */
+//     if (block.type === "turtle_dot") {
+//       const varId = block.getFieldValue("VAR");
+//       const variable = block.workspace.getVariableById(varId);
+//       const varName = variable?.name ?? varId;
+
+//       const radiusBlock = block.getInputTargetBlock("RADIUS");
+//       let radius = 10;
+
+//       if (radiusBlock?.type === "math_number") {
+//         radius = Number(radiusBlock.getFieldValue("NUM"));
+//       }
+
+//       variables[varName]?.dot(radius);
+
+//       appendConsole(`[DEBUG] ${varName}.dot(${radius})`);
+//     }
+
+
+//     /* ==========================
+//        NEXT BLOCK
+//     ========================== */
+//     const next = block.getNextBlock()
+//     if (next) {
+//       await executeBlock(next)
+//     }
+//   }
+
+  // async function runWorkspace(workspace: Blockly.Workspace) {
+  //   variablesRef.current = {};
+  //   turtleEngineRef.current = null; // 🔴 IMPORTANT
+
+  //   const topBlocks = workspace.getTopBlocks(true);
+
+  //   for (const block of topBlocks) {
+  //     await executeBlock(block);
+  //   }
+  // }
 
   function getCanvasTextOutput() {
     let pre = canvasContainerRef.current.querySelector(".canvas-text-output");
@@ -4098,143 +4508,6 @@ function AICodingPage() {
     return pre;
   }
 
-  useEffect(() => {
-    const loadModels = async () => {
-      try {
-        const MODEL_URL = "/models";
-
-        await Promise.all([
-          faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
-          faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
-          faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL),
-          faceapi.nets.faceExpressionNet.loadFromUri(MODEL_URL),
-          faceapi.nets.ageGenderNet.loadFromUri(MODEL_URL),
-        ]);
-
-        console.log("Models loaded");
-        setFaceApiLoaded(true);
-      } catch (err) {
-        console.error("Model loading error:", err);
-        setFaceApiError(err.message);
-      }
-    };
-
-    loadModels();
-  }, []);
-
-  const initFaceApi = useRef(false);
-  const [faceApiLoaded, setFaceApiLoaded] = useState(false);
-  const [faceApiError, setFaceApiError] = useState('');
-
-  useEffect(() => {
-    if (initFaceApi.current) return;
-    initFaceApi.current = true;
-
-    const loadFaceApi = async () => {
-      try {
-        console.log('[FaceAPI] Library loaded, loading models...');
-        setOutput((prev) => prev + '⏳ Loading face detection models...\n');
-
-        // Use local models from /public/models directory
-        const MODEL_URL = '/models';
-
-        await Promise.all([
-          faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
-          faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
-          faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL),
-          faceapi.nets.faceExpressionNet.loadFromUri(MODEL_URL),
-          faceapi.nets.ageGenderNet.loadFromUri(MODEL_URL),
-        ]);
-
-        console.log('[FaceAPI] All models loaded successfully');
-        setFaceApiLoaded(true);
-        setFaceApiError('');
-        setOutput((prev) => prev + '✅ Face detection models loaded!\n');
-      } catch (err) {
-        console.error('[FaceAPI] Failed to load:', err);
-        setFaceApiError(err.message);
-        setFaceApiLoaded(false);
-        setOutput((prev) => prev + `❌ Error loading face-api.js: ${err.message}\n`);
-      }
-    };
-
-    loadFaceApi();
-  }, []);
-  const processFacialDetection = async (imgElement) => {
-    if (!faceApiLoaded) {
-      console.error('[FaceAPI] Models not loaded yet');
-      setOutput((prev) => prev + '❌ Error: Face detection models not loaded. Please wait...\n');
-      return { detections: [], counts: {}, ages: [] };
-    }
-
-    try {
-      const detections = await faceapi
-        .detectAllFaces(imgElement, new faceapi.TinyFaceDetectorOptions())
-        .withFaceLandmarks()
-        .withFaceExpressions()
-        .withAgeAndGender();
-
-      console.log(`[FaceAPI] Detected ${detections.length} faces`);
-
-      const counts = {
-        face: detections.length,
-        eye: 0,
-        nose: 0,
-        smile: 0,
-        male: 0,
-        female: 0,
-        happy: 0,
-        sad: 0,
-        angry: 0,
-        fearful: 0,
-        surprised: 0,
-        disgusted: 0,
-        neutral: 0
-      };
-
-      const ages = [];
-
-      detections.forEach((detection) => {
-        // Count features
-        if (detection.landmarks) {
-          const leftEye = detection.landmarks.getLeftEye();
-          const rightEye = detection.landmarks.getRightEye();
-          const nose = detection.landmarks.getNose();
-          const mouth = detection.landmarks.getMouth();
-
-          if (leftEye.length > 0) counts.eye++;
-          if (rightEye.length > 0) counts.eye++;
-          if (nose.length > 0) counts.nose++;
-          if (mouth.length > 0) counts.smile++;
-        }
-
-        // Count gender
-        if (detection.gender === 'male') counts.male++;
-        if (detection.gender === 'female') counts.female++;
-
-        // Count expressions
-        if (detection.expressions) {
-          const maxExpression = Object.keys(detection.expressions).reduce((a, b) =>
-            detection.expressions[a] > detection.expressions[b] ? a : b
-          );
-          if (counts.hasOwnProperty(maxExpression)) {
-            counts[maxExpression]++;
-          }
-        }
-
-        // Collect ages
-        if (detection.age) {
-          ages.push(Math.round(detection.age));
-        }
-      });
-
-      return { detections, counts, ages };
-    } catch (err) {
-      console.error('[FaceAPI] Detection error:', err);
-      setOutput((prev) => prev + `❌ Detection error: ${err.message}\n`);
-      return { detections: [], counts: {}, ages: [] };
-    }
-  };
   const toolboxXml = useMemo(() => `
 <xml xmlns="https://developers.google.com/blockly/xml">
   <!-- VARIABLES -->
@@ -4242,7 +4515,7 @@ function AICodingPage() {
 <category name="Input" colour="30">
   <block type="input_prompt" />
   <block type="string_literal" />
-  <block type="number_literal" />
+  <block type="math_number" />
   <block type="boolean_literal" />
 </category>
 
@@ -4271,6 +4544,7 @@ function AICodingPage() {
     <!-- Motion -->
     <category name="Motion" colour="90">
       <block type="turtle_forward" />
+      <block type="turtle_move" />
       <block type="turtle_backward" />
       <block type="turtle_right" />
       <block type="turtle_left" />
@@ -4307,13 +4581,13 @@ function AICodingPage() {
   <!-- DATA TYPES TAB -->
   <category name="Data Types" colour="200">
     <!-- String -->
-      <category name="String" colour="160">
+    <category name="String" colour="160">
     <block type="string_literal" />
   </category>
 
   <!-- Number -->
   <category name="Integer" colour="230">
-    <block type="number_literal" />
+    <block type="math_number" />
   </category>
 
     <!-- Boolean -->
@@ -4522,9 +4796,443 @@ function AICodingPage() {
 </xml>
 `, []);
 
+  // Helper function to map color names to hex codes
+  function mapColorToHex(color: string): string {
+    const colorMap: Record<string, string> = {
+      'white': '#ffffff',
+      'WHITE': '#ffffff',
+      'black': '#000000',
+      'BLACK': '#000000',
+      'blue': '#0000ff',
+      'BLUE': '#0000ff',
+      'red': '#ff0000',
+      'RED': '#ff0000',
+      'green': '#00ff00',
+      'GREEN': '#00ff00',
+      'yellow': '#ffff00',
+      'YELLOW': '#ffff00',
+    };
+    return colorMap[color] || color; // Return hex if found, otherwise return as-is
+  }
+
+  // Helper function to ensure variable exists in workspace and return its ID
+  function ensureVariable(workspace: Blockly.Workspace, varName: string): string {
+    let variable = workspace.getVariable(varName);
+    if (!variable) {
+      variable = workspace.createVariable(varName);
+    }
+    return variable.getId();
+  }
+
+  function createValueBlock(workspace, valueCfg) {
+    if (!valueCfg) return null;
+
+    switch (valueCfg.type) {
+
+      case "INT": {
+        const num = workspace.newBlock("math_number");
+        num.setFieldValue(String(valueCfg.value), "NUM");
+        num.initSvg();
+        num.render();
+        return num;
+      }
+
+      case "STRING": {
+        const text = workspace.newBlock("text");
+        text.setFieldValue(valueCfg.value, "TEXT");
+        text.initSvg();
+        text.render();
+        return text;
+      }
+
+      case "VARIABLE": {
+        const varId = ensureVariable(workspace, valueCfg.name);
+        const v = workspace.newBlock("variables_get");
+        v.setFieldValue(varId, "VAR");
+        v.initSvg();
+        v.render();
+        return v;
+      }
+
+      case "EXPRESSION": {
+        if (valueCfg.operator === "MULTIPLY") {
+          const expr = workspace.newBlock("math_arithmetic");
+          expr.setFieldValue("MULTIPLY", "OP");
+
+          const left = createValueBlock(workspace, valueCfg.left);
+          const right = createValueBlock(workspace, valueCfg.right);
+
+          expr.initSvg();
+          expr.render();
+
+          expr.getInput("A")?.connection?.connect(left?.outputConnection);
+          expr.getInput("B")?.connection?.connect(right?.outputConnection);
+
+          return expr;
+        }
+        return null;
+      }
+
+      default:
+        return null;
+    }
+  }
+function mapColorToBlockType(color: string) {
+  switch (color?.toUpperCase()) {
+    case "RED":
+      return "colour_red";
+    case "GREEN":
+      return "colour_green";
+    case "BLUE":
+      return "colour_blue";
+    case "YELLOW":
+      return "colour_yellow";
+    case "PURPLE":
+      return "colour_purple";
+    case "PINK":
+      return "colour_pink";
+    default:
+      return "colour_picker";
+  }
+}
+
+function createBlocklyBlock(workspace, row) {
+  const cfg = typeof row.block_config === "string"
+    ? JSON.parse(row.block_config)
+    : row.block_config;
+
+  if (!cfg) {
+    console.error("block_config is null or undefined for block:", row);
+    return null;
+  }
+
+  switch (row.block_type) {
+
+    /* =====================
+       SET VARIABLE
+    ===================== */
+    case "SET_VARIABLE": {
+
+      // CREATE TURTLE
+      if (cfg.type === "CREATE_TURTLE") {
+        const varId = ensureVariable(workspace, cfg.variable);
+        const block = workspace.newBlock("turtle_create");
+        block.setFieldValue(varId, "VAR");
+        return block;
+      }
+
+      // INPUT → variable
+      if (cfg.value?.type === "INPUT") {
+        const varId = ensureVariable(workspace, cfg.variable);
+        const block = workspace.newBlock("variables_set");
+        block.setFieldValue(varId, "VAR");
+
+        const inputBlock = workspace.newBlock("text_prompt");
+        inputBlock.setFieldValue(cfg.value.prompt, "TEXT");
+
+        inputBlock.initSvg();
+        inputBlock.render();
+
+        block.getInput("VALUE")
+          ?.connection
+          ?.connect(inputBlock.outputConnection);
+
+        return block;
+      }
+
+      // STRING → variable
+      if (cfg.type === "STRING") {
+        const varId = ensureVariable(workspace, cfg.variable);
+        const block = workspace.newBlock("variables_set");
+        block.setFieldValue(varId, "VAR");
+
+        const textBlock = workspace.newBlock("text");
+        textBlock.setFieldValue(cfg.value, "TEXT");
+
+        textBlock.initSvg();
+        textBlock.render();
+
+        block.getInput("VALUE")
+          ?.connection
+          ?.connect(textBlock.outputConnection);
+
+        return block;
+      }
+
+      // INT / VARIABLE / EXPRESSION → variable
+      if (
+        cfg.value?.type === "INT" ||
+        cfg.value?.type === "VARIABLE" ||
+        cfg.value?.type === "EXPRESSION"
+      ) {
+        const varId = ensureVariable(workspace, cfg.variable);
+        const block = workspace.newBlock("variables_set");
+        block.setFieldValue(varId, "VAR");
+
+        const valueBlock = createValueBlock(workspace, cfg.value);
+
+        block.initSvg();
+        block.render();
+
+        if (valueBlock) {
+          block.getInput("VALUE")
+            ?.connection
+            ?.connect(valueBlock.outputConnection);
+        }
+
+        return block;
+      }
+
+      return null;
+    }
+
+    /* =====================
+       PRINT
+    ===================== */
+    case "PRINT": {
+      const varId = ensureVariable(workspace, cfg.variable);
+      const block = workspace.newBlock("text_print");
+
+      const varBlock = workspace.newBlock("variables_get");
+      varBlock.setFieldValue(varId, "VAR");
+
+      varBlock.initSvg();
+      varBlock.render();
+
+      block.getInput("TEXT")
+        ?.connection
+        ?.connect(varBlock.outputConnection);
+
+      return block;
+    }
+
+    /* =====================
+       TURTLE MOVE (legacy)
+    ===================== */
+    case "TURTLE_MOVE": {
+      const varId = ensureVariable(workspace, cfg.variable);
+      const block = workspace.newBlock("turtle_move");
+
+      block.setFieldValue(varId, "VAR");
+      block.setFieldValue(cfg.direction, "DIRECTION");
+
+      const num = workspace.newBlock("math_number");
+      num.setFieldValue(String(cfg.value), "NUM");
+
+      num.initSvg();
+      num.render();
+
+      block.getInput("DISTANCE")
+        ?.connection
+        ?.connect(num.outputConnection);
+
+      return block;
+    }
+
+    /* =====================
+       TURTLE MOTION (DB version)
+    ===================== */
+    case "TURTLE_MOTION": {
+      if (cfg.action === "FORWARD") {
+        const varId = ensureVariable(workspace, cfg.variable);
+        const block = workspace.newBlock("turtle_forward");
+
+        block.setFieldValue(varId, "VAR");
+
+        const num = workspace.newBlock("math_number");
+        num.setFieldValue(String(cfg.distance), "NUM");
+
+        num.initSvg();
+        num.render();
+
+        block.getInput("DISTANCE")
+          ?.connection
+          ?.connect(num.outputConnection);
+
+        return block;
+      }
+
+      return null;
+    }
+
+    /* =====================
+       BACKGROUND COLOR
+    ===================== */
+   case "TURTLE_SCREEN": {
+  if (cfg.action === "SET_BACKGROUND_COLOR") {
+
+    const block = workspace.newBlock("turtle_bgcolor");
+
+    // Map DB color to Blockly block type
+    const colorBlockType = mapColorToBlockType(cfg.color);
+
+    const colorBlock = workspace.newBlock(colorBlockType);
+    colorBlock.initSvg();
+    colorBlock.render();
+
+    block.getInput("COLOR")
+      ?.connection
+      ?.connect(colorBlock.outputConnection);
+
+    return block;
+  }
+  return null;
+}
+
+    /* =====================
+       TURTLE STYLE
+    ===================== */
+    case "TURTLE_STYLE": {
+
+      // SET FILL COLOR
+      if (cfg.action === "SET_FILL_COLOR") {
+        const varId = ensureVariable(workspace, cfg.variable);
+        const block = workspace.newBlock("turtle_fill_color");
+        block.setFieldValue(varId, "VAR");
+
+        const colorBlock = workspace.newBlock("colour_picker");
+        const hexColor = mapColorToHex(cfg.color);
+        colorBlock.setFieldValue(hexColor, "COLOUR");
+
+        colorBlock.initSvg();
+        colorBlock.render();
+
+        block.getInput("COLOR")
+          ?.connection
+          ?.connect(colorBlock.outputConnection);
+
+        return block;
+      }
+
+      // SET SHAPE
+      if (cfg.action === "SET_SHAPE") {
+        const varId = ensureVariable(workspace, cfg.variable);
+        const block = workspace.newBlock("turtle_shape");
+
+        block.setFieldValue(varId, "VAR");
+        block.setFieldValue(cfg.shape, "SHAPE");
+
+        return block;
+      }
+
+      // SET WIDTH
+      if (cfg.action === "SET_WIDTH") {
+        const varId = ensureVariable(workspace, cfg.variable);
+        const block = workspace.newBlock("turtle_width");
+        block.setFieldValue(varId, "VAR");
+
+        const num = workspace.newBlock("math_number");
+        num.setFieldValue(String(cfg.width), "NUM");
+
+        num.initSvg();
+        num.render();
+
+        block.getInput("WIDTH")
+          ?.connection
+          ?.connect(num.outputConnection);
+
+        return block;
+      }
+
+      return null;
+    }
+
+    /* =====================
+       DOT
+    ===================== */
+    case "TURTLE_DRAW": {
+      if (cfg.action === "DOT") {
+        const varId = ensureVariable(workspace, cfg.variable);
+        const block = workspace.newBlock("turtle_dot");
+        block.setFieldValue(varId, "VAR");
+
+        const num = workspace.newBlock("math_number");
+        num.setFieldValue(String(cfg.radius), "NUM");
+
+        num.initSvg();
+        num.render();
+
+        block.getInput("SIZE")
+          ?.connection
+          ?.connect(num.outputConnection);
+
+        return block;
+      }
+      return null;
+    }
+
+    default:
+      console.warn("Unknown block_type:", row.block_type, row);
+      return null;
+  }
+}
+
+  function loadBlocksIntoWorkspace(blocks: any[]) {
+    debugLog('Loading blocks into workspace', { count: blocks.length, blocks });
+    const workspace = workspaceRef.current;
+    if (!workspace) {
+      debugLog('ERROR: Workspace not available');
+      return;
+    }
+
+    workspace.clear();
+
+    // First pass: Create all variables that will be needed
+    debugLog('First pass: Creating variables');
+    blocks.forEach((row) => {
+      const cfg = typeof row.block_config === 'string'
+        ? JSON.parse(row.block_config)
+        : row.block_config;
+
+      if (cfg?.variable) {
+        ensureVariable(workspace, cfg.variable);
+        debugLog(`Created variable: ${cfg.variable}`);
+      }
+    });
+
+    let previousBlock: Blockly.Block | null = null;
+    let y = 40;
+
+    blocks.forEach((row) => {
+      const newBlock = createBlocklyBlock(workspace, row);
+      if (!newBlock) return;
+
+      // Init SVG first (required)
+      newBlock.initSvg();
+
+      if (!previousBlock) {
+        // ⭐ Root block
+        newBlock.render();
+        newBlock.moveBy(40, y);
+        y += newBlock.getHeightWidth().height + 30;
+      } else {
+        // ⭐ Connect BEFORE render
+        if (
+          previousBlock.nextConnection &&
+          newBlock.previousConnection
+        ) {
+          previousBlock.nextConnection.connect(
+            newBlock.previousConnection
+          );
+        }
+        newBlock.render();
+      }
+
+      previousBlock = newBlock;
+    });
+
+    workspace.render();
+    Blockly.svgResize(workspace);
+    workspace.scrollCenter();
+
+
+    debugLog('✅ Finished loading blocks successfully');
+  }
+
   useEffect(() => {
     defineBlocks();
     definePythonGenerators();
+    defineJavascriptGenerators();
 
     const workspace = Blockly.inject(blocklyDiv.current, {
       toolbox: toolboxXml,
@@ -4536,14 +5244,220 @@ function AICodingPage() {
         minScale: 0.3,
         scaleSpeed: 1.2
       },
-      trashcan: true
+      trashcan: true,
+      renderer: 'zelos',
+      // Fixed block size configuration
+      grid: {
+        spacing: 20,
+        length: 1,
+        colour: '#888',
+        snap: false
+      }
     });
 
-    workspaceRef.current = workspace;
+    // Apply fixed block sizes via CSS
+    const style = document.createElement('style');
+    style.textContent = `
+      .blocklyText {
+        font-size: 12pt !important;
+        font-family: sans-serif !important;
+      }
+      .blocklyNonEditableText > text,
+      .blocklyEditableText > text {
+        font-size: 12pt !important;
+      }
+      .blocklyFlyoutButton .blocklyText {
+        font-size: 12pt !important;
+      }
+      /* Ensure consistent block rendering */
+      .blocklyBlockCanvas {
+        transform-origin: 0 0;
+      }
+      /* Fix scrollbar persistence when flyout closes */
+      .blocklyFlyout.blocklyHidden ~ .blocklyFlyoutScrollbar {
+        display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+      }
+      
+      /* Keep flyout blocks at fixed size regardless of workspace zoom */
+      .blocklyFlyout .blocklyBlockCanvas {
+        transform: scale(1) !important;
+      }
+      .blocklyFlyout .blocklyText {
+        font-size: 12pt !important;
+      }
+      /* Override any zoom-based transforms on flyout */
+      .blocklyFlyout svg.blocklySvg > g {
+        transform: scale(1) !important;
+      }
+    `;
+    document.head.appendChild(style);
 
-    /* =========================
-       1ï¸âƒ£ CODE GENERATION LISTENER
-    ========================= */
+    workspaceRef.current = workspace;
+    setWorkspaceReady(true);
+    
+    // Listen for zoom changes and keep flyout blocks at fixed size
+    workspace.addChangeListener((e: any) => {
+      // Handle zoom events
+      if (e.type === Blockly.Events.VIEWPORT_CHANGE) {
+        // Enforce fixed flyout size whenever viewport changes (zoom/pan)
+        enforceFlyoutFixedSize();
+      }
+      
+      if (e.type === Blockly.Events.TOOLBOX_ITEM_SELECT) {
+        requestAnimationFrame(() => {
+          // 1. Normal resize
+          Blockly.svgResize(workspace);
+
+          // 2. Force clear cached content metrics
+          (workspace as any).cachedContentBounds_ = null;
+
+          // 3. Recompute content
+          workspace.resizeContents();
+
+          // 4. Hard reset scrollbars
+          if (workspace.scrollbar) {
+            workspace.scrollbar.resize();
+            workspace.scrollbar.setVisible(false);
+            workspace.scrollbar.setVisible(true);
+          }
+
+          // 5. Clean up flyout scrollbars properly
+          const flyout = blocklyDiv.current?.querySelector('.blocklyFlyout');
+          const scrollbars = blocklyDiv.current?.querySelectorAll('.blocklyFlyoutScrollbar');
+          
+          scrollbars?.forEach((scrollbar) => {
+            const el = scrollbar as HTMLElement;
+            if (!flyout || flyout.classList.contains('blocklyHidden')) {
+              // Hide scrollbar when flyout is closed
+              el.style.display = 'none';
+              el.style.visibility = 'hidden';
+            } else {
+              el.style.display = '';
+              el.style.visibility = '';
+            }
+          });
+          
+          // 6. Ensure flyout blocks stay at fixed size
+          enforceFlyoutFixedSize();
+
+          // 7. Snap back to origin
+          workspace.scroll(0, 0);
+        });
+      }
+    });
+
+    const updateFlyoutScrollbars = () => {
+      const scrollbars = blocklyDiv.current?.querySelectorAll('.blocklyFlyoutScrollbar');
+
+      scrollbars?.forEach((scrollbar) => {
+        const el = scrollbar as HTMLElement;
+        const flyout = scrollbar.previousElementSibling as HTMLElement | null;
+
+        // Hide scrollbar if flyout is hidden, doesn't exist, or has no content
+        if (!flyout || 
+            flyout.classList.contains('blocklyHidden') || 
+            flyout.style.display === 'none' ||
+            !flyout.querySelector('.blocklyBlockCanvas')) {
+          el.style.display = 'none';
+          el.style.visibility = 'hidden';
+          el.style.opacity = '0';
+        } else {
+          el.style.display = '';
+          el.style.visibility = '';
+          el.style.opacity = '';
+        }
+      });
+    };
+
+    // Function to enforce fixed flyout block sizes
+    const enforceFlyoutFixedSize = () => {
+      const flyout = blocklyDiv.current?.querySelector('.blocklyFlyout');
+      if (!flyout || flyout.classList.contains('blocklyHidden')) return;
+      
+      // Force all transform groups in flyout to scale(1)
+      const flyoutSvgGroups = flyout.querySelectorAll('svg.blocklySvg > g');
+      flyoutSvgGroups.forEach((group) => {
+        (group as SVGElement).setAttribute('transform', 'scale(1)');
+      });
+      
+      // Also fix the canvas transform
+      const flyoutCanvas = flyout.querySelector('.blocklyBlockCanvas');
+      if (flyoutCanvas) {
+        (flyoutCanvas as SVGElement).style.transform = 'scale(1)';
+      }
+    };
+
+    let flyoutObserver: MutationObserver | null = null;
+    let containerObserver: MutationObserver | null = null;
+
+    const attachFlyoutObserver = () => {
+      const flyout = blocklyDiv.current?.querySelector('.blocklyFlyout');
+      if (!flyout) return;
+
+      if (flyoutObserver) {
+        flyoutObserver.disconnect();
+      }
+
+      flyoutObserver = new MutationObserver(() => {
+        updateFlyoutScrollbars();
+        enforceFlyoutFixedSize(); // Keep blocks at fixed size
+      });
+
+      flyoutObserver.observe(flyout, {
+        attributes: true,
+        attributeFilter: ['class', 'style'],
+        childList: true,
+        subtree: true
+      });
+    };
+
+    const preventToolboxScroll = () => {
+      const flyout = blocklyDiv.current?.querySelector('.blocklyFlyout');
+      const toolboxDiv = blocklyDiv.current?.querySelector('.blocklyToolboxDiv');
+
+      if (flyout) {
+        flyout.addEventListener('wheel', (e) => e.stopPropagation(), { passive: true });
+        flyout.addEventListener('touchmove', (e) => e.stopPropagation(), { passive: true });
+      }
+
+      if (toolboxDiv) {
+        toolboxDiv.addEventListener('wheel', (e) => e.stopPropagation(), { passive: true });
+        toolboxDiv.addEventListener('touchmove', (e) => e.stopPropagation(), { passive: true });
+      }
+    };
+
+    setTimeout(() => {
+      preventToolboxScroll();
+      attachFlyoutObserver();
+      updateFlyoutScrollbars();
+      enforceFlyoutFixedSize(); // Initial enforcement
+    }, 100);
+
+    if (blocklyDiv.current) {
+      containerObserver = new MutationObserver(() => {
+        attachFlyoutObserver();
+        updateFlyoutScrollbars();
+        enforceFlyoutFixedSize();
+      });
+
+      containerObserver.observe(blocklyDiv.current, {
+        childList: true,
+        subtree: true,
+      });
+    }
+
+    workspace.addChangeListener((event: any) => {
+      if (event.type === Blockly.Events.TOOLBOX_ITEM_SELECT) {
+        setTimeout(() => {
+          preventToolboxScroll();
+          updateFlyoutScrollbars();
+          enforceFlyoutFixedSize(); // Enforce on category change
+        }, 50);
+      }
+    });
+
     workspace.addChangeListener((event) => {
       if (
         event.type !== Blockly.Events.BLOCK_CREATE &&
@@ -4553,34 +5467,35 @@ function AICodingPage() {
       ) {
         return;
       }
-
       setCode(pythonGenerator.workspaceToCode(workspace));
     });
 
-    /* =========================
-       2ï¸âƒ£ FILE UPLOAD BLOCK HANDLER
-       (DOUBLE-CLICK SAFE)
-    ========================= */
     workspace.addChangeListener((event) => {
-      if (
-        event.type === Blockly.Events.UI &&
-        event.element === "click"
-      ) {
-        const block = workspace.getBlockById(event.blockId);
+      if (event.type === Blockly.Events.UI) {
+        setTimeout(updateFlyoutScrollbars, 0);
+      }
 
+      if (event.type === Blockly.Events.UI && event.element === "click") {
+        const block = workspace.getBlockById(event.blockId);
         if (block && block.type === "file_upload") {
           fileInputRef.current?.click();
         }
       }
     });
 
-
     return () => {
+      if (flyoutObserver) {
+        flyoutObserver.disconnect();
+      }
+      if (containerObserver) {
+        containerObserver.disconnect();
+      }
       workspace.dispose();
+      setWorkspaceReady(false); // ✅ ADD THIS
     };
   }, [toolboxXml]);
 
-  useEffect(() => {
+ useEffect(() => {
     const script1 = document.createElement("script");
     script1.src = "https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js";
     script1.async = true;
@@ -4597,283 +5512,7 @@ function AICodingPage() {
     document.body.appendChild(script2);
     document.body.appendChild(script3);
   }, []);
-
-  function renderPlot(plot, labels) {
-    canvasContainerRef.current.innerHTML = "";
-
-    const canvas = document.createElement("canvas");
-    canvas.width = 700;
-    canvas.height = 450;
-    canvas.style.border = "2px solid #ccc";
-    canvasContainerRef.current.appendChild(canvas);
-
-    const ctx = canvas.getContext("2d");
-
-    const { type, x, y } = plot;
-
-    const padding = 60;
-    const width = canvas.width - padding * 2;
-    const height = canvas.height - padding * 2;
-
-    /* ======================
-       AXIS DRAW
-    ====================== */
-    ctx.strokeStyle = "#000";
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(padding, padding);
-    ctx.lineTo(padding, canvas.height - padding);
-    ctx.lineTo(canvas.width - padding, canvas.height - padding);
-    ctx.stroke();
-
-    /* ======================
-       HISTOGRAM
-    ====================== */
-    if (type === "hist") {
-      const data = x;
-      const bins = 5;
-      const min = Math.min(...data);
-      const max = Math.max(...data);
-      const binSize = (max - min) / bins;
-
-      const counts = Array(bins).fill(0);
-      data.forEach(v => {
-        const idx = Math.min(
-          bins - 1,
-          Math.floor((v - min) / binSize)
-        );
-        counts[idx]++;
-      });
-
-      const barWidth = width / bins;
-      const maxCount = Math.max(...counts);
-
-      ctx.fillStyle = "#3498db";
-
-      counts.forEach((count, i) => {
-        const barHeight = (count / maxCount) * height;
-        const px = padding + i * barWidth;
-        const py = canvas.height - padding - barHeight;
-        ctx.fillRect(px, py, barWidth - 5, barHeight);
-      });
-    }
-
-    /* ======================
-       LINE / SCATTER
-    ====================== */
-    if (type === "line" || type === "scatter") {
-      const minX = Math.min(...x);
-      const maxX = Math.max(...x);
-      const minY = Math.min(...y);
-      const maxY = Math.max(...y);
-
-      const scaleX = width / (maxX - minX || 1);
-      const scaleY = height / (maxY - minY || 1);
-
-      if (type === "line") {
-        ctx.strokeStyle = "#2c3e50";
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-      }
-
-      x.forEach((_, i) => {
-        const px = padding + (x[i] - minX) * scaleX;
-        const py =
-          canvas.height -
-          padding -
-          (y[i] - minY) * scaleY;
-
-        if (type === "line") {
-          if (i === 0) ctx.moveTo(px, py);
-          else ctx.lineTo(px, py);
-        }
-
-        if (type === "scatter") {
-          ctx.fillStyle = "#e74c3c";
-          ctx.beginPath();
-          ctx.arc(px, py, 4, 0, Math.PI * 2);
-          ctx.fill();
-        }
-      });
-
-      if (type === "line") ctx.stroke();
-    }
-
-    /* ======================
-       LABELS
-    ====================== */
-    ctx.fillStyle = "#000";
-    ctx.font = "14px Arial";
-    ctx.textAlign = "center";
-
-    // X label
-    ctx.fillText(labels.x || "X", canvas.width / 2, canvas.height - 15);
-
-    // Y label
-    ctx.save();
-    ctx.translate(15, canvas.height / 2);
-    ctx.rotate(-Math.PI / 2);
-    ctx.fillText(labels.y || "Y", 0, 0);
-    ctx.restore();
-  }
-
-  function renderPygalChart(chart) {
-    const container = canvasContainerRef.current;
-    container.innerHTML = "";
-
-    const canvas = document.createElement("canvas");
-    canvas.width = 800;
-    canvas.height = 450;
-    canvas.style.border = "2px solid #5566AA";
-    canvas.style.borderRadius = "8px";
-    container.appendChild(canvas);
-
-    const ctx = canvas.getContext("2d");
-
-    const padding = 70;
-    const W = canvas.width;
-    const H = canvas.height;
-    const plotW = W - padding * 2;
-    const plotH = H - padding * 2;
-
-    /* ======================
-       TITLE
-    ====================== */
-    ctx.fillStyle = "#000";
-    ctx.font = "bold 18px Arial";
-    ctx.textAlign = "center";
-    ctx.fillText(chart.title || "", W / 2, 35);
-
-    /* ======================
-       PIE / RADAR
-    ====================== */
-    if (chart.type === "pie") {
-      const values = chart.series.map(s => s.values[0]);
-      const radius = Math.min(W, H) / 2 - 40;
-      const total = values.reduce((a, b) => a + b, 0);
-      let angle = -Math.PI / 2;
-
-      values.forEach((v, i) => {
-        const slice = (v / total) * Math.PI * 2;
-        ctx.beginPath();
-        ctx.moveTo(W / 2, H / 2);
-        ctx.arc(W / 2, H / 2, radius, angle, angle + slice);
-        ctx.fillStyle = `hsl(${i * 60},70%,60%)`;
-        ctx.fill();
-        angle += slice;
-      });
-      return;
-    }
-
-    /* ======================
-       AXES
-    ====================== */
-    ctx.strokeStyle = "#000";
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(padding, padding);
-    ctx.lineTo(padding, H - padding);
-    ctx.lineTo(W - padding, H - padding);
-    ctx.stroke();
-
-    const maxY = Math.max(
-      ...chart.series.flatMap(s => s.values)
-    );
-
-    const barWidth =
-      plotW /
-      (chart.xlabels.length * chart.series.length || 1);
-
-    /* ======================
-       BAR / HBAR / STACKED
-    ====================== */
-    if (
-      chart.type.includes("bar") ||
-      chart.type === "hbar"
-    ) {
-      chart.xlabels.forEach((label, i) => {
-        let stackBase = 0;
-
-        chart.series.forEach((s, si) => {
-          const val = s.values[i] || 0;
-          const h = (val / maxY) * plotH;
-
-          let x =
-            padding +
-            i * barWidth * chart.series.length +
-            si * barWidth;
-
-          let y = H - padding - h - stackBase;
-
-          if (chart.type.includes("stacked")) {
-            x = padding + i * barWidth;
-            stackBase += h;
-          }
-
-          ctx.fillStyle = `hsl(${si * 60},70%,60%)`;
-          ctx.fillRect(x, y, barWidth - 6, h);
-        });
-      });
-    }
-
-    /* ======================
-       LINE / STACKED LINE / XY
-    ====================== */
-    if (
-      chart.type.includes("line") ||
-      chart.type === "xy"
-    ) {
-      chart.series.forEach((s, si) => {
-        ctx.beginPath();
-        ctx.strokeStyle = `hsl(${si * 60},70%,50%)`;
-        ctx.lineWidth = 2;
-
-        s.values.forEach((v, i) => {
-          const x =
-            padding +
-            (i / (s.values.length - 1 || 1)) * plotW;
-          const y =
-            H - padding - (v / maxY) * plotH;
-
-          if (i === 0) ctx.moveTo(x, y);
-          else ctx.lineTo(x, y);
-        });
-        ctx.stroke();
-      });
-    }
-
-    /* ======================
-       X LABELS
-    ====================== */
-    ctx.fillStyle = "#000";
-    ctx.font = "12px Arial";
-    ctx.textAlign = "center";
-
-    chart.xlabels.forEach((l, i) => {
-      const x =
-        padding +
-        (i + 0.5) *
-        (plotW / chart.xlabels.length);
-      ctx.fillText(l, x, H - padding + 20);
-    });
-  }
-
-  function showSpriteOnly(spriteName) {
-    if (!canvasContainerRef.current) return;
-
-    canvasContainerRef.current.innerHTML = "";
-
-    const img = document.createElement("img");
-    img.src = `/Sprites/${spriteName}.png`;
-    img.style.maxWidth = "100%";
-    img.style.maxHeight = "100%";
-    img.style.objectFit = "contain";
-    img.style.display = "block";
-    img.style.margin = "auto";
-
-    canvasContainerRef.current.appendChild(img);
-  }
-  async function showSpriteWithWebcam(spriteName) {
+async function showSpriteWithWebcam(spriteName) {
     if (!canvasContainerRef.current) return;
 
     canvasContainerRef.current.innerHTML = "";
@@ -5385,6 +6024,7 @@ ${currentPrediction} (${(currentConfidence * 100).toFixed(1)}%)
   // Facial Features
   let facialImage = null;
   let facialDetections = [];
+  let facialCountsArray = [];
 
   // Object Detection
   let objectImage = null;
@@ -5530,7 +6170,7 @@ ${currentPrediction} (${(currentConfidence * 100).toFixed(1)}%)
     });
   }
 
-  function showFacialImage(containerRef, withBorder, outputCallback) {
+  function showFacialImage(containerRef, withBorder, outputCallback, countsToDisplay = null) {
     if (!facialImage) {
       outputCallback("âŒ No image loaded");
       return;
@@ -5559,6 +6199,25 @@ ${currentPrediction} (${(currentConfidence * 100).toFixed(1)}%)
         const gender = detection.gender;
         const age = Math.round(detection.age);
         ctx.fillText(`${gender}, ${age}y`, box.x, box.y - 10);
+      });
+    }
+
+
+    // Display counts on canvas if provided
+    if (countsToDisplay && countsToDisplay.length > 0) {
+      ctx.fillStyle = "#FFFFFF";
+      ctx.strokeStyle = "#000000";
+      ctx.lineWidth = 3;
+      ctx.font = "bold 24px Arial";
+      
+      let yOffset = 40;
+      countsToDisplay.forEach(countInfo => {
+        const text = `${countInfo.label}: ${countInfo.count}`;
+        // Draw text outline (stroke) for better visibility
+        ctx.strokeText(text, 20, yOffset);
+        // Draw text fill
+        ctx.fillText(text, 20, yOffset);
+        yOffset += 35;
       });
     }
 
@@ -5985,26 +6644,459 @@ ${currentPrediction} (${(currentConfidence * 100).toFixed(1)}%)
     });
   }
 
+function renderPlot(plot, labels) {
+  canvasContainerRef.current.innerHTML = "";
+
+  const canvas = document.createElement("canvas");
+  const container = canvasContainerRef.current;
+
+  const rect = container.getBoundingClientRect();
+
+  canvas.width = rect.width;
+  canvas.height = Math.min(450, rect.height);
+  canvas.style.border = "2px solid #ccc";
+  canvasContainerRef.current.appendChild(canvas);
+
+  const ctx = canvas.getContext("2d");
+
+  const { type, x, y } = plot;
+
+  const padding = 60;
+  const width = canvas.width - padding * 2;
+  const height = canvas.height - padding * 2;
+
+  /* ======================
+     AXIS DRAW
+  ====================== */
+  ctx.strokeStyle = "#000";
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(padding, padding);
+  ctx.lineTo(padding, canvas.height - padding);
+  ctx.lineTo(canvas.width - padding, canvas.height - padding);
+  ctx.stroke();
+
+  /* ======================
+     HISTOGRAM
+  ====================== */
+  if (type === "hist") {
+    const data = x;
+    const bins = 5;
+    const min = Math.min(...data);
+    const max = Math.max(...data);
+    const binSize = (max - min) / bins;
+
+    const counts = Array(bins).fill(0);
+    data.forEach(v => {
+      const idx = Math.min(
+        bins - 1,
+        Math.floor((v - min) / binSize)
+      );
+      counts[idx]++;
+    });
+
+    const barWidth = width / bins;
+    const maxCount = Math.max(...counts);
+
+    ctx.fillStyle = "#3498db";
+
+    counts.forEach((count, i) => {
+      const barHeight = (count / maxCount) * height;
+      const px = padding + i * barWidth;
+      const py = canvas.height - padding - barHeight;
+      ctx.fillRect(px, py, barWidth - 5, barHeight);
+    });
+
+    // ✅ NEW: X-axis values (bin ranges)
+    ctx.fillStyle = "#000";
+    ctx.font = "11px Arial";
+    ctx.textAlign = "center";
+    for (let i = 0; i <= bins; i++) {
+      const value = min + i * binSize;
+      const px = padding + (i / bins) * width;
+      ctx.fillText(value.toFixed(1), px, canvas.height - padding + 20);
+      
+      // Tick mark
+      ctx.beginPath();
+      ctx.moveTo(px, canvas.height - padding);
+      ctx.lineTo(px, canvas.height - padding + 5);
+      ctx.stroke();
+    }
+
+    // ✅ NEW: Y-axis values (counts)
+    ctx.textAlign = "right";
+    const numYTicks = 5;
+    for (let i = 0; i <= numYTicks; i++) {
+      const value = (maxCount / numYTicks) * i;
+      const py = canvas.height - padding - (i / numYTicks) * height;
+      ctx.fillText(Math.round(value).toString(), padding - 10, py + 4);
+      
+      // Tick mark
+      ctx.beginPath();
+      ctx.moveTo(padding - 5, py);
+      ctx.lineTo(padding, py);
+      ctx.stroke();
+    }
+  }
+
+  /* ======================
+     LINE / SCATTER
+  ====================== */
+  if (type === "line" || type === "scatter") {
+    const minX = Math.min(...x);
+    const maxX = Math.max(...x);
+    const minY = Math.min(...y);
+    const maxY = Math.max(...y);
+
+    const scaleX = width / (maxX - minX || 1);
+    const scaleY = height / (maxY - minY || 1);
+
+    if (type === "line") {
+      ctx.strokeStyle = "#2c3e50";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+    }
+
+    x.forEach((_, i) => {
+      const px = padding + (x[i] - minX) * scaleX;
+      const py =
+        canvas.height -
+        padding -
+        (y[i] - minY) * scaleY;
+
+      if (type === "line") {
+        if (i === 0) ctx.moveTo(px, py);
+        else ctx.lineTo(px, py);
+      }
+
+      if (type === "scatter") {
+        ctx.fillStyle = "#e74c3c";
+        ctx.beginPath();
+        ctx.arc(px, py, 4, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    });
+
+    if (type === "line") ctx.stroke();
+
+    // ✅ NEW: X-axis values
+    ctx.fillStyle = "#000";
+    ctx.font = "11px Arial";
+    ctx.textAlign = "center";
+    const numXTicks = 5;
+    for (let i = 0; i <= numXTicks; i++) {
+      const value = minX + (maxX - minX) * (i / numXTicks);
+      const px = padding + (i / numXTicks) * width;
+      ctx.fillText(value.toFixed(1), px, canvas.height - padding + 20);
+      
+      // Tick mark
+      ctx.strokeStyle = "#000";
+      ctx.beginPath();
+      ctx.moveTo(px, canvas.height - padding);
+      ctx.lineTo(px, canvas.height - padding + 5);
+      ctx.stroke();
+    }
+
+    // ✅ NEW: Y-axis values
+    ctx.textAlign = "right";
+    const numYTicks = 5;
+    for (let i = 0; i <= numYTicks; i++) {
+      const value = minY + (maxY - minY) * (i / numYTicks);
+      const py = canvas.height - padding - (i / numYTicks) * height;
+      ctx.fillText(value.toFixed(1), padding - 10, py + 4);
+      
+      // Tick mark
+      ctx.beginPath();
+      ctx.moveTo(padding - 5, py);
+      ctx.lineTo(padding, py);
+      ctx.stroke();
+    }
+  }
+
+  /* ======================
+     LABELS
+  ====================== */
+  ctx.fillStyle = "#000";
+  ctx.font = "14px Arial";
+  ctx.textAlign = "center";
+
+  // X label
+  ctx.fillText(labels.x || "X", canvas.width / 2, canvas.height - 15);
+
+  // Y label
+  ctx.save();
+  ctx.translate(15, canvas.height / 2);
+  ctx.rotate(-Math.PI / 2);
+  ctx.fillText(labels.y || "Y", 0, 0);
+  ctx.restore();
+}
+
+  function renderPygalChart(chart) {
+    const container = canvasContainerRef.current;
+    container.innerHTML = "";
+
+    const canvas = document.createElement("canvas");
+    canvas.width = 800;
+    canvas.height = 450;
+    canvas.style.border = "2px solid #5566AA";
+    canvas.style.borderRadius = "8px";
+    container.appendChild(canvas);
+
+    const ctx = canvas.getContext("2d");
+
+    const padding = 70;
+    const W = canvas.width;
+    const H = canvas.height;
+    const plotW = W - padding * 2;
+    const plotH = H - padding * 2;
+
+    /* ======================
+       TITLE
+    ====================== */
+    ctx.fillStyle = "#000";
+    ctx.font = "bold 18px Arial";
+    ctx.textAlign = "center";
+    ctx.fillText(chart.title || "", W / 2, 35);
+
+    /* ======================
+       PIE / RADAR
+    ====================== */
+    if (chart.type === "pie") {
+      const values = chart.series.map(s => s.values[0]);
+      const radius = Math.min(W, H) / 2 - 40;
+      const total = values.reduce((a, b) => a + b, 0);
+      let angle = -Math.PI / 2;
+
+      values.forEach((v, i) => {
+        const slice = (v / total) * Math.PI * 2;
+        ctx.beginPath();
+        ctx.moveTo(W / 2, H / 2);
+        ctx.arc(W / 2, H / 2, radius, angle, angle + slice);
+        ctx.fillStyle = `hsl(${i * 60},70%,60%)`;
+        ctx.fill();
+        angle += slice;
+      });
+      return;
+    }
+
+    /* ======================
+       AXES
+    ====================== */
+    ctx.strokeStyle = "#000";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(padding, padding);
+    ctx.lineTo(padding, H - padding);
+    ctx.lineTo(W - padding, H - padding);
+    ctx.stroke();
+
+    const maxY = Math.max(
+      ...chart.series.flatMap(s => s.values)
+    );
+
+    const barWidth =
+      plotW /
+      (chart.xlabels.length * chart.series.length || 1);
+
+    /* ======================
+       BAR / HBAR / STACKED
+    ====================== */
+    if (
+      chart.type.includes("bar") ||
+      chart.type === "hbar"
+    ) {
+      chart.xlabels.forEach((label, i) => {
+        let stackBase = 0;
+
+        chart.series.forEach((s, si) => {
+          const val = s.values[i] || 0;
+          const h = (val / maxY) * plotH;
+
+          let x =
+            padding +
+            i * barWidth * chart.series.length +
+            si * barWidth;
+
+          let y = H - padding - h - stackBase;
+
+          if (chart.type.includes("stacked")) {
+            x = padding + i * barWidth;
+            stackBase += h;
+          }
+
+          ctx.fillStyle = `hsl(${si * 60},70%,60%)`;
+          ctx.fillRect(x, y, barWidth - 6, h);
+        });
+      });
+    }
+
+    /* ======================
+       LINE / STACKED LINE / XY
+    ====================== */
+    if (
+      chart.type.includes("line") ||
+      chart.type === "xy"
+    ) {
+      chart.series.forEach((s, si) => {
+        ctx.beginPath();
+        ctx.strokeStyle = `hsl(${si * 60},70%,50%)`;
+        ctx.lineWidth = 2;
+
+        s.values.forEach((v, i) => {
+          const x =
+            padding +
+            (i / (s.values.length - 1 || 1)) * plotW;
+          const y =
+            H - padding - (v / maxY) * plotH;
+
+          if (i === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        });
+        ctx.stroke();
+      });
+    }
+
+    /* ======================
+       X LABELS
+    ====================== */
+    ctx.fillStyle = "#000";
+    ctx.font = "12px Arial";
+    ctx.textAlign = "center";
+
+    chart.xlabels.forEach((l, i) => {
+      const x =
+        padding +
+        (i + 0.5) *
+        (plotW / chart.xlabels.length);
+      ctx.fillText(l, x, H - padding + 20);
+    });
+  }
+
+  function showSpriteOnly(spriteName) {
+    if (!canvasContainerRef.current) return;
+
+    canvasContainerRef.current.innerHTML = "";
+
+    const img = document.createElement("img");
+    img.src = `/Sprites/${spriteName}.png`;
+    img.style.maxWidth = "100%";
+    img.style.maxHeight = "100%";
+    img.style.objectFit = "contain";
+    img.style.display = "block";
+    img.style.margin = "auto";
+
+    canvasContainerRef.current.appendChild(img);
+  }
+  async function showSpriteWithWebcam(spriteName) {
+    if (!canvasContainerRef.current) return;
+
+    canvasContainerRef.current.innerHTML = "";
+
+    // Layout container
+    const wrapper = document.createElement("div");
+    wrapper.style.display = "flex";
+    wrapper.style.justifyContent = "space-between";
+    wrapper.style.alignItems = "center";
+    wrapper.style.width = "100%";
+    wrapper.style.height = "100%";
+    wrapper.style.gap = "20px";
+
+    // Webcam video
+    const video = document.createElement("video");
+    video.autoplay = true;
+    video.playsInline = true;
+    video.style.width = "48%";
+    video.style.borderRadius = "12px";
+    video.style.background = "#000";
+
+    // Emoji image
+    const img = document.createElement("img");
+    img.src = `/Sprites/${spriteName}.png`;
+    img.style.width = "48%";
+    img.style.objectFit = "contain";
+
+    wrapper.appendChild(video);
+    wrapper.appendChild(img);
+    canvasContainerRef.current.appendChild(wrapper);
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: true,
+        audio: false
+      });
+      video.srcObject = stream;
+    } catch (err) {
+      console.error("Webcam error:", err);
+      alert("Webcam access denied");
+    }
+  }
+  function stopWebcam() {
+    const videos = document.querySelectorAll("video");
+    videos.forEach(v => {
+      if (v.srcObject) {
+        v.srcObject.getTracks().forEach(t => t.stop());
+      }
+    });
+  }
+
+  function injectUploadedFiles(code) {
+    if (!window.__uploadedFiles) return code;
+
+    const files = JSON.stringify(window.__uploadedFiles)
+      .replace(/\\/g, "\\\\")
+      .replace(/'/g, "\\'");
+
+    return `
+from io import StringIO
+__uploaded_files = ${files}
+
+def open_uploaded(filename, mode="r"):
+    if filename not in __uploaded_files:
+        raise FileNotFoundError(filename)
+    return StringIO(__uploaded_files[filename])
+
+file_handle = None
+
+` + code;
+  }
+
   const runCode = () => {
     if (!Sk || typeof Sk.configure !== "function") {
       setOutput("Python runtime not available.");
       return;
     }
-
     // Reset command queue
     commandQueue = [];
     isProcessingQueue = false;
-
     setOutput("Running...\n");
-
-    const usesTurtle = /\bturtle\b/.test(code);
+const ws = workspaceRef.current;
+const usesTurtle = ws
+  ? ws.getAllBlocks(false).some(b => b.type.startsWith("turtle_"))
+  : false;
+  
     const usesMath = /\bmath\./.test(code);
     const usesMatplotlib = /\bplt\./.test(code);
     const usesPygal = /\bpygal\b/.test(code);
     // Clear previous canvas
     canvasContainerRef.current.innerHTML = "";
-
-    if (usesTurtle) {
+  if (usesTurtle) {
+  const canvas = document.createElement("canvas");
+  canvas.id = "turtleCanvas";
+  // ✅ Let CSS control size
+  canvas.style.width = "100%";
+  canvas.style.height = "100%";
+  canvas.style.display = "block";
+  canvas.style.border = "2px solid #5566AA";
+  canvas.style.borderRadius = "8px";
+  canvas.style.backgroundColor = "#ffffff";
+  canvasContainerRef.current.appendChild(canvas);
+  // ✅ Sync real resolution AFTER append
+  const rect = canvas.getBoundingClientRect();
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = rect.width * dpr;
+  canvas.height = rect.height * dpr;
+  const ctx = canvas.getContext("2d");
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       const turtleDiv = document.createElement("div");
       turtleDiv.id = "turtleCanvas";
       turtleDiv.style.width = "100%";
@@ -6014,18 +7106,14 @@ ${currentPrediction} (${(currentConfidence * 100).toFixed(1)}%)
       turtleDiv.style.backgroundColor = "#ffffff";
       turtleDiv.style.position = "relative";
       canvasContainerRef.current.appendChild(turtleDiv);
-
       // Turtle graphics config MUST be before import turtle
       Sk.TurtleGraphics = Sk.TurtleGraphics || {};
       Sk.TurtleGraphics.target = "turtleCanvas";
       Sk.TurtleGraphics.width = 800;
       Sk.TurtleGraphics.height = 500;
-    }
-
+}
     let pendingPlot = null;
     let plotLabels = { x: "", y: "" };
-
-
     // Add AI Learning helper functions to Skulpt
     // Handler for AI Learning commands
     async function handleAICommand(cleanText, containerRef, setOutput) {
@@ -6034,16 +7122,13 @@ ${currentPrediction} (${(currentConfidence * 100).toFixed(1)}%)
         await loadFacialImage(containerRef, (msg) => setOutput(prev => prev + "\n" + msg));
         return;
       }
-
       if (cleanText.startsWith("__FACIAL_GET_COUNT__:")) {
         const feature = cleanText.split(":")[1];
         let count = 0;
-
         if (!facialDetections || facialDetections.length === 0) {
           setOutput(prev => prev + `\n${feature} count: 0`);
           return;
         }
-
         if (feature === "face") {
           count = facialDetections.length;
         } else if (feature === "eye") {
@@ -6059,114 +7144,91 @@ ${currentPrediction} (${(currentConfidence * 100).toFixed(1)}%)
             if (d.expressions && d.expressions.happy > 0.5) count++;
           });
         }
-
         setOutput(prev => prev + `\n${feature} count: ${count}`);
         return;
       }
-
       if (cleanText.startsWith("__FACIAL_GET_GENDER__:")) {
         const gender = cleanText.split(":")[1];
         let count = 0;
-
         if (!facialDetections || facialDetections.length === 0) {
           setOutput(prev => prev + `\n${gender} count: 0`);
           return;
         }
-
         facialDetections.forEach(d => {
           if (d.gender && d.gender === gender) count++;
         });
-
         setOutput(prev => prev + `\n${gender} count: ${count}`);
         return;
       }
-
       if (cleanText.startsWith("__FACIAL_GET_EXPRESSION__:")) {
         const expression = cleanText.split(":")[1];
         let count = 0;
-
         if (!facialDetections || facialDetections.length === 0) {
           setOutput(prev => prev + `\n${expression} count: 0`);
           return;
         }
-
         facialDetections.forEach(d => {
           if (d.expressions && d.expressions[expression] > 0.5) count++;
         });
-
         setOutput(prev => prev + `\n${expression} count: ${count}`);
         return;
       }
-
       if (cleanText === "__FACIAL_GET_AGE_LIST__") {
         if (!facialDetections || facialDetections.length === 0) {
           setOutput(prev => prev + `\nAge list: []`);
           return;
         }
-
         const ages = facialDetections.map(d => Math.round(d.age || 0));
         setOutput(prev => prev + `\nAge list: [${ages.join(", ")}]`);
         return;
       }
-
       if (cleanText.startsWith("__FACIAL_SHOW__:")) {
         const border = cleanText.split(":")[1];
         showFacialImage(containerRef, border === "with", (msg) => setOutput(prev => prev + "\n" + msg));
         return;
       }
-
       // Object Detection
       if (cleanText === "__OBJECT_LOAD_IMAGE__") {
         await loadObjectImage(containerRef, (msg) => setOutput(prev => prev + "\n" + msg));
         return;
       }
-
       if (cleanText.startsWith("__OBJECT_GET_COUNT__:")) {
         const object = cleanText.split(":")[1];
         let count = 0;
-
         if (!objectDetections || objectDetections.length === 0) {
           setOutput(prev => prev + `\n${object} count: 0`);
           return;
         }
-
         objectDetections.forEach(d => {
           if (d.class === object) count++;
         });
-
         setOutput(prev => prev + `\n${object} count: ${count}`);
         return;
       }
-
       if (cleanText.startsWith("__OBJECT_SHOW__:")) {
         const border = cleanText.split(":")[1];
         showObjectImage(containerRef, border === "with", (msg) => setOutput(prev => prev + "\n" + msg));
         return;
       }
-
       // Face Recognition
       if (cleanText === "__FACERECOG_LOAD_IMAGE__") {
         await loadFaceRecogImage(containerRef, (msg) => setOutput(prev => prev + "\n" + msg));
         return;
       }
-
       if (cleanText === "__FACERECOG_PREDICT__") {
         await predictFaceRecog((msg) => setOutput(prev => prev + "\n" + msg));
         return;
       }
-
       if (cleanText.startsWith("__FACERECOG_SHOW__:")) {
         const border = cleanText.split(":")[1];
         showFaceRecogImage(containerRef, border === "with", (msg) => setOutput(prev => prev + "\n" + msg));
         return;
       }
-
       // Computer Vision
       if (cleanText === "__CV_LOAD_IMAGE__") {
         await loadCVImage(containerRef, (msg) => setOutput(prev => prev + "\n" + msg));
         return;
       }
-
       if (cleanText.startsWith("__CV_PUT_TEXT__:")) {
         const parts = cleanText.split(":");
         const text = parts[1].replace(/"/g, '');
@@ -6178,7 +7240,6 @@ ${currentPrediction} (${(currentConfidence * 100).toFixed(1)}%)
         const g = parseInt(parts[7]);
         const b = parseInt(parts[8]);
         const thickness = parseInt(parts[9]);
-
         if (cvMat && window.cv) {
           const fontMap = {
             'SIMPLEX': window.cv.FONT_HERSHEY_SIMPLEX,
@@ -6195,7 +7256,6 @@ ${currentPrediction} (${(currentConfidence * 100).toFixed(1)}%)
         }
         return;
       }
-
       if (cleanText.startsWith("__CV_DRAW_LINE__:")) {
         const parts = cleanText.split(":");
         const x1 = parseInt(parts[1]);
@@ -6206,7 +7266,6 @@ ${currentPrediction} (${(currentConfidence * 100).toFixed(1)}%)
         const g = parseInt(parts[6]);
         const b = parseInt(parts[7]);
         const thickness = parseInt(parts[8]);
-
         if (cvMat && window.cv) {
           window.cv.line(cvMat, new window.cv.Point(x1, y1), new window.cv.Point(x2, y2), new window.cv.Scalar(b, g, r), thickness);
           setOutput(prev => prev + `\nâœ… Line drawn`);
@@ -6220,44 +7279,32 @@ ${currentPrediction} (${(currentConfidence * 100).toFixed(1)}%)
         );
         return;
       }
-
       if (cleanText === "__FINGER_STOP__") {
         stopFingerDetection((msg) =>
           setOutput(prev => prev + "\n" + msg)
         );
         return;
       }
-
       if (cleanText.startsWith("__FINGER_DELAY__:")) {
         fingerDelaySeconds = parseFloat(cleanText.split(":")[1]) || 1;
         return;
       }
-
       if (cleanText === "__FINGER_GET_COUNT__") {
-
         if (!fingerInterval) {
-
           fingerInterval = setInterval(() => {
-
             if (!fingerResults || !fingerResults.multiHandLandmarks) return;
-
             const landmarks = fingerResults.multiHandLandmarks[0];
             let count = 0;
-
             if (landmarks[4].x < landmarks[3].x) count++;
             if (landmarks[8].y < landmarks[6].y) count++;
             if (landmarks[12].y < landmarks[10].y) count++;
             if (landmarks[16].y < landmarks[14].y) count++;
             if (landmarks[20].y < landmarks[18].y) count++;
-
             setOutput(prev => prev + `\nFinger count: ${count}`);
-
           }, fingerDelaySeconds * 1000);
         }
-
         return;
       }
-
       if (cleanText.startsWith("__CV_DRAW_RECTANGLE__:")) {
         const parts = cleanText.split(":");
         const x1 = parseInt(parts[1]);
@@ -6268,14 +7315,12 @@ ${currentPrediction} (${(currentConfidence * 100).toFixed(1)}%)
         const g = parseInt(parts[6]);
         const b = parseInt(parts[7]);
         const thickness = parseInt(parts[8]);
-
         if (cvMat && window.cv) {
           window.cv.rectangle(cvMat, new window.cv.Point(x1, y1), new window.cv.Point(x2, y2), new window.cv.Scalar(b, g, r), thickness);
           setOutput(prev => prev + `\nâœ… Rectangle drawn`);
         }
         return;
       }
-
       if (cleanText.startsWith("__CV_DRAW_CIRCLE__:")) {
         const parts = cleanText.split(":");
         const x = parseInt(parts[1]);
@@ -6285,19 +7330,16 @@ ${currentPrediction} (${(currentConfidence * 100).toFixed(1)}%)
         const g = parseInt(parts[5]);
         const b = parseInt(parts[6]);
         const thickness = parseInt(parts[7]);
-
         if (cvMat && window.cv) {
           window.cv.circle(cvMat, new window.cv.Point(x, y), radius, new window.cv.Scalar(b, g, r), thickness);
           setOutput(prev => prev + `\nâœ… Circle drawn`);
         }
         return;
       }
-
       if (cleanText.startsWith("__CV_RESIZE__:")) {
         const parts = cleanText.split(":");
         const width = parseInt(parts[1]);
         const height = parseInt(parts[2]);
-
         if (cvMat && window.cv) {
           const resized = new window.cv.Mat();
           window.cv.resize(cvMat, resized, new window.cv.Size(width, height));
@@ -6307,13 +7349,11 @@ ${currentPrediction} (${(currentConfidence * 100).toFixed(1)}%)
         }
         return;
       }
-
       if (cleanText.startsWith("__CV_SHOW__:")) {
         const border = cleanText.split(":")[1];
         showCVImage(containerRef, border === "with", (msg) => setOutput(prev => prev + "\n" + msg));
         return;
       }
-
       if (cleanText === "__CV_SAVE__") {
         saveCVImage((msg) => setOutput(prev => prev + "\n" + msg));
         return;
@@ -6323,7 +7363,6 @@ ${currentPrediction} (${(currentConfidence * 100).toFixed(1)}%)
       const map = {};
       let maxCount = 0;
       let mostFrequent = 0;
-
       arr.forEach(num => {
         map[num] = (map[num] || 0) + 1;
         if (map[num] > maxCount) {
@@ -6331,14 +7370,11 @@ ${currentPrediction} (${(currentConfidence * 100).toFixed(1)}%)
           mostFrequent = num;
         }
       });
-
       return mostFrequent;
     }
-
     Sk.builtins.__facial_get_count__ = new Sk.builtin.func((feature) => {
       const f = Sk.ffi.remapToJs(feature);
       if (!facialDetections || facialDetections.length === 0) return Sk.ffi.remapToPy(0);
-
       let count = 0;
       if (f === "face") {
         count = facialDetections.length;
@@ -6355,73 +7391,58 @@ ${currentPrediction} (${(currentConfidence * 100).toFixed(1)}%)
       }
       return Sk.ffi.remapToPy(count);
     });
-
     Sk.builtins.__facial_get_gender__ = new Sk.builtin.func((gender) => {
       const g = Sk.ffi.remapToJs(gender);
       if (!facialDetections || facialDetections.length === 0) return Sk.ffi.remapToPy(0);
-
       let count = 0;
       facialDetections.forEach(d => {
         if (d.gender && d.gender.toLowerCase() === g) count++;
       });
       return Sk.ffi.remapToPy(count);
     });
-
     Sk.builtins.__facial_get_expression__ = new Sk.builtin.func((expression) => {
       const exp = Sk.ffi.remapToJs(expression);
       if (!facialDetections || facialDetections.length === 0) return Sk.ffi.remapToPy(0);
-
       let count = 0;
       facialDetections.forEach(d => {
         if (d.expressions && d.expressions[exp] > 0.5) count++;
       });
       return Sk.ffi.remapToPy(count);
     });
-
     Sk.builtins.__facial_get_age_list__ = new Sk.builtin.func(() => {
       if (!facialDetections || facialDetections.length === 0) return Sk.ffi.remapToPy([]);
-
       const ages = facialDetections.map(d => Math.round(d.age || 0));
       return Sk.ffi.remapToPy(ages);
     });
-
     Sk.builtins.__object_get_count__ = new Sk.builtin.func((object) => {
       const obj = Sk.ffi.remapToJs(object);
       if (!objectDetections || objectDetections.length === 0) return Sk.ffi.remapToPy(0);
-
       let count = 0;
       objectDetections.forEach(d => {
         if (d.class === obj) count++;
       });
       return Sk.ffi.remapToPy(count);
     });
-
     Sk.builtins.__finger_get_coord__ = new Sk.builtin.func((axis, point) => {
       const a = Sk.ffi.remapToJs(axis);
       const p = Sk.ffi.remapToJs(point);
-
       if (!fingerResults || !fingerResults.multiHandLandmarks || fingerResults.multiHandLandmarks.length === 0) {
         return Sk.ffi.remapToPy(0);
       }
-
       const landmarks = fingerResults.multiHandLandmarks[0];
       if (landmarks && landmarks[p]) {
         const value = landmarks[p][a] || 0;
         return Sk.ffi.remapToPy(value);
       }
-
       return Sk.ffi.remapToPy(0);
     });
-
     Sk.builtins.__finger_get_count__ = new Sk.builtin.func(() => {
       if (!fingerResults || !fingerResults.multiHandLandmarks || fingerResults.multiHandLandmarks.length === 0) {
         return Sk.ffi.remapToPy(0);
       }
-
       // Simple finger counting logic (can be improved)
       const landmarks = fingerResults.multiHandLandmarks[0];
       let count = 0;
-
       // Thumb
       if (landmarks[4].x < landmarks[3].x) count++;
       // Index
@@ -6432,17 +7453,12 @@ ${currentPrediction} (${(currentConfidence * 100).toFixed(1)}%)
       if (landmarks[16].y < landmarks[14].y) count++;
       // Pinky
       if (landmarks[20].y < landmarks[18].y) count++;
-
       return Sk.ffi.remapToPy(count);
     });
-
     Sk.configure({
       output: (text) => {
         console.log("[Skulpt Output]", text);
-
-
         const cleanText = text.trim();
-
         // Queue AI Learning commands that need async processing
         if (cleanText === "__FACIAL_LOAD_IMAGE__" ||
           cleanText.startsWith("__FACIAL_GET_") ||
@@ -6459,19 +7475,17 @@ ${currentPrediction} (${(currentConfidence * 100).toFixed(1)}%)
           cleanText.startsWith("__FINGER_DELAY__") ||
           cleanText === "__CV_LOAD_IMAGE__" ||
           cleanText.startsWith("__CV_")) {
-
           commandQueue.push(async () => {
             await handleAICommand(cleanText, canvasContainerRef, setOutput);
           });
-
           // Start processing queue if not already processing
           if (!isProcessingQueue) {
             processCommandQueue();
           }
           return;
         }
-
         /* =========================
+           🖼️ SPRITE HANDLER
    TEACHABLE HANDLER
 ========================= */
         if (cleanText.startsWith("__TEACHABLE_LOAD__")) {
@@ -6479,13 +7493,11 @@ ${currentPrediction} (${(currentConfidence * 100).toFixed(1)}%)
           loadTeachableModel(url, (msg) => setOutput(prev => prev + "\n" + msg));
           return;
         }
-
         if (cleanText === "__TEACHABLE_LOAD_IMAGE__") {
           if (tmLoadedImage) {
             setOutput(prev => prev + "\n✅ Image already loaded!");
           } else {
             setOutput(prev => prev + "\n⚠️ Image loading required!\n📋 Please click the 'Load Image' button that appears below, then click Run again.");
-
             // Create visible upload button
             if (canvasContainerRef.current) {
               const uploadBtn = document.createElement("button");
@@ -6502,7 +7514,6 @@ ${currentPrediction} (${(currentConfidence * 100).toFixed(1)}%)
         margin: 20px auto;
         display: block;
       `;
-
               uploadBtn.onclick = () => {
                 const input = document.createElement("input");
                 input.type = "file";
@@ -6526,14 +7537,12 @@ ${currentPrediction} (${(currentConfidence * 100).toFixed(1)}%)
                 };
                 input.click();
               };
-
               canvasContainerRef.current.innerHTML = "";
               canvasContainerRef.current.appendChild(uploadBtn);
             }
           }
           return;
         }
-
         if (cleanText.startsWith("__TEACHABLE_SHOW__:")) {
           const src = cleanText.split(":")[1];
           if (src === "webcam") {
@@ -6543,12 +7552,10 @@ ${currentPrediction} (${(currentConfidence * 100).toFixed(1)}%)
           }
           return;
         }
-
         if (cleanText.startsWith("__TEACHABLE_PREDICT__:")) {
           const parts = cleanText.split(":");
           const type = parts[1]; // "image" or "pose"
           const src = parts[2];  // "webcam" or "image"
-
           if (src === "webcam") {
             predictFromWebcam(type, (msg) => setOutput(prev => prev + "\n" + msg), canvasContainerRef);
           } else if (src === "image") {
@@ -6556,31 +7563,25 @@ ${currentPrediction} (${(currentConfidence * 100).toFixed(1)}%)
           }
           return;
         }
-
         if (cleanText === "__TEACHABLE_PREDICT_AUDIO__") {
           predictTeachableAudio();
           return;
         }
-
         /* =========================
            AI LEARNING HANDLERS
         ========================= */
-
         // Facial Features
         if (cleanText === "__FACIAL_LOAD_IMAGE__") {
           loadFacialImage(canvasContainerRef, (msg) => setOutput(prev => prev + "\n" + msg));
           return;
         }
-
         if (cleanText.startsWith("__FACIAL_GET_COUNT__:")) {
           const feature = cleanText.split(":")[1];
           let count = 0;
-
           if (!facialDetections || facialDetections.length === 0) {
-            setOutput(prev => prev + `\n${feature} count: 0`);
+            facialCountsArray.push({ label: feature.charAt(0).toUpperCase() + feature.slice(1), count: 0 });
             return;
           }
-
           if (feature === "face") {
             count = facialDetections.length;
           } else if (feature === "eye") {
@@ -6596,108 +7597,91 @@ ${currentPrediction} (${(currentConfidence * 100).toFixed(1)}%)
               if (d.expressions && d.expressions.happy > 0.5) count++;
             });
           }
-
-          setOutput(prev => prev + `\n${feature} count: ${count}`);
+          // Store the count for canvas display
+          facialCountsArray.push({ label: feature.charAt(0).toUpperCase() + feature.slice(1), count: count });
           return;
         }
-
         if (cleanText.startsWith("__FACIAL_GET_GENDER__:")) {
           const gender = cleanText.split(":")[1];
           let count = 0;
-
           if (!facialDetections || facialDetections.length === 0) {
-            setOutput(prev => prev + `\n${gender} count: 0`);
+            facialCountsArray.push({ label: gender.charAt(0).toUpperCase() + gender.slice(1), count: 0 });
             return;
           }
-
           facialDetections.forEach(d => {
             if (d.gender && d.gender === gender) count++;
           });
-
-          setOutput(prev => prev + `\n${gender} count: ${count}`);
+          // Store the count for canvas display
+          facialCountsArray.push({ label: gender.charAt(0).toUpperCase() + gender.slice(1), count: count });
           return;
         }
-
         if (cleanText.startsWith("__FACIAL_GET_EXPRESSION__:")) {
           const expression = cleanText.split(":")[1];
           let count = 0;
-
           if (!facialDetections || facialDetections.length === 0) {
-            setOutput(prev => prev + `\n${expression} count: 0`);
+            facialCountsArray.push({ label: expression.charAt(0).toUpperCase() + expression.slice(1), count: 0 });
             return;
           }
-
           facialDetections.forEach(d => {
             if (d.expressions && d.expressions[expression] > 0.5) count++;
           });
-
-          setOutput(prev => prev + `\n${expression} count: ${count}`);
+          // Store the count for canvas display
+          facialCountsArray.push({ label: expression.charAt(0).toUpperCase() + expression.slice(1), count: count });
           return;
         }
-
         if (cleanText === "__FACIAL_GET_AGE_LIST__") {
           if (!facialDetections || facialDetections.length === 0) {
-            setOutput(prev => prev + `\nAge list: []`);
+            facialCountsArray.push({ label: "Ages", count: "[]" });
             return;
           }
-
           const ages = facialDetections.map(d => Math.round(d.age || 0));
-          setOutput(prev => prev + `\nAge list: [${ages.join(", ")}]`);
+          // Store the ages for canvas display
+          facialCountsArray.push({ label: "Ages", count: `[${ages.join(", ")}]` });
           return;
         }
-
         if (cleanText.startsWith("__FACIAL_SHOW__:")) {
           const border = cleanText.split(":")[1];
-          showFacialImage(canvasContainerRef, border === "with", (msg) => setOutput(prev => prev + "\n" + msg));
+          showFacialImage(canvasContainerRef, border === "with", (msg) => setOutput(prev => prev + "\n" + msg), facialCountsArray);
+          facialCountsArray = []; // Clear the array after displaying
           return;
         }
-
         // Object Detection
         if (cleanText === "__OBJECT_LOAD_IMAGE__") {
           loadObjectImage(canvasContainerRef, (msg) => setOutput(prev => prev + "\n" + msg));
           return;
         }
-
         if (cleanText.startsWith("__OBJECT_GET_COUNT__:")) {
           const object = cleanText.split(":")[1];
           let count = 0;
-
           if (!objectDetections || objectDetections.length === 0) {
             setOutput(prev => prev + `\n${object} count: 0`);
             return;
           }
-
           objectDetections.forEach(d => {
             if (d.class === object) count++;
           });
-
           setOutput(prev => prev + `\n${object} count: ${count}`);
           return;
         }
-
         if (cleanText.startsWith("__OBJECT_SHOW__:")) {
           const border = cleanText.split(":")[1];
           showObjectImage(canvasContainerRef, border === "with", (msg) => setOutput(prev => prev + "\n" + msg));
           return;
         }
-
         // Face Recognition
         if (cleanText === "__FACERECOG_LOAD_IMAGE__") {
           loadFaceRecogImage(canvasContainerRef, (msg) => setOutput(prev => prev + "\n" + msg));
           return;
         }
-
         if (cleanText === "__FACERECOG_PREDICT__") {
           predictFaceRecog((msg) => setOutput(prev => prev + "\n" + msg));
           return;
         }
-
         if (cleanText.startsWith("__FACERECOG_SHOW__:")) {
           const border = cleanText.split(":")[1];
           showFaceRecogImage(canvasContainerRef, border === "with", (msg) => setOutput(prev => prev + "\n" + msg));
           return;
         }
-
         // Finger Detection
         // if (cleanText === "__FINGER_START__") {
         //   fingerCollected = [];
@@ -6707,32 +7691,24 @@ ${currentPrediction} (${(currentConfidence * 100).toFixed(1)}%)
         //   );
         //   return;
         // }
-
-
         // if (cleanText === "__FINGER_STOP__") {
-
         //   if (fingerInterval) {
         //     clearInterval(fingerInterval);
         //     fingerInterval = null;
         //   }
-
         //   stopFingerDetection((msg) =>
         //     setOutput(prev => prev + "\n" + msg)
         //   );
-
         //   return;
         // }
-
         // if (cleanText.startsWith("__FINGER_GET_COORD__:")) {
         //   const parts = cleanText.split(":");
         //   const axis = parts[1];
         //   const point = parseInt(parts[2]);
-
         //   if (!fingerResults || !fingerResults.multiHandLandmarks || fingerResults.multiHandLandmarks.length === 0) {
         //     setOutput(prev => prev + `\nCoordinate ${axis} of point ${point}: 0`);
         //     return;
         //   }
-
         //   const landmarks = fingerResults.multiHandLandmarks[0];
         //   if (landmarks && landmarks[point]) {
         //     const value = landmarks[point][axis] || 0;
@@ -6742,62 +7718,42 @@ ${currentPrediction} (${(currentConfidence * 100).toFixed(1)}%)
         //   }
         //   return;
         // }
-
         // if (cleanText === "__FINGER_GET_COUNT__") {
-
         //   if (!fingerInterval) {
-
         //     fingerInterval = setInterval(() => {
-
         //       if (!fingerResults || !fingerResults.multiHandLandmarks) return;
-
         //       const landmarks = fingerResults.multiHandLandmarks[0];
         //       let count = 0;
-
         //       if (landmarks[4].x < landmarks[3].x) count++;
         //       if (landmarks[8].y < landmarks[6].y) count++;
         //       if (landmarks[12].y < landmarks[10].y) count++;
         //       if (landmarks[16].y < landmarks[14].y) count++;
         //       if (landmarks[20].y < landmarks[18].y) count++;
-
         //       fingerCollected.push(count);
-
         //       setOutput(prev => prev + `\nFinger count: ${count}`);
-
         //       fingerLoopCurrent++;
-
         //       if (fingerLoopCurrent >= 30) { // match repeat count
-
         //         clearInterval(fingerInterval);
         //         fingerInterval = null;
-
         //         const mostFrequent = getMostFrequent(fingerCollected);
-
         //         setOutput(prev =>
         //           prev + `\n\n✅ Final Detected Finger Count: ${mostFrequent}`
         //         );
-
         //         fingerCollected = [];
         //       }
-
         //     }, fingerDelaySeconds * 1000);
         //   }
-
         //   return;
         // }
-
         // if (cleanText.startsWith("__FINGER_DELAY__:")) {
         //   fingerDelaySeconds = parseFloat(cleanText.split(":")[1]) || 1;
         //   return;
         // }
-
-
         // Computer Vision
         if (cleanText === "__CV_LOAD_IMAGE__") {
           loadCVImage(canvasContainerRef, (msg) => setOutput(prev => prev + "\n" + msg));
           return;
         }
-
         if (cleanText.startsWith("__CV_PUT_TEXT__:")) {
           const parts = cleanText.split(":");
           const text = parts[1].replace(/"/g, '');
@@ -6809,7 +7765,6 @@ ${currentPrediction} (${(currentConfidence * 100).toFixed(1)}%)
           const g = parseInt(parts[7]);
           const b = parseInt(parts[8]);
           const thickness = parseInt(parts[9]);
-
           if (cvMat && window.cv) {
             const fontMap = {
               'SIMPLEX': window.cv.FONT_HERSHEY_SIMPLEX,
@@ -6826,7 +7781,6 @@ ${currentPrediction} (${(currentConfidence * 100).toFixed(1)}%)
           }
           return;
         }
-
         if (cleanText.startsWith("__CV_DRAW_LINE__:")) {
           const parts = cleanText.split(":");
           const x1 = parseInt(parts[1]);
@@ -6837,14 +7791,12 @@ ${currentPrediction} (${(currentConfidence * 100).toFixed(1)}%)
           const g = parseInt(parts[6]);
           const b = parseInt(parts[7]);
           const thickness = parseInt(parts[8]);
-
           if (cvMat && window.cv) {
             window.cv.line(cvMat, new window.cv.Point(x1, y1), new window.cv.Point(x2, y2), new window.cv.Scalar(b, g, r), thickness);
             setOutput(prev => prev + `\nâœ… Line drawn from (${x1},${y1}) to (${x2},${y2})`);
           }
           return;
         }
-
         if (cleanText.startsWith("__CV_DRAW_RECT__:")) {
           const parts = cleanText.split(":");
           const x1 = parseInt(parts[1]);
@@ -6855,14 +7807,12 @@ ${currentPrediction} (${(currentConfidence * 100).toFixed(1)}%)
           const g = parseInt(parts[6]);
           const b = parseInt(parts[7]);
           const thickness = parseInt(parts[8]);
-
           if (cvMat && window.cv) {
             window.cv.rectangle(cvMat, new window.cv.Point(x1, y1), new window.cv.Point(x2, y2), new window.cv.Scalar(b, g, r), thickness);
             setOutput(prev => prev + `\nâœ… Rectangle drawn from (${x1},${y1}) to (${x2},${y2})`);
           }
           return;
         }
-
         if (cleanText.startsWith("__CV_DRAW_CIRCLE__:")) {
           const parts = cleanText.split(":");
           const x = parseInt(parts[1]);
@@ -6872,19 +7822,16 @@ ${currentPrediction} (${(currentConfidence * 100).toFixed(1)}%)
           const g = parseInt(parts[5]);
           const b = parseInt(parts[6]);
           const thickness = parseInt(parts[7]);
-
           if (cvMat && window.cv) {
             window.cv.circle(cvMat, new window.cv.Point(x, y), radius, new window.cv.Scalar(b, g, r), thickness);
             setOutput(prev => prev + `\nâœ… Circle drawn at (${x},${y}) with radius ${radius}`);
           }
           return;
         }
-
         if (cleanText.startsWith("__CV_RESIZE__:")) {
           const parts = cleanText.split(":");
           const width = parseInt(parts[1]);
           const height = parseInt(parts[2]);
-
           if (cvMat && window.cv) {
             const dsize = new window.cv.Size(width, height);
             window.cv.resize(cvMat, cvMat, dsize, 0, 0, window.cv.INTER_AREA);
@@ -6892,31 +7839,26 @@ ${currentPrediction} (${(currentConfidence * 100).toFixed(1)}%)
           }
           return;
         }
-
         if (cleanText.startsWith("__CV_SHOW__:")) {
           const name = cleanText.split(":")[1].replace(/"/g, '');
           showCVImage(canvasContainerRef, name, (msg) => setOutput(prev => prev + "\n" + msg));
           return;
         }
-
         if (cleanText.startsWith("__CV_SAVE__:")) {
           const name = cleanText.split(":")[1].replace(/"/g, '');
           saveCVImage(name, (msg) => setOutput(prev => prev + "\n" + msg));
           return;
         }
-
         if (code.includes("__UPLOAD_FILE__")) {
           fileInputRef.current.click();
           return; // wait for upload
         }
-
         /* =========================
            ðŸ–¼ï¸ SPRITE HANDLER
         ========================= */
         if (cleanText.startsWith("__SPRITE__:")) {
           const raw = cleanText.replace("__SPRITE__:", "").trim();
           const [spriteName, cam] = raw.split("|");
-
           if (cam === "on") {
             showSpriteWithWebcam(spriteName);
           } else {
@@ -6924,29 +7866,26 @@ ${currentPrediction} (${(currentConfidence * 100).toFixed(1)}%)
           }
           return;
         }
-
         if (cleanText.startsWith("__SPEAK__:")) {
           const spokenText = cleanText.replace("__SPEAK__:", "").trim();
-
           if (spokenText) {
             window.speechSynthesis.cancel();
             window.speechSynthesis.speak(
               new SpeechSynthesisUtterance(spokenText)
             );
           }
+          return; // ⛔ stop further processing
           return; // â›” stop further processing
         }
         if (text.startsWith("__PYGAL_RENDER__")) {
           const raw = text.replace("__PYGAL_RENDER__", "").trim();
           const [type, seriesStr, xlabelsStr, titleStr] = raw.split("|");
-
           const chart = {
             type,
             series: eval(seriesStr),
             x_labels: eval(xlabelsStr),
             title: titleStr || ""
           };
-
           renderPygalChart(chart);
           return;
         }
@@ -6956,13 +7895,10 @@ ${currentPrediction} (${(currentConfidence * 100).toFixed(1)}%)
         if (text.includes("__PLOT_DATA__")) {
           try {
             const raw = text.replace("__PLOT_DATA__", "").trim();
-
             // Format: type|[x]|[y]
             const [type, xStr, yStr] = raw.split("|");
-
             const x = eval(xStr); // safe (internal only)
             const y = eval(yStr);
-
             pendingPlot = {
               type,
               x,
@@ -6973,34 +7909,29 @@ ${currentPrediction} (${(currentConfidence * 100).toFixed(1)}%)
           }
           return;
         }
-
         /* =========================
            LABELS
         ========================= */
         if (text.includes("__PLOT_LABELS__")) {
           const raw = text.replace("__PLOT_LABELS__", "").trim();
           const [xLabel, yLabel] = raw.split("|");
-
           plotLabels = {
             x: xLabel.replace(/'/g, ""),
             y: yLabel.replace(/'/g, "")
           };
-
           if (pendingPlot) {
             renderPlot(pendingPlot, plotLabels);
             pendingPlot = null;
           }
           return;
         }
-
-
         /* =========================
+       NORMAL OUTPUT → WHITE CANVAS
        NORMAL OUTPUT â†’ WHITE CANVAS
     ========================= */
         const pre = getCanvasTextOutput();
         pre.textContent += text;
       },
-
       read: (filename) => {
         if (
           Sk.builtinFiles === undefined ||
@@ -7011,7 +7942,6 @@ ${currentPrediction} (${(currentConfidence * 100).toFixed(1)}%)
         return Sk.builtinFiles["files"][filename];
       }
     });
-
     // Optional helper for turtle background
     window.setCanvasBackgroundColor = function (color) {
       const canvas = document.querySelector("#turtleCanvas canvas");
@@ -7023,11 +7953,11 @@ ${currentPrediction} (${(currentConfidence * 100).toFixed(1)}%)
     };
     const needsUpload = code.includes("__UPLOAD_FILE__");
     const cleanedCode = code.replace(/__UPLOAD_FILE__/g, "");
-
     if (needsUpload && !window.__fileUploaded) {
       fileInputRef.current.click();
       return;
     }
+    // 👇 Only inject turtle init if required
     // ðŸ‘‡ Only inject turtle init if required
     let initCode = "";
     if (code.includes("playsound.say")) {
@@ -7038,7 +7968,6 @@ class playsound:
         print("__SPEAK__:", text)
 `;
     }
-
     if (code.includes("sprites.show")) {
       initCode += `
 class sprites:
@@ -7047,7 +7976,6 @@ class sprites:
         print("__SPRITE__:" + str(name) + "|" + str(cam))
 `;
     }
-
     if (code.includes("serial")) {
       initCode += `
 class serial:
@@ -7059,7 +7987,12 @@ class serial:
     if (usesMath) {
       initCode += `import math\n`;
     }
-
+    //     if (usesTurtle) {
+    //       initCode += `
+    // import turtle
+    // _s = turtle.Screen()
+    // `;
+    //     }
     if (usesTurtle) {
       initCode += `
 import turtle
@@ -7074,10 +8007,8 @@ class _PygalBase:
         self.x_labels = []
         self.title = ""
         self._type = "base"
-
     def add(self, label, values):
         self.series.append({"label": label, "values": values})
-
     def render(self):
       print(
           "__PYGAL_RENDER__"
@@ -7089,48 +8020,38 @@ class _PygalBase:
           + "|"
           + str(self.title)
       )
-
-
 class Bar(_PygalBase):
     def __init__(self):
         super().__init__()
         self._type = "bar"
-
 class HorizontalBar(_PygalBase):
     def __init__(self):
         super().__init__()
         self._type = "hbar"
-
 class Line(_PygalBase):
     def __init__(self):
         super().__init__()
         self._type = "line"
-
 class Pie(_PygalBase):
     def __init__(self):
         super().__init__()
         self._type = "pie"
-
 class Radar(_PygalBase):
     def __init__(self):
         super().__init__()
         self._type = "radar"
-
 class StackedBar(_PygalBase):
     def __init__(self):
         super().__init__()
         self._type = "stacked_bar"
-
 class StackedLine(_PygalBase):
     def __init__(self):
         super().__init__()
         self._type = "stacked_line"
-
 class XY(_PygalBase):
     def __init__(self):
         super().__init__()
         self._type = "xy"
-
 class pygal:
     Bar = Bar
     HorizontalBar = HorizontalBar
@@ -7151,52 +8072,76 @@ class _FakePlt:
         self.xlabel_text = ""
         self.ylabel_text = ""
         self.title_text = ""
-
     def plot(self, x, y):
         self.kind = "line"
         self.plots.append((list(x), list(y)))
-
     def scatter(self, x, y):
         self.kind = "scatter"
         self.plots.append((list(x), list(y)))
-
     def hist(self, d):
         self.kind = "hist"
         self.plots.append((list(d), []))
-
     def xlabel(self, t): self.xlabel_text = t
     def ylabel(self, t): self.ylabel_text = t
     def title(self, t): self.title_text = t
-
     def show(self):
         for p in self.plots:
             print("__PLOT_DATA__" + self.kind + "|" + str(p[0]) + "|" + str(p[1]))
         print("__PLOT_LABELS__" + str(self.xlabel_text) + "|" + str(self.ylabel_text))
-
 plt = _FakePlt()
 `;
     }
-
-    const fullCode = initCode + code + cleanedCode;
-
+    const pythonDisplayCode = initCode + code; // 👀 shown only
+    // 🐢 TURTLE → JAVASCRIPT CANVAS
+    if (usesTurtle) {
+      import("@/lib/turtleEngine").then(({ createTurtle }) => {
+        const turtle = createTurtle("turtleCanvas");
+        turtle.reset();
+        // Generate JS from Blockly (NOT Python)
+        const ws = workspaceRef.current;
+        if (!ws) {
+          setOutput("Blockly workspace not ready");
+          return;
+        }
+        const jsCode = javascriptGenerator.workspaceToCode(ws);
+        try {
+          new Function("__turtle", jsCode)(turtle);
+          setOutput((prev) => prev + "\nTurtle executed successfully!");
+        } catch (e) {
+          console.error("Canvas turtle error", e);
+          setOutput((prev) => prev + "\nTurtle execution error");
+        }
+      });
+      return; // ⛔ DO NOT FALL THROUGH TO SKULPT
+    }
+    if (!usesTurtle) {
+      const fullCode = injectUploadedFiles(initCode + cleanedCode);
+    
     console.log("[App] Generated code:\n", fullCode);
     setOutput((prev) => prev + "Generated code:\n" + fullCode + "\n\n");
-
-    const myPromise = Sk.misceval.asyncToPromise(() => {
+      const myPromise = Sk.misceval.asyncToPromise(() => {
       console.log("[App] Starting execution...");
-      return Sk.importMainWithBody("<stdin>", false, fullCode, true);
-    });
-
-    myPromise.then(
-      () => {
+        return Sk.importMainWithBody("<stdin>", false, fullCode, true);
+      });
+      myPromise.then(
+        () => {
         console.log("[App] Code executed successfully!");
-        setOutput((prev) => prev + "\nCode executed successfully!");
-      },
+          setOutput((prev) => prev + "\nCode executed successfully!");
+        },
+        (err: any) => {
+          let errorMessage = "Unknown execution error";
+          if (err?.tp$str) errorMessage = err.tp$str();
+          if (err?.args?.v?.length) {
+            errorMessage += ": " + err.args.v.map((x: any) => x.v).join(", ");
+          }
+          setOutput((prev) => prev + "\nError: " + errorMessage);
       (err) => {
         console.error("[App] Execution error:", err);
         setOutput((prev) => prev + "\nError: " + err.toString());
+        }
       }
-    );
+      );
+    }
   };
 
   function handleFileUpload(e) {
@@ -7232,7 +8177,7 @@ plt = _FakePlt()
 
   return (
     <>
-      <Script
+    <Script
         src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"
         strategy="afterInteractive"
       />
@@ -7274,112 +8219,322 @@ plt = _FakePlt()
       />
 
       <input
+        ref={fileInputRef}
+        type="file"
+        style={{ display: "none" }}
+        onChange={async (e) => {
+          const file = e.target.files?.[0];
+          if (!file) return;
+
+          const text = await file.text();
+
+          window.__uploadedFiles = window.__uploadedFiles || {};
+          window.__uploadedFiles[file.name] = text;
+          window.__fileUploaded = true;
+
+          // 🔥 AUTO-FILL filename into Blockly block
+          const ws = workspaceRef.current;
+          if (ws) {
+            const blocks = ws.getAllBlocks(false);
+            const openBlock = blocks.find(b => b.type === "file_open");
+            if (openBlock) {
+              openBlock.setFieldValue(file.name, "FILENAME");
+            }
+          }
+
+          runCode();
+        }}
+      />
+
+      {/* Debug Panel */}
+      {/* {showDebug && (
+        <div style={{
+          position: 'fixed',
+          top: '10px',
+          right: '10px',
+          width: '400px',
+          maxHeight: '80vh',
+          background: '#1e1e1e',
+          border: '2px solid #4CAF50',
+          borderRadius: '8px',
+          zIndex: 9999,
+          display: 'flex',
+          flexDirection: 'column',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.3)'
+        }}>
+          <div style={{
+            padding: '10px',
+            background: '#4CAF50',
+            color: 'white',
+            fontWeight: 'bold',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            borderRadius: '6px 6px 0 0'
+          }}>
+            <span>🔍 Debug Console</span>
+            <div>
+              <button
+                onClick={() => setDebugLogs([])}
+                style={{
+                  background: '#fff',
+                  border: 'none',
+                  borderRadius: '4px',
+                  padding: '4px 8px',
+                  cursor: 'pointer',
+                  marginRight: '8px',
+                  fontSize: '12px'
+                }}
+              >
+                Clear
+              </button>
+              <button
+                onClick={() => setShowDebug(false)}
+                style={{
+                  background: '#ff4444',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  padding: '4px 8px',
+                  cursor: 'pointer',
+                  fontSize: '12px'
+                }}
+              >
+                ✕
+              </button>
+            </div>
+          </div>
+          <div style={{
+            padding: '10px',
+            overflowY: 'auto',
+            flex: 1,
+            fontFamily: 'monospace',
+            fontSize: '12px',
+            color: '#00ff00',
+            background: '#1e1e1e'
+          }}>
+            {debugLogs.length === 0 ? (
+              <div style={{ color: '#888' }}>No logs yet...</div>
+            ) : (
+              debugLogs.map((log, i) => (
+                <div key={i} style={{
+                  marginBottom: '4px',
+                  borderBottom: '1px solid #333',
+                  paddingBottom: '4px',
+                  wordWrap: 'break-word'
+                }}>
+                  {log}
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      )} */}
+
+      {/* Toggle Debug Button (when hidden) */}
+      {/* {!showDebug && (
+        <button
+          onClick={() => setShowDebug(true)}
+          style={{
+            position: 'fixed',
+            top: '10px',
+            right: '10px',
+            zIndex: 9999,
+            background: '#4CAF50',
+            color: 'white',
+            border: 'none',
+            borderRadius: '50%',
+            width: '50px',
+            height: '50px',
+            fontSize: '20px',
+            cursor: 'pointer',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.3)'
+          }}
+        >
+          🔍
+        </button>
+      )} */}
+
+      <input
         type="file"
         ref={fileInputRef}
         style={{ display: "none" }}
         onChange={handleFileUpload}
       />
-      <div style={{ width: '100vw', height: '100vh', display: 'flex', flexDirection: 'column', fontFamily: 'Arial, sans-serif' }}>
+      <div
+        style={{
+          width: "100%",
+          height: "100vh",
+          display: "flex",
+          flexDirection: "column",
+          fontFamily: "Arial, sans-serif",
+          overflow: "hidden"
+        }}
+      >
         {/* Header */}
-        <div style={{ height: '60px', background: '#7C88CC', display: 'flex', alignItems: 'center', padding: '0 20px', gap: '10px' }}>
-          <button style={{ padding: '8px 16px', background: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>
+        <div
+          style={{
+            height: "60px",
+            background: "#7C88CC",
+            display: "flex",
+            alignItems: "center",
+            padding: "0 20px",
+            gap: "10px"
+          }}
+        >
+          <button style={{ padding: "8px 16px", background: "#fff", border: "none", borderRadius: "4px", fontWeight: "bold" }}>
             ☰
           </button>
-          <button onClick={resetWorkspace} style={{ padding: '8px 16px', background: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
+
+          <button onClick={resetWorkspace} style={{ padding: "8px 16px", background: "#fff", border: "none", borderRadius: "4px" }}>
             🔄 Reset
           </button>
-          <button onClick={runCode} style={{ padding: '8px 24px', background: '#4CAF50', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>
+
+          <button
+            onClick={runCode}
+            style={{
+              padding: "8px 24px",
+              background: "#4CAF50",
+              color: "#fff",
+              border: "none",
+              borderRadius: "4px",
+              fontWeight: "bold"
+            }}
+          >
             ▶ Run
           </button>
-          <div style={{ marginLeft: 'auto', display: 'flex', gap: '10px' }}>
-            <button
-              onClick={() => setView('blocks')}
-              style={{ padding: '8px 16px', background: view === 'blocks' ? '#fff' : '#9BA5D8', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
-              Blocks
-            </button>
-            <button
-              onClick={() => setView('code')}
-              style={{ padding: '8px 16px', background: view === 'code' ? '#fff' : '#9BA5D8', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
-              Code
-            </button>
-            <button
-              onClick={() => setView('canvas')}
-              style={{ padding: '8px 16px', background: view === 'canvas' ? '#fff' : '#9BA5D8', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
-              Canvas
-            </button>
+
+          <div style={{ marginLeft: "auto", display: "flex", gap: "10px" }}>
+            {["blocks", "code", "canvas"].map(v => (
+              <button
+                key={v}
+                onClick={() => setView(v as any)}
+                style={{
+                  padding: "8px 16px",
+                  background: view === v ? "#fff" : "#9BA5D8",
+                  border: "none",
+                  borderRadius: "4px",
+                  cursor: "pointer"
+                }}
+              >
+                {v.charAt(0).toUpperCase() + v.slice(1)}
+              </button>
+            ))}
           </div>
         </div>
 
         {/* Main Content */}
-        <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
-          {/* Blockly Workspace - Sidebar + Editor (LEFT SIDE) */}
-          <div style={{
-            flex: view === 'blocks' ? 1 : 0.6,
-            display: view === 'canvas' ? 'none' : 'block',
-            minWidth: '400px',
-            height: '100%',
-            position: 'relative',
-            backgroundColor: '#fff'
-          }}>
-            <div ref={blocklyDiv} style={{ width: '100%', height: '100%', display: view === 'blocks' ? 'block' : 'none' }} />
-            {view === 'code' && (
-              <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column' }}>
-                <div style={{ padding: '10px', borderBottom: '1px solid #ccc', fontWeight: 'bold', background: '#ddd' }}>Generated Python Code</div>
-                <pre style={{ margin: 0, padding: '20px', flex: 1, overflow: 'auto', fontSize: '13px', fontFamily: 'monospace', whiteSpace: 'pre-wrap', wordWrap: 'break-word' }}>
-                  {code || '# Drag blocks to generate code...'}
+        <div style={{ flex: 1, display: "flex", overflow: "hidden" }}>
+          {/* LEFT – Blockly */}
+          <div
+            style={{
+              flex: view === "blocks" ? 1 : 0.6,
+              display: view === "canvas" ? "none" : "block",
+              minWidth: "400px",
+              height: "100%",
+              background: "#fff",
+              position: "relative",
+              overflow: "hidden"
+            }}
+          >
+            <div
+              ref={blocklyDiv}
+              style={{
+                width: "100%",
+                height: "100%",
+                display: view === "blocks" ? "block" : "none",
+                fontSize: "14px", // Force consistent font size
+                transform: "scale(1)", // Prevent browser scaling
+                transformOrigin: "top left"
+              }}
+            />
+
+            {view === "code" && (
+              <div style={{ height: "100%", display: "flex", flexDirection: "column" }}>
+                <div style={{ padding: "10px", background: "#ddd", fontWeight: "bold" }}>
+                  Generated Python Code
+                </div>
+
+                <pre
+                  style={{
+                    flex: 1,
+                    margin: 0,
+                    padding: "20px",
+                    overflowY: "auto",
+                    fontSize: "13px",
+                    fontFamily: "monospace",
+                    whiteSpace: "pre-wrap"
+                  }}
+                >
+                  {code || "# Drag blocks to generate code..."}
                 </pre>
               </div>
             )}
           </div>
 
-          {/* Canvas/Output Area (RIGHT SIDE) */}
-          <div style={{
-            flex: view === 'blocks' ? 1 : (view === 'code' ? 1 : 1),
-            background: '#7C88CC',
-            display: view === 'canvas' || view === 'blocks' || view === 'code' ? 'flex' : 'none',
-            flexDirection: 'column',
-            padding: '20px',
-            overflow: 'auto',
-            borderLeft: view === 'blocks' || view === 'code' ? '2px solid #555' : 'none'
-          }}>
-            {/* Canvas Container */}
+          {/* RIGHT – Canvas + Output */}
+          <div
+            style={{
+              flex: 1,
+              background: "#7C88CC",
+              display: "flex",
+              flexDirection: "column",
+              padding: "20px",
+              overflow: "hidden",
+              borderLeft: view !== "canvas" ? "2px solid #555" : "none"
+            }}
+          >
+            {/* Canvas */}
             <div
               ref={canvasContainerRef}
               style={{
-                width: '100%',
-                flex: view === 'canvas' ? 0.8 : 0.6,
-                marginBottom: '20px',
-                background: '#ffffff',
-                borderRadius: '8px',
-                border: '2px solid #5566AA',
-                position: 'relative',
-                minHeight: '300px'
+                flex: view === "canvas" ? 0.8 : 0.6,
+                background: "#fff",
+                borderRadius: "8px",
+                border: "2px solid #5566AA",
+                padding: "10px",
+                overflow: "hidden",
+                marginBottom: "20px"
               }}
-            />
+            >
+              <pre
+                style={{
+                  margin: 0,
+                  fontSize: "13px",
+                  fontFamily: "monospace",
+                  whiteSpace: "pre-wrap",
+                  overflowY: "auto",
+                  maxHeight: "100%"
+                }}
+              />
+            </div>
 
-            {/* Output Box */}
-            <div style={{
-              padding: '15px',
-              background: '#5566AA',
-              borderRadius: '8px',
-              color: 'white',
-              flex: view === 'canvas' ? 0.2 : 0.4,
-              overflow: 'auto',
-              display: 'flex',
-              flexDirection: 'column'
-            }}>
-              <div style={{ fontWeight: 'bold', marginBottom: '10px', color: '#ffffff', fontSize: '14px' }}>Output:</div>
-              <pre style={{
-                fontSize: '12px',
-                margin: 0,
-                whiteSpace: 'pre-wrap',
-                wordWrap: 'break-word',
-                overflow: 'auto',
-                color: '#ffffff',
-                flex: 1,
-                fontFamily: 'monospace'
-              }}>
-                {output || 'Ready to run...'}
+            {/* Output */}
+            <div
+              style={{
+                flex: view === "canvas" ? 0.2 : 0.4,
+                background: "#5566AA",
+                borderRadius: "8px",
+                padding: "15px",
+                display: "flex",
+                flexDirection: "column",
+                overflow: "hidden",
+                color: "#fff"
+              }}
+            >
+              <div style={{ fontWeight: "bold", marginBottom: "10px" }}>Output:</div>
+
+              <pre
+                style={{
+                  flex: 1,
+                  margin: 0,
+                  fontSize: "12px",
+                  fontFamily: "monospace",
+                  whiteSpace: "pre-wrap",
+                  overflowY: "auto"
+                }}
+              >
+                {output || "Ready to run..."}
               </pre>
             </div>
           </div>
@@ -7387,6 +8542,7 @@ plt = _FakePlt()
       </div>
     </>
   );
+
 }
 
 export default AICodingPage;
