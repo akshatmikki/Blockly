@@ -11,6 +11,9 @@ import { javascriptGenerator } from "blockly/javascript";
 import Script from "next/script";
 import { Hands } from "@mediapipe/hands";
 import * as faceapi from "face-api.js";
+import * as tf from "@tensorflow/tfjs";
+import "@tensorflow/tfjs-backend-webgl";
+import * as cocoSsd from "@tensorflow-models/coco-ssd";
 
 // TensorFlow and COCO-SSD are loaded via CDN Script tags (see bottom of file)
 // Access them via window.tf and window.cocoSsd
@@ -4396,6 +4399,9 @@ function AICodingPage() {
   const [debugLogs, setDebugLogs] = useState<string[]>([]);
   const [showDebug, setShowDebug] = useState(true);
   const searchParams = useSearchParams()
+let cocoModel: cocoSsd.ObjectDetection | null = null;
+let objectImage: HTMLImageElement | null = null;
+let objectDetections: cocoSsd.DetectedObject[] = [];
 
   const projectId = searchParams?.get("projectId")
   const activityId = searchParams?.get("activityId")
@@ -6178,131 +6184,121 @@ ${currentPrediction} (${(currentConfidence * 100).toFixed(1)}%)
      OBJECT DETECTION FUNCTIONS
   ========================= */
 
-
-
   async function loadObjectImage(containerRef, outputCallback) {
-    return new Promise((resolve) => {
-      const input = document.createElement("input");
-      input.type = "file";
-      input.accept = "image/*";
+  return new Promise((resolve) => {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = "image/*";
 
-      input.onchange = async (e) => {
-        const file = e.target.files[0];
-        if (!file) {
-          resolve();
-          return;
-        }
+    input.onchange = async (e: any) => {
+      const file = e.target.files?.[0];
+      if (!file) {
+        resolve(null);
+        return;
+      }
 
-        const reader = new FileReader();
-        reader.onload = async (event) => {
-          const img = new Image();
+      const reader = new FileReader();
 
-          img.onload = async () => {
-            objectImage = img;
+      reader.onload = async (event: any) => {
+        const img = new Image();
 
-            // Don't display the image yet - only store it
-            // Image will be displayed when __OBJECT_SHOW__ is called
-            containerRef.current.innerHTML = "";
+        img.onload = async () => {
+          objectImage = img;
+          containerRef.current.innerHTML = "";
+          outputCallback("✅ Image loaded!");
 
-            outputCallback("✅ Image loaded!");
+          try {
+            outputCallback("🔄 Initializing TensorFlow...");
 
-            try {
-              // Use window.tf and window.cocoSsd from CDN
-              if (!window.tf || !window.cocoSsd) {
-                outputCallback("❌ TensorFlow.js libraries not loaded. Please refresh the page.");
-                resolve();
-                return;
-              }
+            // Force backend (IMPORTANT for Next.js)
+            await tf.setBackend("webgl");
+            await tf.ready();
 
-              const tf = window.tf;
-              const cocoSsd = window.cocoSsd;
+            outputCallback(`🔄 Backend ready: ${tf.getBackend()}`);
 
-              // Wait for TensorFlow to be ready
-              await tf.ready();
-
-              const currentBackend = tf.getBackend();
-              outputCallback(`🔄 Loading detection model (${currentBackend} backend)...`);
-
-              if (!cocoModel) {
-                // Load COCO-SSD model
-                cocoModel = await cocoSsd.load({
-                  base: 'lite_mobilenet_v2'
-                });
-                outputCallback("✅ Model loaded!");
-              }
-
-              // Run detection
-              outputCallback("🔄 Detecting objects...");
-              const predictions = await cocoModel.detect(img);
-              objectDetections = predictions;
-
-              outputCallback(`✅ Object detection completed! Found ${predictions.length} objects.`);
-            } catch (err) {
-              console.error("Detection error:", err);
-              console.error("Error stack:", err.stack);
-              outputCallback(`❌ Detection failed: ${err.message}`);
-
-              // Log TensorFlow state for debugging
-              if (window.tf) {
-                console.log("TensorFlow backend:", window.tf.getBackend());
-              }
+            // Load model once
+            if (!cocoModel) {
+              outputCallback("🔄 Loading COCO-SSD model...");
+              cocoModel = await cocoSsd.load({
+                base: "lite_mobilenet_v2",
+              });
+              outputCallback("✅ Model loaded!");
             }
 
-            resolve();
-          };
+            // Run detection
+            outputCallback("🔄 Detecting objects...");
+            const predictions = await cocoModel.detect(img);
 
-          img.onerror = () => {
-            outputCallback("❌ Failed to load image");
-            resolve();
-          };
+            objectDetections = predictions;
 
-          img.src = event.target.result;
+            outputCallback(
+              `✅ Detection completed! Found ${predictions.length} objects.`
+            );
+          } catch (err: any) {
+            console.error("Detection error:", err);
+            outputCallback(`❌ Detection failed: ${err.message}`);
+          }
+
+          resolve(null);
         };
 
-        reader.readAsDataURL(file);
+        img.onerror = () => {
+          outputCallback("❌ Failed to load image.");
+          resolve(null);
+        };
+
+        img.src = event.target.result;
       };
 
-      input.click();
+      reader.readAsDataURL(file);
+    };
+
+    input.click();
+  });
+}
+
+  function showObjectImage(containerRef, withBorder, outputCallback) {
+  if (!objectImage) {
+    outputCallback("❌ No image loaded.");
+    return;
+  }
+
+  containerRef.current.innerHTML = "";
+
+  const canvas = document.createElement("canvas");
+  canvas.width = objectImage.width;
+  canvas.height = objectImage.height;
+
+  const ctx = canvas.getContext("2d");
+  ctx.drawImage(objectImage, 0, 0);
+
+  if (withBorder && objectDetections.length > 0) {
+    objectDetections.forEach((detection) => {
+      const [x, y, width, height] = detection.bbox;
+
+      ctx.strokeStyle = "#FF0000";
+      ctx.lineWidth = 3;
+      ctx.strokeRect(x, y, width, height);
+
+      ctx.fillStyle = "#FF0000";
+      ctx.font = "16px Arial";
+      ctx.fillText(
+        `${detection.class} (${Math.round(detection.score * 100)}%)`,
+        x,
+        y > 10 ? y - 5 : 10
+      );
     });
   }
 
-  function showObjectImage(containerRef, withBorder, outputCallback) {
-    if (!objectImage) {
-      outputCallback("âŒ No image loaded");
-      return;
-    }
+  canvas.style.maxWidth = "100%";
+  canvas.style.borderRadius = "12px";
+  canvas.style.display = "block";
+  canvas.style.margin = "auto";
 
-    containerRef.current.innerHTML = "";
+  containerRef.current.appendChild(canvas);
 
-    const canvas = document.createElement("canvas");
-    canvas.width = objectImage.width;
-    canvas.height = objectImage.height;
-
-    const ctx = canvas.getContext("2d");
-    ctx.drawImage(objectImage, 0, 0);
-
-    if (withBorder && objectDetections.length > 0) {
-      // Draw rectangles around objects
-      objectDetections.forEach(detection => {
-        const [x, y, width, height] = detection.bbox;
-        ctx.strokeStyle = "#FF0000";
-        ctx.lineWidth = 3;
-        ctx.strokeRect(x, y, width, height);
-
-        ctx.fillStyle = "#FF0000";
-        ctx.font = "16px Arial";
-        ctx.fillText(`${detection.class} (${Math.round(detection.score * 100)}%)`, x, y - 10);
-      });
-    }
-
-    canvas.style.maxWidth = "100%";
-    canvas.style.borderRadius = "12px";
-    canvas.style.display = "block";
-    canvas.style.margin = "auto";
-
-    containerRef.current.appendChild(canvas);
-    outputCallback("âœ… Image displayed");
-  }
+  outputCallback("✅ Image displayed.");
+}
 
   /* =========================
      FACE RECOGNITION FUNCTIONS
@@ -8325,77 +8321,37 @@ plt = _FakePlt()
 
   return (
     <>
-      <Script
-        src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"
-        strategy="afterInteractive"
-      />
 
-      <Script
-        src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js"
-        strategy="afterInteractive"
-      />
+<Script
+  src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@0.8/dist/tf-teachablemachine-image.min.js"
+  strategy="beforeInteractive"
+/>
 
-      <Script
-        src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"
-        strategy="beforeInteractive"
-      />
+<Script
+  src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"
+  strategy="afterInteractive"
+/>
 
-      <Script
-        src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"
-        strategy="beforeInteractive"
-      />
+<Script
+  src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js"
+  strategy="afterInteractive"
+/>
 
-      <Script
-        src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@latest"
-        strategy="beforeInteractive"
-      />
+<Script
+  src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils@latest"
+  strategy="beforeInteractive"
+/>
 
-      <Script
-        src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils@latest"
-        strategy="beforeInteractive"
-      />
+<Script
+  src="https://docs.opencv.org/4.x/opencv.js"
+  strategy="afterInteractive"
+/>
 
-      <Script
-        src="https://docs.opencv.org/4.x/opencv.js"
-        strategy="afterInteractive"
-      />
+<Script
+  src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"
+  strategy="beforeInteractive"
+/>
 
-      <Script
-        src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"
-        strategy="beforeInteractive"
-        onError={() => console.error('Failed to load face-api.js from CDN')}
-      />
-      <Script
-        src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.11.0/dist/tf.min.js"
-        strategy="beforeInteractive"
-        onLoad={() => {
-          console.log('TensorFlow.js loaded successfully');
-          appendConsole('✅ TensorFlow.js loaded');
-        }}
-        onError={(e) => {
-          console.error('Failed to load TensorFlow.js:', e);
-          appendConsole('❌ Failed to load TensorFlow.js');
-        }}
-      />
-      <Script
-        src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@2.2.3/dist/coco-ssd.min.js"
-        strategy="beforeInteractive"
-        onLoad={() => {
-          console.log('COCO-SSD loaded successfully');
-          appendConsole('✅ COCO-SSD loaded');
-        }}
-        onError={(e) => {
-          console.error('Failed to load COCO-SSD:', e);
-          appendConsole('❌ Failed to load COCO-SSD');
-        }}
-      />
-      <Script
-        src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@0.8/dist/tf-teachablemachine-image.min.js"
-        strategy="beforeInteractive"
-        onLoad={() => {
-          console.log('Teachable Machine loaded successfully');
-        }}
-      />
       <input
         ref={fileInputRef}
         type="file"
