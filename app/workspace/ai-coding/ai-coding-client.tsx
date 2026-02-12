@@ -4461,17 +4461,17 @@ function AICodingPage() {
           await new Promise(resolve => setTimeout(resolve, 100));
           attempts++;
         }
-        
+
         if (!window.tf) {
           debugLog("❌ TensorFlow.js CDN script failed to load");
           return;
         }
-        
+
         debugLog("🔧 Initializing TensorFlow.js from CDN...");
-        
+
         const tf = window.tf;
         await tf.ready();
-        
+
         // Try WebGL first
         try {
           await tf.setBackend('webgl');
@@ -4484,20 +4484,20 @@ function AICodingPage() {
           await tf.ready();
           debugLog(`✅ TensorFlow.js ready (CPU) - ${tf.getBackend()}`);
         }
-        
+
         // Verify with a test operation
         const testTensor = tf.tensor([1, 2, 3]);
         const result = testTensor.square();
         result.dispose();
         testTensor.dispose();
         debugLog("✅ TensorFlow.js backend verified");
-        
+
       } catch (err) {
         console.error("TensorFlow.js init failed:", err);
         debugLog(`❌ TensorFlow.js init failed: ${err.message}`);
       }
     };
-    
+
     initTensorFlow();
   }, []);
 
@@ -4919,6 +4919,44 @@ function AICodingPage() {
     }
 
     switch (row.block_type) {
+      /* =====================
+         CV BLOCKS
+      ===================== */
+
+      case "CV_LOAD_IMAGE": {
+        const block = workspace.newBlock("cv_load_image");
+        block.initSvg();
+        block.render();
+        return block;
+      }
+
+      case "CV_PUT_TEXT": {
+        const block = workspace.newBlock("cv_put_text");
+
+        block.setFieldValue(cfg.text || "Hello", "TEXT");
+        block.setFieldValue(String(cfg.x ?? 100), "X");
+        block.setFieldValue(String(cfg.y ?? 100), "Y");
+        block.setFieldValue(cfg.font || "SIMPLEX", "FONT");
+        block.setFieldValue(String(cfg.size ?? 2), "SIZE");
+
+        block.setFieldValue(String(cfg.color?.r ?? 255), "R");
+        block.setFieldValue(String(cfg.color?.g ?? 0), "G");
+        block.setFieldValue(String(cfg.color?.b ?? 0), "B");
+
+        block.setFieldValue(String(cfg.thickness ?? 2), "THICKNESS");
+
+        block.initSvg();
+        block.render();
+
+        return block;
+      }
+
+      case "CV_SHOW_IMAGE": {
+        const block = workspace.newBlock("cv_show_image");
+        block.initSvg();
+        block.render();
+        return block;
+      }
 
       /* =====================
          SET VARIABLE
@@ -6010,91 +6048,91 @@ ${currentPrediction} (${(currentConfidence * 100).toFixed(1)}%)
 
 
 
-async function loadObjectImage(containerRef, outputCallback) {
-  return new Promise((resolve) => {
-    const input = document.createElement("input");
-    input.type = "file";
-    input.accept = "image/*";
+  async function loadObjectImage(containerRef, outputCallback) {
+    return new Promise((resolve) => {
+      const input = document.createElement("input");
+      input.type = "file";
+      input.accept = "image/*";
 
-    input.onchange = async (e) => {
-      const file = e.target.files[0];
-      if (!file) {
-        resolve();
-        return;
-      }
-
-      const reader = new FileReader();
-      reader.onload = async (event) => {
-        const img = new Image();
-
-        img.onload = async () => {
-          objectImage = img;
-
-          // Don't display the image yet - only store it
-          // Image will be displayed when __OBJECT_SHOW__ is called
-          containerRef.current.innerHTML = "";
-
-          outputCallback("✅ Image loaded!");
-
-          try {
-            // Use window.tf and window.cocoSsd from CDN
-            if (!window.tf || !window.cocoSsd) {
-              outputCallback("❌ TensorFlow.js libraries not loaded. Please refresh the page.");
-              resolve();
-              return;
-            }
-            
-            const tf = window.tf;
-            const cocoSsd = window.cocoSsd;
-            
-            // Wait for TensorFlow to be ready
-            await tf.ready();
-            
-            const currentBackend = tf.getBackend();
-            outputCallback(`🔄 Loading detection model (${currentBackend} backend)...`);
-
-            if (!cocoModel) {
-              // Load COCO-SSD model
-              cocoModel = await cocoSsd.load({
-                base: 'lite_mobilenet_v2'
-              });
-              outputCallback("✅ Model loaded!");
-            }
-
-            // Run detection
-            outputCallback("🔄 Detecting objects...");
-            const predictions = await cocoModel.detect(img);
-            objectDetections = predictions;
-
-            outputCallback(`✅ Object detection completed! Found ${predictions.length} objects.`);
-          } catch (err) {
-            console.error("Detection error:", err);
-            console.error("Error stack:", err.stack);
-            outputCallback(`❌ Detection failed: ${err.message}`);
-            
-            // Log TensorFlow state for debugging
-            if (window.tf) {
-              console.log("TensorFlow backend:", window.tf.getBackend());
-            }
-          }
-
+      input.onchange = async (e) => {
+        const file = e.target.files[0];
+        if (!file) {
           resolve();
+          return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = async (event) => {
+          const img = new Image();
+
+          img.onload = async () => {
+            objectImage = img;
+
+            // Don't display the image yet - only store it
+            // Image will be displayed when __OBJECT_SHOW__ is called
+            containerRef.current.innerHTML = "";
+
+            outputCallback("✅ Image loaded!");
+
+            try {
+              // Use window.tf and window.cocoSsd from CDN
+              if (!window.tf || !window.cocoSsd) {
+                outputCallback("❌ TensorFlow.js libraries not loaded. Please refresh the page.");
+                resolve();
+                return;
+              }
+
+              const tf = window.tf;
+              const cocoSsd = window.cocoSsd;
+
+              // Wait for TensorFlow to be ready
+              await tf.ready();
+
+              const currentBackend = tf.getBackend();
+              outputCallback(`🔄 Loading detection model (${currentBackend} backend)...`);
+
+              if (!cocoModel) {
+                // Load COCO-SSD model
+                cocoModel = await cocoSsd.load({
+                  base: 'lite_mobilenet_v2'
+                });
+                outputCallback("✅ Model loaded!");
+              }
+
+              // Run detection
+              outputCallback("🔄 Detecting objects...");
+              const predictions = await cocoModel.detect(img);
+              objectDetections = predictions;
+
+              outputCallback(`✅ Object detection completed! Found ${predictions.length} objects.`);
+            } catch (err) {
+              console.error("Detection error:", err);
+              console.error("Error stack:", err.stack);
+              outputCallback(`❌ Detection failed: ${err.message}`);
+
+              // Log TensorFlow state for debugging
+              if (window.tf) {
+                console.log("TensorFlow backend:", window.tf.getBackend());
+              }
+            }
+
+            resolve();
+          };
+
+          img.onerror = () => {
+            outputCallback("❌ Failed to load image");
+            resolve();
+          };
+
+          img.src = event.target.result;
         };
 
-        img.onerror = () => {
-          outputCallback("❌ Failed to load image");
-          resolve();
-        };
-
-        img.src = event.target.result;
+        reader.readAsDataURL(file);
       };
 
-      reader.readAsDataURL(file);
-    };
-
-    input.click();
-  });
-}
+      input.click();
+    });
+  }
 
   function showObjectImage(containerRef, withBorder, outputCallback) {
     if (!objectImage) {
@@ -6433,7 +6471,7 @@ async function loadObjectImage(containerRef, outputCallback) {
             const ctx = canvas.getContext("2d");
             ctx.drawImage(img, 0, 0);
             if (cvMat) {
-              try { cvMat.delete(); } catch (_) {}
+              try { cvMat.delete(); } catch (_) { }
             }
             cvMat = window.cv.imread(canvas);
 
@@ -7562,7 +7600,7 @@ file_handle = None
               if (d.class === object) count++;
             });
           }
-          
+
           // Display count on canvas
           canvasContainerRef.current.innerHTML = "";
           const countDisplay = document.createElement("div");
@@ -7578,7 +7616,7 @@ file_handle = None
           `;
           countDisplay.textContent = `${object}: ${count}`;
           canvasContainerRef.current.appendChild(countDisplay);
-          
+
           setOutput(prev => prev + `\n${object} count: ${count}`);
           return;
         }
@@ -8136,7 +8174,7 @@ plt = _FakePlt()
         strategy="beforeInteractive"
         onError={() => console.error('Failed to load face-api.js from CDN')}
       />
- <Script
+      <Script
         src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.11.0/dist/tf.min.js"
         strategy="beforeInteractive"
         onLoad={() => {
@@ -8491,7 +8529,7 @@ plt = _FakePlt()
       </div>
 
       {/* Load TensorFlow.js and COCO-SSD */}
-     
+
     </>
   );
 
