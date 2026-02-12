@@ -4980,6 +4980,17 @@ function AICodingPage() {
         block.render();
         return block;
       }
+      case "FACIAL_GET_GENDER": {
+  const block = workspace.newBlock("facial_get_gender");
+
+  block.setFieldValue(cfg.gender || "male", "GENDER");
+
+  block.initSvg();
+  block.render();
+
+  return block;
+}
+
       default:
         console.warn("Unknown block_type:", row.block_type, row);
         return null;
@@ -7062,6 +7073,7 @@ file_handle = None
           if (d.gender && d.gender === gender) count++;
         });
         setOutput(prev => prev + `\n${gender} count: ${count}`);
+         canvasContainerRef.current.innerHTML = `<div>${gender} count: ${count}</div>`;
         return;
       }
       if (cleanText.startsWith("__FACIAL_GET_EXPRESSION__:")) {
@@ -7075,6 +7087,7 @@ file_handle = None
           if (d.expressions && d.expressions[expression] > 0.5) count++;
         });
         setOutput(prev => prev + `\n${expression} count: ${count}`);
+         canvasContainerRef.current.innerHTML = `<div>${expression} count: ${count}</div>`;
         return;
       }
       if (cleanText === "__FACIAL_GET_AGE_LIST__") {
@@ -7084,6 +7097,7 @@ file_handle = None
         }
         const ages = facialDetections.map(d => Math.round(d.age || 0));
         setOutput(prev => prev + `\nAge list: [${ages.join(", ")}]`);
+         canvasContainerRef.current.innerHTML = `<div>Age list: [${ages.join(", ")}]</div>`;
         return;
       }
       if (cleanText.startsWith("__FACIAL_SHOW__:")) {
