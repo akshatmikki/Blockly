@@ -8,6 +8,7 @@ import Sk from 'skulpt';
 import Script from "next/script";
 import 'skulpt/dist/skulpt-stdlib.js';
 import { Hands } from "@mediapipe/hands";
+import * as faceapi from "face-api.js";
 
 // Custom Blockly Blocks Definitions
 const defineBlocks = () => {
@@ -15,555 +16,555 @@ const defineBlocks = () => {
    TEACHABLE MACHINE BLOCKS
 ========================= */
 
-Blockly.Blocks['teachable_load_model'] = {
-  init: function () {
-    this.appendDummyInput()
-      .appendField("Load The Model")
-      .appendField(
-        new Blockly.FieldTextInput("https://teachablemachine.withgoogle.com/models/xxxx/"),
-        "URL"
-      );
-    this.setPreviousStatement(true);
-    this.setNextStatement(true);
-    this.setColour(300);
-  }
-};
+  Blockly.Blocks['teachable_load_model'] = {
+    init: function () {
+      this.appendDummyInput()
+        .appendField("Load The Model")
+        .appendField(
+          new Blockly.FieldTextInput("https://teachablemachine.withgoogle.com/models/xxxx/"),
+          "URL"
+        );
+      this.setPreviousStatement(true);
+      this.setNextStatement(true);
+      this.setColour(300);
+    }
+  };
 
-Blockly.Blocks['teachable_load_image'] = {
-  init: function () {
-    this.appendDummyInput()
-      .appendField("Load Image");
-    this.setPreviousStatement(true);
-    this.setNextStatement(true);
-    this.setColour(300);
-  }
-};
+  Blockly.Blocks['teachable_load_image'] = {
+    init: function () {
+      this.appendDummyInput()
+        .appendField("Load Image");
+      this.setPreviousStatement(true);
+      this.setNextStatement(true);
+      this.setColour(300);
+    }
+  };
 
-Blockly.Blocks['teachable_show_webcam'] = {
-  init: function () {
-    this.appendDummyInput()
-      .appendField("show the")
-      .appendField(
-        new Blockly.FieldDropdown([
-          ["webcam", "webcam"],
-          ["image", "image"]
-        ]),
-        "SRC"
-      );
-    this.setPreviousStatement(true);
-    this.setNextStatement(true);
-    this.setColour(300);
-  }
-};
+  Blockly.Blocks['teachable_show_webcam'] = {
+    init: function () {
+      this.appendDummyInput()
+        .appendField("show the")
+        .appendField(
+          new Blockly.FieldDropdown([
+            ["webcam", "webcam"],
+            ["image", "image"]
+          ]),
+          "SRC"
+        );
+      this.setPreviousStatement(true);
+      this.setNextStatement(true);
+      this.setColour(300);
+    }
+  };
 
-Blockly.Blocks['teachable_predict_image'] = {
-  init: function () {
-    this.appendDummyInput()
-      .appendField("predict")
-      .appendField(
-        new Blockly.FieldDropdown([
-          ["image", "image"],
-          ["pose", "pose"]
-        ]),
-        "TYPE"
-      )
-      .appendField("from")
-      .appendField(
-        new Blockly.FieldDropdown([
-          ["webcam", "webcam"],
-          ["image", "image"]
-        ]),
-        "SRC"
-      );
-    this.setPreviousStatement(true);
-    this.setNextStatement(true);
-    this.setColour(300);
-  }
-};
+  Blockly.Blocks['teachable_predict_image'] = {
+    init: function () {
+      this.appendDummyInput()
+        .appendField("predict")
+        .appendField(
+          new Blockly.FieldDropdown([
+            ["image", "image"],
+            ["pose", "pose"]
+          ]),
+          "TYPE"
+        )
+        .appendField("from")
+        .appendField(
+          new Blockly.FieldDropdown([
+            ["webcam", "webcam"],
+            ["image", "image"]
+          ]),
+          "SRC"
+        );
+      this.setPreviousStatement(true);
+      this.setNextStatement(true);
+      this.setColour(300);
+    }
+  };
 
-Blockly.Blocks['teachable_predict_audio'] = {
-  init: function () {
-    this.appendDummyInput()
-      .appendField("predict audio");
-    this.setPreviousStatement(true);
-    this.setNextStatement(true);
-    this.setColour(300);
-  }
-};
+  Blockly.Blocks['teachable_predict_audio'] = {
+    init: function () {
+      this.appendDummyInput()
+        .appendField("predict audio");
+      this.setPreviousStatement(true);
+      this.setNextStatement(true);
+      this.setColour(300);
+    }
+  };
 
-/* =========================
-   FACIAL FEATURE BLOCKS
-========================= */
+  /* =========================
+     FACIAL FEATURE BLOCKS
+  ========================= */
 
-Blockly.Blocks['facial_load_image'] = {
-  init: function () {
-    this.appendDummyInput()
-      .appendField("Load Image");
-    this.setPreviousStatement(true);
-    this.setNextStatement(true);
-    this.setColour(160);
-  }
-};
+  Blockly.Blocks['facial_load_image'] = {
+    init: function () {
+      this.appendDummyInput()
+        .appendField("Load Image");
+      this.setPreviousStatement(true);
+      this.setNextStatement(true);
+      this.setColour(160);
+    }
+  };
 
-Blockly.Blocks['facial_get_count'] = {
-  init: function () {
-    this.appendDummyInput()
-      .appendField("Get")
-      .appendField(new Blockly.FieldDropdown([
-        ["face", "face"],
-        ["eye", "eye"],
-        ["nose", "nose"],
-        ["smile", "smile"]
-      ]), "FEATURE")
-      .appendField("count");
-    this.setPreviousStatement(true);
-    this.setNextStatement(true);
-    this.setColour(160);
-  }
-};
+  Blockly.Blocks['facial_get_count'] = {
+    init: function () {
+      this.appendDummyInput()
+        .appendField("Get")
+        .appendField(new Blockly.FieldDropdown([
+          ["face", "face"],
+          ["eye", "eye"],
+          ["nose", "nose"],
+          ["smile", "smile"]
+        ]), "FEATURE")
+        .appendField("count");
+      this.setPreviousStatement(true);
+      this.setNextStatement(true);
+      this.setColour(160);
+    }
+  };
 
-Blockly.Blocks['facial_get_gender'] = {
-  init: function () {
-    this.appendDummyInput()
-      .appendField("Get")
-      .appendField(new Blockly.FieldDropdown([
-        ["male", "male"],
-        ["female", "female"]
-      ]), "GENDER")
-      .appendField("count");
-    this.setPreviousStatement(true);
-    this.setNextStatement(true);
-    this.setColour(160);
-  }
-};
+  Blockly.Blocks['facial_get_gender'] = {
+    init: function () {
+      this.appendDummyInput()
+        .appendField("Get")
+        .appendField(new Blockly.FieldDropdown([
+          ["male", "male"],
+          ["female", "female"]
+        ]), "GENDER")
+        .appendField("count");
+      this.setPreviousStatement(true);
+      this.setNextStatement(true);
+      this.setColour(160);
+    }
+  };
 
-Blockly.Blocks['facial_get_expression'] = {
-  init: function () {
-    this.appendDummyInput()
-      .appendField("Get")
-      .appendField(new Blockly.FieldDropdown([
-        ["happy", "happy"],
-        ["sad", "sad"],
-        ["angry", "angry"],
-        ["fearful", "fearful"],
-        ["surprised", "surprised"],
-        ["disgusted", "disgusted"],
-        ["neutral", "neutral"]
-      ]), "EXPRESSION")
-      .appendField("expression count");
-    this.setPreviousStatement(true);
-    this.setNextStatement(true);
-    this.setColour(160);
-  }
-};
+  Blockly.Blocks['facial_get_expression'] = {
+    init: function () {
+      this.appendDummyInput()
+        .appendField("Get")
+        .appendField(new Blockly.FieldDropdown([
+          ["happy", "happy"],
+          ["sad", "sad"],
+          ["angry", "angry"],
+          ["fearful", "fearful"],
+          ["surprised", "surprised"],
+          ["disgusted", "disgusted"],
+          ["neutral", "neutral"]
+        ]), "EXPRESSION")
+        .appendField("expression count");
+      this.setPreviousStatement(true);
+      this.setNextStatement(true);
+      this.setColour(160);
+    }
+  };
 
-Blockly.Blocks['facial_get_age_list'] = {
-  init: function () {
-    this.appendDummyInput()
-      .appendField("Get age list");
-    this.setPreviousStatement(true);
-    this.setNextStatement(true);
-    this.setColour(160);
-  }
-};
+  Blockly.Blocks['facial_get_age_list'] = {
+    init: function () {
+      this.appendDummyInput()
+        .appendField("Get age list");
+      this.setPreviousStatement(true);
+      this.setNextStatement(true);
+      this.setColour(160);
+    }
+  };
 
-Blockly.Blocks['facial_show_image'] = {
-  init: function () {
-    this.appendDummyInput()
-      .appendField("Show image")
-      .appendField(new Blockly.FieldDropdown([
-        ["with border", "with"],
-        ["without border", "without"]
-      ]), "BORDER");
-    this.setPreviousStatement(true);
-    this.setNextStatement(true);
-    this.setColour(160);
-  }
-};
+  Blockly.Blocks['facial_show_image'] = {
+    init: function () {
+      this.appendDummyInput()
+        .appendField("Show image")
+        .appendField(new Blockly.FieldDropdown([
+          ["with border", "with"],
+          ["without border", "without"]
+        ]), "BORDER");
+      this.setPreviousStatement(true);
+      this.setNextStatement(true);
+      this.setColour(160);
+    }
+  };
 
-/* =========================
-   OBJECT DETECTION BLOCKS
-========================= */
+  /* =========================
+     OBJECT DETECTION BLOCKS
+  ========================= */
 
-Blockly.Blocks['object_load_image'] = {
-  init: function () {
-    this.appendDummyInput()
-      .appendField("Load Image");
-    this.setPreviousStatement(true);
-    this.setNextStatement(true);
-    this.setColour(180);
-  }
-};
+  Blockly.Blocks['object_load_image'] = {
+    init: function () {
+      this.appendDummyInput()
+        .appendField("Load Image");
+      this.setPreviousStatement(true);
+      this.setNextStatement(true);
+      this.setColour(180);
+    }
+  };
 
-Blockly.Blocks['object_get_count'] = {
-  init: function () {
-    this.appendDummyInput()
-      .appendField("Get")
-      .appendField(new Blockly.FieldDropdown([
-        ["aeroplane", "aeroplane"],
-        ["bicycle", "bicycle"],
-        ["bird", "bird"],
-        ["boat", "boat"],
-        ["bottle", "bottle"],
-        ["bus", "bus"],
-        ["car", "car"],
-        ["cat", "cat"],
-        ["chair", "chair"],
-        ["cow", "cow"],
-        ["diningtable", "diningtable"],
-        ["dog", "dog"],
-        ["horse", "horse"],
-        ["motorbike", "motorbike"],
-        ["person", "person"],
-        ["pottedplant", "pottedplant"],
-        ["sheep", "sheep"],
-        ["sofa", "sofa"],
-        ["train", "train"],
-        ["tvmonitor", "tvmonitor"]
-      ]), "OBJECT")
-      .appendField("count");
-    this.setPreviousStatement(true);
-    this.setNextStatement(true);
-    this.setColour(180);
-  }
-};
+  Blockly.Blocks['object_get_count'] = {
+    init: function () {
+      this.appendDummyInput()
+        .appendField("Get")
+        .appendField(new Blockly.FieldDropdown([
+          ["aeroplane", "aeroplane"],
+          ["bicycle", "bicycle"],
+          ["bird", "bird"],
+          ["boat", "boat"],
+          ["bottle", "bottle"],
+          ["bus", "bus"],
+          ["car", "car"],
+          ["cat", "cat"],
+          ["chair", "chair"],
+          ["cow", "cow"],
+          ["diningtable", "diningtable"],
+          ["dog", "dog"],
+          ["horse", "horse"],
+          ["motorbike", "motorbike"],
+          ["person", "person"],
+          ["pottedplant", "pottedplant"],
+          ["sheep", "sheep"],
+          ["sofa", "sofa"],
+          ["train", "train"],
+          ["tvmonitor", "tvmonitor"]
+        ]), "OBJECT")
+        .appendField("count");
+      this.setPreviousStatement(true);
+      this.setNextStatement(true);
+      this.setColour(180);
+    }
+  };
 
-Blockly.Blocks['object_show_image'] = {
-  init: function () {
-    this.appendDummyInput()
-      .appendField("Show image")
-      .appendField(new Blockly.FieldDropdown([
-        ["with border", "with"],
-        ["without border", "without"]
-      ]), "BORDER");
-    this.setPreviousStatement(true);
-    this.setNextStatement(true);
-    this.setColour(180);
-  }
-};
+  Blockly.Blocks['object_show_image'] = {
+    init: function () {
+      this.appendDummyInput()
+        .appendField("Show image")
+        .appendField(new Blockly.FieldDropdown([
+          ["with border", "with"],
+          ["without border", "without"]
+        ]), "BORDER");
+      this.setPreviousStatement(true);
+      this.setNextStatement(true);
+      this.setColour(180);
+    }
+  };
 
-/* =========================
-   FACE RECOGNITION BLOCKS
-========================= */
+  /* =========================
+     FACE RECOGNITION BLOCKS
+  ========================= */
 
-Blockly.Blocks['facerecog_load_image'] = {
-  init: function () {
-    this.appendDummyInput()
-      .appendField("Load Image");
-    this.setPreviousStatement(true);
-    this.setNextStatement(true);
-    this.setColour(200);
-  }
-};
+  Blockly.Blocks['facerecog_load_image'] = {
+    init: function () {
+      this.appendDummyInput()
+        .appendField("Load Image");
+      this.setPreviousStatement(true);
+      this.setNextStatement(true);
+      this.setColour(200);
+    }
+  };
 
-Blockly.Blocks['facerecog_predict'] = {
-  init: function () {
-    this.appendDummyInput()
-      .appendField("Predict the result");
-    this.setPreviousStatement(true);
-    this.setNextStatement(true);
-    this.setColour(200);
-  }
-};
+  Blockly.Blocks['facerecog_predict'] = {
+    init: function () {
+      this.appendDummyInput()
+        .appendField("Predict the result");
+      this.setPreviousStatement(true);
+      this.setNextStatement(true);
+      this.setColour(200);
+    }
+  };
 
-Blockly.Blocks['facerecog_show_image'] = {
-  init: function () {
-    this.appendDummyInput()
-      .appendField("Show image")
-      .appendField(new Blockly.FieldDropdown([
-        ["with border", "with"],
-        ["without border", "without"]
-      ]), "BORDER");
-    this.setPreviousStatement(true);
-    this.setNextStatement(true);
-    this.setColour(200);
-  }
-};
+  Blockly.Blocks['facerecog_show_image'] = {
+    init: function () {
+      this.appendDummyInput()
+        .appendField("Show image")
+        .appendField(new Blockly.FieldDropdown([
+          ["with border", "with"],
+          ["without border", "without"]
+        ]), "BORDER");
+      this.setPreviousStatement(true);
+      this.setNextStatement(true);
+      this.setColour(200);
+    }
+  };
 
-/* =========================
-   FINGER DETECTION BLOCKS
-========================= */
+  /* =========================
+     FINGER DETECTION BLOCKS
+  ========================= */
 
-Blockly.Blocks['finger_start_detection'] = {
-  init: function () {
-    this.appendDummyInput()
-      .appendField("Start Detection");
-    this.setPreviousStatement(true);
-    this.setNextStatement(true);
-    this.setColour(220);
-  }
-};
+  Blockly.Blocks['finger_start_detection'] = {
+    init: function () {
+      this.appendDummyInput()
+        .appendField("Start Detection");
+      this.setPreviousStatement(true);
+      this.setNextStatement(true);
+      this.setColour(220);
+    }
+  };
 
-Blockly.Blocks['finger_get_coordinate'] = {
-  init: function () {
-    this.appendDummyInput()
-      .appendField("Get")
-      .appendField(new Blockly.FieldDropdown([
-        ["x", "x"],
-        ["y", "y"],
-        ["z", "z"]
-      ]), "AXIS")
-      .appendField("coordinate of point")
-      .appendField(new Blockly.FieldDropdown([
-        ["0", "0"], ["1", "1"], ["2", "2"], ["3", "3"], ["4", "4"],
-        ["5", "5"], ["6", "6"], ["7", "7"], ["8", "8"], ["9", "9"],
-        ["10", "10"], ["11", "11"], ["12", "12"], ["13", "13"], ["14", "14"],
-        ["15", "15"], ["16", "16"], ["17", "17"], ["18", "18"], ["19", "19"],
-        ["20", "20"]
-      ]), "POINT");
-    this.setPreviousStatement(true);
-    this.setNextStatement(true);
-    this.setColour(220);
-  }
-};
+  Blockly.Blocks['finger_get_coordinate'] = {
+    init: function () {
+      this.appendDummyInput()
+        .appendField("Get")
+        .appendField(new Blockly.FieldDropdown([
+          ["x", "x"],
+          ["y", "y"],
+          ["z", "z"]
+        ]), "AXIS")
+        .appendField("coordinate of point")
+        .appendField(new Blockly.FieldDropdown([
+          ["0", "0"], ["1", "1"], ["2", "2"], ["3", "3"], ["4", "4"],
+          ["5", "5"], ["6", "6"], ["7", "7"], ["8", "8"], ["9", "9"],
+          ["10", "10"], ["11", "11"], ["12", "12"], ["13", "13"], ["14", "14"],
+          ["15", "15"], ["16", "16"], ["17", "17"], ["18", "18"], ["19", "19"],
+          ["20", "20"]
+        ]), "POINT");
+      this.setPreviousStatement(true);
+      this.setNextStatement(true);
+      this.setColour(220);
+    }
+  };
 
-Blockly.Blocks['finger_get_count'] = {
-  init: function () {
-    this.appendDummyInput()
-      .appendField("Finger Count");
-    this.setPreviousStatement(true);
-    this.setNextStatement(true);
-    this.setColour(220);
-  }
-};
+  Blockly.Blocks['finger_get_count'] = {
+    init: function () {
+      this.appendDummyInput()
+        .appendField("Finger Count");
+      this.setPreviousStatement(true);
+      this.setNextStatement(true);
+      this.setColour(220);
+    }
+  };
 
-Blockly.Blocks['finger_stop_detection'] = {
-  init: function () {
-    this.appendDummyInput()
-      .appendField("Stop Detection");
-    this.setPreviousStatement(true);
-    this.setNextStatement(true);
-    this.setColour(220);
-  }
-};
+  Blockly.Blocks['finger_stop_detection'] = {
+    init: function () {
+      this.appendDummyInput()
+        .appendField("Stop Detection");
+      this.setPreviousStatement(true);
+      this.setNextStatement(true);
+      this.setColour(220);
+    }
+  };
 
-Blockly.Blocks['finger_set_delay'] = {
-  init: function () {
-    this.appendValueInput("DELAY")
-      .setCheck("Number")
-      .appendField("Set Delay of");
-    this.appendDummyInput()
-      .appendField("Seconds");
-    this.setPreviousStatement(true);
-    this.setNextStatement(true);
-    this.setColour(220);
-  }
-};
+  Blockly.Blocks['finger_set_delay'] = {
+    init: function () {
+      this.appendValueInput("DELAY")
+        .setCheck("Number")
+        .appendField("Set Delay of");
+      this.appendDummyInput()
+        .appendField("Seconds");
+      this.setPreviousStatement(true);
+      this.setNextStatement(true);
+      this.setColour(220);
+    }
+  };
 
-/* =========================
-   COMPUTER VISION (OPENCV) BLOCKS
-========================= */
+  /* =========================
+     COMPUTER VISION (OPENCV) BLOCKS
+  ========================= */
 
-Blockly.Blocks['cv_load_image'] = {
-  init: function () {
-    this.appendDummyInput()
-      .appendField("Load Image");
-    this.setPreviousStatement(true);
-    this.setNextStatement(true);
-    this.setColour(280);
-  }
-};
+  Blockly.Blocks['cv_load_image'] = {
+    init: function () {
+      this.appendDummyInput()
+        .appendField("Load Image");
+      this.setPreviousStatement(true);
+      this.setNextStatement(true);
+      this.setColour(280);
+    }
+  };
 
-Blockly.Blocks['cv_put_text'] = {
-  init: function () {
-    this.appendValueInput("TEXT")
-      .setCheck("String")
-      .appendField("Put Text:");
-    this.appendDummyInput()
-      .appendField("Position:")
-      .appendField("x:")
-      .appendField(new Blockly.FieldNumber(100), "X")
-      .appendField("y:")
-      .appendField(new Blockly.FieldNumber(100), "Y");
-    this.appendDummyInput()
-      .appendField("Font Style:")
-      .appendField(new Blockly.FieldDropdown([
-        ["SIMPLEX", "SIMPLEX"],
-        ["PLAIN", "PLAIN"],
-        ["DUPLEX", "DUPLEX"],
-        ["COMPLEX", "COMPLEX"],
-        ["TRIPLEX", "TRIPLEX"],
-        ["COMPLEX_SMALL", "COMPLEX_SMALL"],
-        ["SCRIPT_SIMPLEX", "SCRIPT_SIMPLEX"],
-        ["SCRIPT_COMPLEX", "SCRIPT_COMPLEX"]
-      ]), "FONT");
-    this.appendDummyInput()
-      .appendField("Font Size:")
-      .appendField(new Blockly.FieldNumber(2, 0.1, 10, 0.1), "SIZE");
-    this.appendDummyInput()
-      .appendField("Color in")
-      .appendField("R:")
-      .appendField(new Blockly.FieldNumber(255, 0, 255), "R")
-      .appendField("G:")
-      .appendField(new Blockly.FieldNumber(0, 0, 255), "G")
-      .appendField("B:")
-      .appendField(new Blockly.FieldNumber(0, 0, 255), "B");
-    this.appendDummyInput()
-      .appendField("Line Thickness:")
-      .appendField(new Blockly.FieldNumber(2, 1, 10), "THICKNESS");
-    this.setPreviousStatement(true);
-    this.setNextStatement(true);
-    this.setColour(280);
-  }
-};
+  Blockly.Blocks['cv_put_text'] = {
+    init: function () {
+      this.appendValueInput("TEXT")
+        .setCheck("String")
+        .appendField("Put Text:");
+      this.appendDummyInput()
+        .appendField("Position:")
+        .appendField("x:")
+        .appendField(new Blockly.FieldNumber(100), "X")
+        .appendField("y:")
+        .appendField(new Blockly.FieldNumber(100), "Y");
+      this.appendDummyInput()
+        .appendField("Font Style:")
+        .appendField(new Blockly.FieldDropdown([
+          ["SIMPLEX", "SIMPLEX"],
+          ["PLAIN", "PLAIN"],
+          ["DUPLEX", "DUPLEX"],
+          ["COMPLEX", "COMPLEX"],
+          ["TRIPLEX", "TRIPLEX"],
+          ["COMPLEX_SMALL", "COMPLEX_SMALL"],
+          ["SCRIPT_SIMPLEX", "SCRIPT_SIMPLEX"],
+          ["SCRIPT_COMPLEX", "SCRIPT_COMPLEX"]
+        ]), "FONT");
+      this.appendDummyInput()
+        .appendField("Font Size:")
+        .appendField(new Blockly.FieldNumber(2, 0.1, 10, 0.1), "SIZE");
+      this.appendDummyInput()
+        .appendField("Color in")
+        .appendField("R:")
+        .appendField(new Blockly.FieldNumber(255, 0, 255), "R")
+        .appendField("G:")
+        .appendField(new Blockly.FieldNumber(0, 0, 255), "G")
+        .appendField("B:")
+        .appendField(new Blockly.FieldNumber(0, 0, 255), "B");
+      this.appendDummyInput()
+        .appendField("Line Thickness:")
+        .appendField(new Blockly.FieldNumber(2, 1, 10), "THICKNESS");
+      this.setPreviousStatement(true);
+      this.setNextStatement(true);
+      this.setColour(280);
+    }
+  };
 
-Blockly.Blocks['cv_draw_line'] = {
-  init: function () {
-    this.appendDummyInput()
-      .appendField("Draw Line");
-    this.appendDummyInput()
-      .appendField("Start Point:")
-      .appendField("x:")
-      .appendField(new Blockly.FieldNumber(100), "X1")
-      .appendField("y:")
-      .appendField(new Blockly.FieldNumber(100), "Y1");
-    this.appendDummyInput()
-      .appendField("End Point:")
-      .appendField("x:")
-      .appendField(new Blockly.FieldNumber(100), "X2")
-      .appendField("y:")
-      .appendField(new Blockly.FieldNumber(100), "Y2");
-    this.appendDummyInput()
-      .appendField("Color in")
-      .appendField("R:")
-      .appendField(new Blockly.FieldNumber(255, 0, 255), "R")
-      .appendField("G:")
-      .appendField(new Blockly.FieldNumber(0, 0, 255), "G")
-      .appendField("B:")
-      .appendField(new Blockly.FieldNumber(0, 0, 255), "B");
-    this.appendDummyInput()
-      .appendField("Line Thickness:")
-      .appendField(new Blockly.FieldNumber(2, 1, 10), "THICKNESS");
-    this.setPreviousStatement(true);
-    this.setNextStatement(true);
-    this.setColour(280);
-  }
-};
+  Blockly.Blocks['cv_draw_line'] = {
+    init: function () {
+      this.appendDummyInput()
+        .appendField("Draw Line");
+      this.appendDummyInput()
+        .appendField("Start Point:")
+        .appendField("x:")
+        .appendField(new Blockly.FieldNumber(100), "X1")
+        .appendField("y:")
+        .appendField(new Blockly.FieldNumber(100), "Y1");
+      this.appendDummyInput()
+        .appendField("End Point:")
+        .appendField("x:")
+        .appendField(new Blockly.FieldNumber(100), "X2")
+        .appendField("y:")
+        .appendField(new Blockly.FieldNumber(100), "Y2");
+      this.appendDummyInput()
+        .appendField("Color in")
+        .appendField("R:")
+        .appendField(new Blockly.FieldNumber(255, 0, 255), "R")
+        .appendField("G:")
+        .appendField(new Blockly.FieldNumber(0, 0, 255), "G")
+        .appendField("B:")
+        .appendField(new Blockly.FieldNumber(0, 0, 255), "B");
+      this.appendDummyInput()
+        .appendField("Line Thickness:")
+        .appendField(new Blockly.FieldNumber(2, 1, 10), "THICKNESS");
+      this.setPreviousStatement(true);
+      this.setNextStatement(true);
+      this.setColour(280);
+    }
+  };
 
-Blockly.Blocks['cv_draw_rectangle'] = {
-  init: function () {
-    this.appendDummyInput()
-      .appendField("Draw Rectangle");
-    this.appendDummyInput()
-      .appendField("Start Position:")
-      .appendField("x:")
-      .appendField(new Blockly.FieldNumber(100), "X1")
-      .appendField("y:")
-      .appendField(new Blockly.FieldNumber(100), "Y1");
-    this.appendDummyInput()
-      .appendField("End Position:")
-      .appendField("x:")
-      .appendField(new Blockly.FieldNumber(100), "X2")
-      .appendField("y:")
-      .appendField(new Blockly.FieldNumber(100), "Y2");
-    this.appendDummyInput()
-      .appendField("Color in")
-      .appendField("R:")
-      .appendField(new Blockly.FieldNumber(255, 0, 255), "R")
-      .appendField("G:")
-      .appendField(new Blockly.FieldNumber(0, 0, 255), "G")
-      .appendField("B:")
-      .appendField(new Blockly.FieldNumber(0, 0, 255), "B");
-    this.appendDummyInput()
-      .appendField("Thickness:")
-      .appendField(new Blockly.FieldNumber(2, 1, 10), "THICKNESS");
-    this.setPreviousStatement(true);
-    this.setNextStatement(true);
-    this.setColour(280);
-  }
-};
+  Blockly.Blocks['cv_draw_rectangle'] = {
+    init: function () {
+      this.appendDummyInput()
+        .appendField("Draw Rectangle");
+      this.appendDummyInput()
+        .appendField("Start Position:")
+        .appendField("x:")
+        .appendField(new Blockly.FieldNumber(100), "X1")
+        .appendField("y:")
+        .appendField(new Blockly.FieldNumber(100), "Y1");
+      this.appendDummyInput()
+        .appendField("End Position:")
+        .appendField("x:")
+        .appendField(new Blockly.FieldNumber(100), "X2")
+        .appendField("y:")
+        .appendField(new Blockly.FieldNumber(100), "Y2");
+      this.appendDummyInput()
+        .appendField("Color in")
+        .appendField("R:")
+        .appendField(new Blockly.FieldNumber(255, 0, 255), "R")
+        .appendField("G:")
+        .appendField(new Blockly.FieldNumber(0, 0, 255), "G")
+        .appendField("B:")
+        .appendField(new Blockly.FieldNumber(0, 0, 255), "B");
+      this.appendDummyInput()
+        .appendField("Thickness:")
+        .appendField(new Blockly.FieldNumber(2, 1, 10), "THICKNESS");
+      this.setPreviousStatement(true);
+      this.setNextStatement(true);
+      this.setColour(280);
+    }
+  };
 
-Blockly.Blocks['cv_draw_circle'] = {
-  init: function () {
-    this.appendDummyInput()
-      .appendField("Draw Circle");
-    this.appendDummyInput()
-      .appendField("Position:")
-      .appendField("x:")
-      .appendField(new Blockly.FieldNumber(100), "X")
-      .appendField("y:")
-      .appendField(new Blockly.FieldNumber(100), "Y");
-    this.appendDummyInput()
-      .appendField("Radius:")
-      .appendField(new Blockly.FieldNumber(50, 1, 500), "RADIUS");
-    this.appendDummyInput()
-      .appendField("Color in")
-      .appendField("R:")
-      .appendField(new Blockly.FieldNumber(255, 0, 255), "R")
-      .appendField("G:")
-      .appendField(new Blockly.FieldNumber(0, 0, 255), "G")
-      .appendField("B:")
-      .appendField(new Blockly.FieldNumber(0, 0, 255), "B");
-    this.appendDummyInput()
-      .appendField("Thickness:")
-      .appendField(new Blockly.FieldNumber(2, 1, 10), "THICKNESS");
-    this.setPreviousStatement(true);
-    this.setNextStatement(true);
-    this.setColour(280);
-  }
-};
+  Blockly.Blocks['cv_draw_circle'] = {
+    init: function () {
+      this.appendDummyInput()
+        .appendField("Draw Circle");
+      this.appendDummyInput()
+        .appendField("Position:")
+        .appendField("x:")
+        .appendField(new Blockly.FieldNumber(100), "X")
+        .appendField("y:")
+        .appendField(new Blockly.FieldNumber(100), "Y");
+      this.appendDummyInput()
+        .appendField("Radius:")
+        .appendField(new Blockly.FieldNumber(50, 1, 500), "RADIUS");
+      this.appendDummyInput()
+        .appendField("Color in")
+        .appendField("R:")
+        .appendField(new Blockly.FieldNumber(255, 0, 255), "R")
+        .appendField("G:")
+        .appendField(new Blockly.FieldNumber(0, 0, 255), "G")
+        .appendField("B:")
+        .appendField(new Blockly.FieldNumber(0, 0, 255), "B");
+      this.appendDummyInput()
+        .appendField("Thickness:")
+        .appendField(new Blockly.FieldNumber(2, 1, 10), "THICKNESS");
+      this.setPreviousStatement(true);
+      this.setNextStatement(true);
+      this.setColour(280);
+    }
+  };
 
-Blockly.Blocks['cv_resize'] = {
-  init: function () {
-    this.appendDummyInput()
-      .appendField("Resize")
-      .appendField("x:")
-      .appendField(new Blockly.FieldNumber(100), "X")
-      .appendField("y:")
-      .appendField(new Blockly.FieldNumber(100), "Y");
-    this.setPreviousStatement(true);
-    this.setNextStatement(true);
-    this.setColour(280);
-  }
-};
+  Blockly.Blocks['cv_resize'] = {
+    init: function () {
+      this.appendDummyInput()
+        .appendField("Resize")
+        .appendField("x:")
+        .appendField(new Blockly.FieldNumber(100), "X")
+        .appendField("y:")
+        .appendField(new Blockly.FieldNumber(100), "Y");
+      this.setPreviousStatement(true);
+      this.setNextStatement(true);
+      this.setColour(280);
+    }
+  };
 
-Blockly.Blocks['cv_xy'] = {
-  init: function () {
-    this.appendDummyInput()
-      .appendField("x:")
-      .appendField(new Blockly.FieldNumber(50), "X")
-      .appendField("y:")
-      .appendField(new Blockly.FieldNumber(50), "Y");
-    this.setOutput(true);
-    this.setColour(280);
-  }
-};
+  Blockly.Blocks['cv_xy'] = {
+    init: function () {
+      this.appendDummyInput()
+        .appendField("x:")
+        .appendField(new Blockly.FieldNumber(50), "X")
+        .appendField("y:")
+        .appendField(new Blockly.FieldNumber(50), "Y");
+      this.setOutput(true);
+      this.setColour(280);
+    }
+  };
 
-Blockly.Blocks['cv_rgb'] = {
-  init: function () {
-    this.appendDummyInput()
-      .appendField("R:")
-      .appendField(new Blockly.FieldNumber(255, 0, 255), "R")
-      .appendField("G:")
-      .appendField(new Blockly.FieldNumber(0, 0, 255), "G")
-      .appendField("B:")
-      .appendField(new Blockly.FieldNumber(0, 0, 255), "B");
-    this.setOutput(true);
-    this.setColour(280);
-  }
-};
+  Blockly.Blocks['cv_rgb'] = {
+    init: function () {
+      this.appendDummyInput()
+        .appendField("R:")
+        .appendField(new Blockly.FieldNumber(255, 0, 255), "R")
+        .appendField("G:")
+        .appendField(new Blockly.FieldNumber(0, 0, 255), "G")
+        .appendField("B:")
+        .appendField(new Blockly.FieldNumber(0, 0, 255), "B");
+      this.setOutput(true);
+      this.setColour(280);
+    }
+  };
 
-Blockly.Blocks['cv_show_image'] = {
-  init: function () {
-    this.appendValueInput("NAME")
-      .setCheck("String")
-      .appendField("Show image as");
-    this.setPreviousStatement(true);
-    this.setNextStatement(true);
-    this.setColour(280);
-  }
-};
+  Blockly.Blocks['cv_show_image'] = {
+    init: function () {
+      this.appendValueInput("NAME")
+        .setCheck("String")
+        .appendField("Show image as");
+      this.setPreviousStatement(true);
+      this.setNextStatement(true);
+      this.setColour(280);
+    }
+  };
 
-Blockly.Blocks['cv_save_image'] = {
-  init: function () {
-    this.appendValueInput("NAME")
-      .setCheck("String")
-      .appendField("Save image as");
-    this.setPreviousStatement(true);
-    this.setNextStatement(true);
-    this.setColour(280);
-  }
-};
+  Blockly.Blocks['cv_save_image'] = {
+    init: function () {
+      this.appendValueInput("NAME")
+        .setCheck("String")
+        .appendField("Save image as");
+      this.setPreviousStatement(true);
+      this.setNextStatement(true);
+      this.setColour(280);
+    }
+  };
 
   /* =========================
      SPEAK BLOCK
@@ -613,79 +614,79 @@ Blockly.Blocks['cv_save_image'] = {
   /* =========================
      FILE HANDLING
   ========================= */
-/* =========================
-   FILE UPLOAD BLOCK
-========================= */
+  /* =========================
+     FILE UPLOAD BLOCK
+  ========================= */
 
-Blockly.Blocks['file_upload'] = {
-  init: function () {
-    this.appendDummyInput()
-      .appendField(
-        new Blockly.FieldImage(
-          "https://cdn-icons-png.flaticon.com/512/716/716784.png",
-          20,
-          20,
-          "*"
+  Blockly.Blocks['file_upload'] = {
+    init: function () {
+      this.appendDummyInput()
+        .appendField(
+          new Blockly.FieldImage(
+            "https://cdn-icons-png.flaticon.com/512/716/716784.png",
+            20,
+            20,
+            "*"
+          )
         )
-      )
-      .appendField("Upload file");
+        .appendField("Upload file");
 
-    this.setPreviousStatement(true);
-    this.setNextStatement(true);
-    this.setColour(120);
-    this.setTooltip("Upload a file from your device");
-  }
-};
+      this.setPreviousStatement(true);
+      this.setNextStatement(true);
+      this.setColour(120);
+      this.setTooltip("Upload a file from your device");
+    }
+  };
 
   Blockly.Blocks['file_open'] = {
-  init: function () {
-    this.appendDummyInput()
-      .appendField("Open file")
-      .appendField(new Blockly.FieldTextInput("file.txt"), "FILENAME")
-      .appendField("in")
-      .appendField(
-        new Blockly.FieldDropdown([
-          ["read", "r"],
-          ["write", "w"]
-        ]),
-        "MODE"
-      )
-      .appendField("mode");
+    init: function () {
+      this.appendDummyInput()
+        .appendField("Open file")
+        .appendField(new Blockly.FieldTextInput("file.txt"), "FILENAME")
+        .appendField("in")
+        .appendField(
+          new Blockly.FieldDropdown([
+            ["read", "r"],
+            ["write", "w"]
+          ]),
+          "MODE"
+        )
+        .appendField("mode");
 
-    this.setPreviousStatement(true);
-    this.setNextStatement(true);
-    this.setColour(120);
-  }
-};
+      this.setPreviousStatement(true);
+      this.setNextStatement(true);
+      this.setColour(120);
+    }
+  };
 
-Blockly.Blocks['file_read'] = {
-  init: function () {
-    this.appendDummyInput().appendField("Read file");
-    this.setPreviousStatement(true);
-    this.setNextStatement(true);
-    this.setColour(120);
-  }
-};
+  Blockly.Blocks['file_read'] = {
+    init: function () {
+      this.appendDummyInput().appendField("Read file");
+      this.setPreviousStatement(true);
+      this.setNextStatement(true);
+      this.setColour(120);
+    }
+  };
 
-Blockly.Blocks['file_write'] = {
-  init: function () {
-    this.appendValueInput("TEXT")
-      .setCheck("String")
-      .appendField("Write to file");
-    this.setPreviousStatement(true);
-    this.setNextStatement(true);
-    this.setColour(120);
-  }
-};
+  Blockly.Blocks['file_write'] = {
+    init: function () {
+      this.appendValueInput("TEXT")
+        .setCheck("String")
+        .appendField("Write to file");
+      this.setPreviousStatement(true);
+      this.setNextStatement(true);
+      this.setColour(120);
+    }
+  };
 
-Blockly.Blocks['file_close'] = {
-  init: function () {
-    this.appendDummyInput().appendField("Close file");
-    this.setPreviousStatement(true);
-    this.setNextStatement(true);
-    this.setColour(120);
-  }
-};
+  Blockly.Blocks['file_close'] = {
+    init: function () {
+      this.appendDummyInput().appendField("Close file");
+      this.setPreviousStatement(true);
+      this.setNextStatement(true);
+      this.setColour(120);
+    }
+  };
 
   /* =========================
      SERIAL
@@ -2753,40 +2754,40 @@ const definePythonGenerators = () => {
   };
 
   pythonGenerator.forBlock['sprite_show'] = function (block) {
-  const sprite = block.getFieldValue("SPRITE"); // Laugh
-  const cam = block.getFieldValue("CAM");       // on / off
+    const sprite = block.getFieldValue("SPRITE"); // Laugh
+    const cam = block.getFieldValue("CAM");       // on / off
 
-  return `sprites.show("${sprite}", "${cam}")\n`;
-};
+    return `sprites.show("${sprite}", "${cam}")\n`;
+  };
 
   /* =========================
    FILE HANDLING GENERATORS
 ========================= */
 
-pythonGenerator.forBlock['file_upload'] = function () {
-  // Marker only â€“ handled in JS
-  return "__UPLOAD_FILE__\n";
-};
+  pythonGenerator.forBlock['file_upload'] = function () {
+    // Marker only â€“ handled in JS
+    return "__UPLOAD_FILE__\n";
+  };
 
-pythonGenerator.forBlock['file_open'] = function (block) {
-  const filename = block.getFieldValue("FILENAME");
-  const mode = block.getFieldValue("MODE");
-  return `file = open("${filename}", "${mode}")\n`;
-};
+  pythonGenerator.forBlock['file_open'] = function (block) {
+    const filename = block.getFieldValue("FILENAME");
+    const mode = block.getFieldValue("MODE");
+    return `file = open("${filename}", "${mode}")\n`;
+  };
 
-pythonGenerator.forBlock['file_read'] = function () {
-  return `print(file.read())\n`;
-};
+  pythonGenerator.forBlock['file_read'] = function () {
+    return `print(file.read())\n`;
+  };
 
-pythonGenerator.forBlock['file_write'] = function (block, gen) {
-  const text =
-    gen.valueToCode(block, "TEXT", gen.ORDER_NONE) || '""';
-  return `file.write(${text})\n`;
-};
+  pythonGenerator.forBlock['file_write'] = function (block, gen) {
+    const text =
+      gen.valueToCode(block, "TEXT", gen.ORDER_NONE) || '""';
+    return `file.write(${text})\n`;
+  };
 
-pythonGenerator.forBlock['file_close'] = function () {
-  return `file.close()\n`;
-};
+  pythonGenerator.forBlock['file_close'] = function () {
+    return `file.close()\n`;
+  };
 
   pythonGenerator.forBlock['serial_send'] = function (block, gen) {
     const text =
@@ -2938,212 +2939,212 @@ serial.send(${text})
     const code = `${varName}.right(${angle})\n`;
     return code;
   };
-/* =========================
-   TEACHABLE GENERATORS
-========================= */
+  /* =========================
+     TEACHABLE GENERATORS
+  ========================= */
 
-pythonGenerator.forBlock['teachable_load_model'] = function (block) {
-  const url = block.getFieldValue("URL");
-  return `print("__TEACHABLE_LOAD__:${url}")\n`;
-};
+  pythonGenerator.forBlock['teachable_load_model'] = function (block) {
+    const url = block.getFieldValue("URL");
+    return `print("__TEACHABLE_LOAD__:${url}")\n`;
+  };
 
-pythonGenerator.forBlock['teachable_load_image'] = function () {
-  return `print("__TEACHABLE_LOAD_IMAGE__")\n`;
-};
+  pythonGenerator.forBlock['teachable_load_image'] = function () {
+    return `print("__TEACHABLE_LOAD_IMAGE__")\n`;
+  };
 
-pythonGenerator.forBlock['teachable_show_webcam'] = function (block) {
-  const src = block.getFieldValue("SRC");
-  return `print("__TEACHABLE_SHOW__:${src}")\n`;
-};
+  pythonGenerator.forBlock['teachable_show_webcam'] = function (block) {
+    const src = block.getFieldValue("SRC");
+    return `print("__TEACHABLE_SHOW__:${src}")\n`;
+  };
 
-pythonGenerator.forBlock['teachable_predict_image'] = function (block) {
-  const type = block.getFieldValue("TYPE");
-  const src = block.getFieldValue("SRC");
-  return `print("__TEACHABLE_PREDICT__:${type}:${src}")\n`;
-};
+  pythonGenerator.forBlock['teachable_predict_image'] = function (block) {
+    const type = block.getFieldValue("TYPE");
+    const src = block.getFieldValue("SRC");
+    return `print("__TEACHABLE_PREDICT__:${type}:${src}")\n`;
+  };
 
-pythonGenerator.forBlock['teachable_predict_audio'] = function () {
-  return `print("__TEACHABLE_PREDICT_AUDIO__")\n`;
-};
+  pythonGenerator.forBlock['teachable_predict_audio'] = function () {
+    return `print("__TEACHABLE_PREDICT_AUDIO__")\n`;
+  };
 
-/* =========================
-   FACIAL FEATURE GENERATORS
-========================= */
+  /* =========================
+     FACIAL FEATURE GENERATORS
+  ========================= */
 
-pythonGenerator.forBlock['facial_load_image'] = function () {
-  return `print("__FACIAL_LOAD_IMAGE__")\n`;
-};
+  pythonGenerator.forBlock['facial_load_image'] = function () {
+    return `print("__FACIAL_LOAD_IMAGE__")\n`;
+  };
 
-pythonGenerator.forBlock['facial_get_count'] = function (block) {
-  const feature = block.getFieldValue("FEATURE");
-  return `print("__FACIAL_GET_COUNT__:${feature}")\n`;
-};
+  pythonGenerator.forBlock['facial_get_count'] = function (block) {
+    const feature = block.getFieldValue("FEATURE");
+    return `print("__FACIAL_GET_COUNT__:${feature}")\n`;
+  };
 
-pythonGenerator.forBlock['facial_get_gender'] = function (block) {
-  const gender = block.getFieldValue("GENDER");
-  return `print("__FACIAL_GET_GENDER__:${gender}")\n`;
-};
+  pythonGenerator.forBlock['facial_get_gender'] = function (block) {
+    const gender = block.getFieldValue("GENDER");
+    return `print("__FACIAL_GET_GENDER__:${gender}")\n`;
+  };
 
-pythonGenerator.forBlock['facial_get_expression'] = function (block) {
-  const expression = block.getFieldValue("EXPRESSION");
-  return `print("__FACIAL_GET_EXPRESSION__:${expression}")\n`;
-};
+  pythonGenerator.forBlock['facial_get_expression'] = function (block) {
+    const expression = block.getFieldValue("EXPRESSION");
+    return `print("__FACIAL_GET_EXPRESSION__:${expression}")\n`;
+  };
 
-pythonGenerator.forBlock['facial_get_age_list'] = function () {
-  return `print("__FACIAL_GET_AGE_LIST__")\n`;
-};
+  pythonGenerator.forBlock['facial_get_age_list'] = function () {
+    return `print("__FACIAL_GET_AGE_LIST__")\n`;
+  };
 
-pythonGenerator.forBlock['facial_show_image'] = function (block) {
-  const border = block.getFieldValue("BORDER");
-  return `print("__FACIAL_SHOW__:${border}")\n`;
-};
+  pythonGenerator.forBlock['facial_show_image'] = function (block) {
+    const border = block.getFieldValue("BORDER");
+    return `print("__FACIAL_SHOW__:${border}")\n`;
+  };
 
-/* =========================
-   OBJECT DETECTION GENERATORS
-========================= */
+  /* =========================
+     OBJECT DETECTION GENERATORS
+  ========================= */
 
-pythonGenerator.forBlock['object_load_image'] = function () {
-  return `print("__OBJECT_LOAD_IMAGE__")\n`;
-};
+  pythonGenerator.forBlock['object_load_image'] = function () {
+    return `print("__OBJECT_LOAD_IMAGE__")\n`;
+  };
 
-pythonGenerator.forBlock['object_get_count'] = function (block) {
-  const object = block.getFieldValue("OBJECT");
-  return `print("__OBJECT_GET_COUNT__:${object}")\n`;
-};
+  pythonGenerator.forBlock['object_get_count'] = function (block) {
+    const object = block.getFieldValue("OBJECT");
+    return `print("__OBJECT_GET_COUNT__:${object}")\n`;
+  };
 
-pythonGenerator.forBlock['object_show_image'] = function (block) {
-  const border = block.getFieldValue("BORDER");
-  return `print("__OBJECT_SHOW__:${border}")\n`;
-};
+  pythonGenerator.forBlock['object_show_image'] = function (block) {
+    const border = block.getFieldValue("BORDER");
+    return `print("__OBJECT_SHOW__:${border}")\n`;
+  };
 
-/* =========================
-   FACE RECOGNITION GENERATORS
-========================= */
+  /* =========================
+     FACE RECOGNITION GENERATORS
+  ========================= */
 
-pythonGenerator.forBlock['facerecog_load_image'] = function () {
-  return `print("__FACERECOG_LOAD_IMAGE__")\n`;
-};
+  pythonGenerator.forBlock['facerecog_load_image'] = function () {
+    return `print("__FACERECOG_LOAD_IMAGE__")\n`;
+  };
 
-pythonGenerator.forBlock['facerecog_predict'] = function () {
-  return `print("__FACERECOG_PREDICT__")\n`;
-};
+  pythonGenerator.forBlock['facerecog_predict'] = function () {
+    return `print("__FACERECOG_PREDICT__")\n`;
+  };
 
-pythonGenerator.forBlock['facerecog_show_image'] = function (block) {
-  const border = block.getFieldValue("BORDER");
-  return `print("__FACERECOG_SHOW__:${border}")\n`;
-};
+  pythonGenerator.forBlock['facerecog_show_image'] = function (block) {
+    const border = block.getFieldValue("BORDER");
+    return `print("__FACERECOG_SHOW__:${border}")\n`;
+  };
 
-/* =========================
-   FINGER DETECTION GENERATORS
-========================= */
+  /* =========================
+     FINGER DETECTION GENERATORS
+  ========================= */
 
-pythonGenerator.forBlock['finger_start_detection'] = function () {
-  return `print("__FINGER_START__")\n`;
-};
+  pythonGenerator.forBlock['finger_start_detection'] = function () {
+    return `print("__FINGER_START__")\n`;
+  };
 
-pythonGenerator.forBlock['finger_get_coordinate'] = function (block) {
-  const axis = block.getFieldValue("AXIS");
-  const point = block.getFieldValue("POINT");
-  return `print("__FINGER_GET_COORD__:${axis}:${point}")\n`;
-};
+  pythonGenerator.forBlock['finger_get_coordinate'] = function (block) {
+    const axis = block.getFieldValue("AXIS");
+    const point = block.getFieldValue("POINT");
+    return `print("__FINGER_GET_COORD__:${axis}:${point}")\n`;
+  };
 
-pythonGenerator.forBlock['finger_get_count'] = function () {
-  return `print("__FINGER_GET_COUNT__")\n`;
-};
+  pythonGenerator.forBlock['finger_get_count'] = function () {
+    return `print("__FINGER_GET_COUNT__")\n`;
+  };
 
-pythonGenerator.forBlock['finger_stop_detection'] = function () {
-  return `print("__FINGER_STOP__")\n`;
-};
+  pythonGenerator.forBlock['finger_stop_detection'] = function () {
+    return `print("__FINGER_STOP__")\n`;
+  };
 
-pythonGenerator.forBlock['finger_set_delay'] = function (block, generator) {
-  const delay = generator.valueToCode(block, 'DELAY', pythonGenerator.ORDER_ATOMIC) || '0';
-  return `print("__FINGER_DELAY__:${delay}")\n`;
-};
+  pythonGenerator.forBlock['finger_set_delay'] = function (block, generator) {
+    const delay = generator.valueToCode(block, 'DELAY', pythonGenerator.ORDER_ATOMIC) || '0';
+    return `print("__FINGER_DELAY__:${delay}")\n`;
+  };
 
-/* =========================
-   COMPUTER VISION (OPENCV) GENERATORS
-========================= */
+  /* =========================
+     COMPUTER VISION (OPENCV) GENERATORS
+  ========================= */
 
-pythonGenerator.forBlock['cv_load_image'] = function () {
-  return `print("__CV_LOAD_IMAGE__")\n`;
-};
+  pythonGenerator.forBlock['cv_load_image'] = function () {
+    return `print("__CV_LOAD_IMAGE__")\n`;
+  };
 
-pythonGenerator.forBlock['cv_put_text'] = function (block, generator) {
-  const text = generator.valueToCode(block, 'TEXT', pythonGenerator.ORDER_ATOMIC) || '""';
-  const x = block.getFieldValue("X");
-  const y = block.getFieldValue("Y");
-  const font = block.getFieldValue("FONT");
-  const size = block.getFieldValue("SIZE");
-  const r = block.getFieldValue("R");
-  const g = block.getFieldValue("G");
-  const b = block.getFieldValue("B");
-  const thickness = block.getFieldValue("THICKNESS");
-  return `print("__CV_PUT_TEXT__:${text}:${x}:${y}:${font}:${size}:${r}:${g}:${b}:${thickness}")\n`;
-};
+  pythonGenerator.forBlock['cv_put_text'] = function (block, generator) {
+    const text = generator.valueToCode(block, 'TEXT', pythonGenerator.ORDER_ATOMIC) || '""';
+    const x = block.getFieldValue("X");
+    const y = block.getFieldValue("Y");
+    const font = block.getFieldValue("FONT");
+    const size = block.getFieldValue("SIZE");
+    const r = block.getFieldValue("R");
+    const g = block.getFieldValue("G");
+    const b = block.getFieldValue("B");
+    const thickness = block.getFieldValue("THICKNESS");
+    return `print("__CV_PUT_TEXT__:${text}:${x}:${y}:${font}:${size}:${r}:${g}:${b}:${thickness}")\n`;
+  };
 
-pythonGenerator.forBlock['cv_draw_line'] = function (block) {
-  const x1 = block.getFieldValue("X1");
-  const y1 = block.getFieldValue("Y1");
-  const x2 = block.getFieldValue("X2");
-  const y2 = block.getFieldValue("Y2");
-  const r = block.getFieldValue("R");
-  const g = block.getFieldValue("G");
-  const b = block.getFieldValue("B");
-  const thickness = block.getFieldValue("THICKNESS");
-  return `print("__CV_DRAW_LINE__:${x1}:${y1}:${x2}:${y2}:${r}:${g}:${b}:${thickness}")\n`;
-};
+  pythonGenerator.forBlock['cv_draw_line'] = function (block) {
+    const x1 = block.getFieldValue("X1");
+    const y1 = block.getFieldValue("Y1");
+    const x2 = block.getFieldValue("X2");
+    const y2 = block.getFieldValue("Y2");
+    const r = block.getFieldValue("R");
+    const g = block.getFieldValue("G");
+    const b = block.getFieldValue("B");
+    const thickness = block.getFieldValue("THICKNESS");
+    return `print("__CV_DRAW_LINE__:${x1}:${y1}:${x2}:${y2}:${r}:${g}:${b}:${thickness}")\n`;
+  };
 
-pythonGenerator.forBlock['cv_draw_rectangle'] = function (block) {
-  const x1 = block.getFieldValue("X1");
-  const y1 = block.getFieldValue("Y1");
-  const x2 = block.getFieldValue("X2");
-  const y2 = block.getFieldValue("Y2");
-  const r = block.getFieldValue("R");
-  const g = block.getFieldValue("G");
-  const b = block.getFieldValue("B");
-  const thickness = block.getFieldValue("THICKNESS");
-  return `print("__CV_DRAW_RECT__:${x1}:${y1}:${x2}:${y2}:${r}:${g}:${b}:${thickness}")\n`;
-};
+  pythonGenerator.forBlock['cv_draw_rectangle'] = function (block) {
+    const x1 = block.getFieldValue("X1");
+    const y1 = block.getFieldValue("Y1");
+    const x2 = block.getFieldValue("X2");
+    const y2 = block.getFieldValue("Y2");
+    const r = block.getFieldValue("R");
+    const g = block.getFieldValue("G");
+    const b = block.getFieldValue("B");
+    const thickness = block.getFieldValue("THICKNESS");
+    return `print("__CV_DRAW_RECT__:${x1}:${y1}:${x2}:${y2}:${r}:${g}:${b}:${thickness}")\n`;
+  };
 
-pythonGenerator.forBlock['cv_draw_circle'] = function (block) {
-  const x = block.getFieldValue("X");
-  const y = block.getFieldValue("Y");
-  const radius = block.getFieldValue("RADIUS");
-  const r = block.getFieldValue("R");
-  const g = block.getFieldValue("G");
-  const b = block.getFieldValue("B");
-  const thickness = block.getFieldValue("THICKNESS");
-  return `print("__CV_DRAW_CIRCLE__:${x}:${y}:${radius}:${r}:${g}:${b}:${thickness}")\n`;
-};
+  pythonGenerator.forBlock['cv_draw_circle'] = function (block) {
+    const x = block.getFieldValue("X");
+    const y = block.getFieldValue("Y");
+    const radius = block.getFieldValue("RADIUS");
+    const r = block.getFieldValue("R");
+    const g = block.getFieldValue("G");
+    const b = block.getFieldValue("B");
+    const thickness = block.getFieldValue("THICKNESS");
+    return `print("__CV_DRAW_CIRCLE__:${x}:${y}:${radius}:${r}:${g}:${b}:${thickness}")\n`;
+  };
 
-pythonGenerator.forBlock['cv_resize'] = function (block) {
-  const x = block.getFieldValue("X");
-  const y = block.getFieldValue("Y");
-  return `print("__CV_RESIZE__:${x}:${y}")\n`;
-};
+  pythonGenerator.forBlock['cv_resize'] = function (block) {
+    const x = block.getFieldValue("X");
+    const y = block.getFieldValue("Y");
+    return `print("__CV_RESIZE__:${x}:${y}")\n`;
+  };
 
-pythonGenerator.forBlock['cv_xy'] = function (block) {
-  const x = block.getFieldValue("X");
-  const y = block.getFieldValue("Y");
-  return [`(${x}, ${y})`, pythonGenerator.ORDER_ATOMIC];
-};
+  pythonGenerator.forBlock['cv_xy'] = function (block) {
+    const x = block.getFieldValue("X");
+    const y = block.getFieldValue("Y");
+    return [`(${x}, ${y})`, pythonGenerator.ORDER_ATOMIC];
+  };
 
-pythonGenerator.forBlock['cv_rgb'] = function (block) {
-  const r = block.getFieldValue("R");
-  const g = block.getFieldValue("G");
-  const b = block.getFieldValue("B");
-  return [`(${r}, ${g}, ${b})`, pythonGenerator.ORDER_ATOMIC];
-};
+  pythonGenerator.forBlock['cv_rgb'] = function (block) {
+    const r = block.getFieldValue("R");
+    const g = block.getFieldValue("G");
+    const b = block.getFieldValue("B");
+    return [`(${r}, ${g}, ${b})`, pythonGenerator.ORDER_ATOMIC];
+  };
 
-pythonGenerator.forBlock['cv_show_image'] = function (block, generator) {
-  const name = generator.valueToCode(block, 'NAME', pythonGenerator.ORDER_ATOMIC) || '""';
-  return `print("__CV_SHOW__:${name}")\n`;
-};
+  pythonGenerator.forBlock['cv_show_image'] = function (block, generator) {
+    const name = generator.valueToCode(block, 'NAME', pythonGenerator.ORDER_ATOMIC) || '""';
+    return `print("__CV_SHOW__:${name}")\n`;
+  };
 
-pythonGenerator.forBlock['cv_save_image'] = function (block, generator) {
-  const name = generator.valueToCode(block, 'NAME', pythonGenerator.ORDER_ATOMIC) || '""';
-  return `print("__CV_SAVE__:${name}")\n`;
-};
+  pythonGenerator.forBlock['cv_save_image'] = function (block, generator) {
+    const name = generator.valueToCode(block, 'NAME', pythonGenerator.ORDER_ATOMIC) || '""';
+    return `print("__CV_SAVE__:${name}")\n`;
+  };
 
   pythonGenerator.forBlock['turtle_left'] = function (block, generator) {
     const varName = generator.nameDB_.getName(block.getFieldValue('VAR'), Blockly.Names.NameType.VARIABLE);
@@ -4067,16 +4068,16 @@ function AICodingPage() {
   const [view, setView] = useState('blocks');
   const [output, setOutput] = useState('');
   let fingerCameraInstance = null;
-let fingerInterval = null;
-let fingerDelaySeconds = 1;
-let fingerLoopLimit = 30; // default
-let fingerLoopCounter = 0;
-let fingerResultsArray = [];
-let fingerCollected =[];
-let fingerLoopCurrent =0;
-let handsInstance = null;
-let cameraInstance = null;
-let isDetectionRunning = false;
+  let fingerInterval = null;
+  let fingerDelaySeconds = 1;
+  let fingerLoopLimit = 30; // default
+  let fingerLoopCounter = 0;
+  let fingerResultsArray = [];
+  let fingerCollected = [];
+  let fingerLoopCurrent = 0;
+  let handsInstance = null;
+  let cameraInstance = null;
+  let isDetectionRunning = false;
 
   function getCanvasTextOutput() {
     let pre = canvasContainerRef.current.querySelector(".canvas-text-output");
@@ -4096,6 +4097,31 @@ let isDetectionRunning = false;
 
     return pre;
   }
+
+  useEffect(() => {
+    const loadModels = async () => {
+      try {
+        const MODEL_URL = "/models";
+
+        await Promise.all([
+          faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
+          faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
+          faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL),
+          faceapi.nets.faceExpressionNet.loadFromUri(MODEL_URL),
+          faceapi.nets.ageGenderNet.loadFromUri(MODEL_URL),
+        ]);
+
+        console.log("Models loaded");
+        setFaceApiLoaded(true);
+      } catch (err) {
+        console.error("Model loading error:", err);
+        setFaceApiError(err.message);
+      }
+    };
+
+    loadModels();
+  }, []);
+
   const initFaceApi = useRef(false);
   const [faceApiLoaded, setFaceApiLoaded] = useState(false);
   const [faceApiError, setFaceApiError] = useState('');
@@ -4122,7 +4148,7 @@ let isDetectionRunning = false;
 
         // Use CDN path for models instead of local "/models"
         const MODEL_URL = 'https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js';
-        
+
         await Promise.all([
           window.faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
           window.faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
@@ -4145,7 +4171,7 @@ let isDetectionRunning = false;
 
     loadFaceApi();
   }, []);
- const processFacialDetection = async (imgElement) => {
+  const processFacialDetection = async (imgElement) => {
     if (!faceApiLoaded) {
       console.error('[FaceAPI] Models not loaded yet');
       setOutput((prev) => prev + '❌ Error: Face detection models not loaded. Please wait...\n');
@@ -4186,7 +4212,7 @@ let isDetectionRunning = false;
           const rightEye = detection.landmarks.getRightEye();
           const nose = detection.landmarks.getNose();
           const mouth = detection.landmarks.getMouth();
-          
+
           if (leftEye.length > 0) counts.eye++;
           if (rightEye.length > 0) counts.eye++;
           if (nose.length > 0) counts.nose++;
@@ -4199,7 +4225,7 @@ let isDetectionRunning = false;
 
         // Count expressions
         if (detection.expressions) {
-          const maxExpression = Object.keys(detection.expressions).reduce((a, b) => 
+          const maxExpression = Object.keys(detection.expressions).reduce((a, b) =>
             detection.expressions[a] > detection.expressions[b] ? a : b
           );
           if (counts.hasOwnProperty(maxExpression)) {
@@ -4507,81 +4533,81 @@ let isDetectionRunning = false;
 </xml>
 `, []);
 
- useEffect(() => {
-  defineBlocks();
-  definePythonGenerators();
+  useEffect(() => {
+    defineBlocks();
+    definePythonGenerators();
 
-  const workspace = Blockly.inject(blocklyDiv.current, {
-    toolbox: toolboxXml,
-    zoom: {
-      controls: true,
-      wheel: true,
-      startScale: 1.0,
-      maxScale: 3,
-      minScale: 0.3,
-      scaleSpeed: 1.2
-    },
-    trashcan: true
-  });
+    const workspace = Blockly.inject(blocklyDiv.current, {
+      toolbox: toolboxXml,
+      zoom: {
+        controls: true,
+        wheel: true,
+        startScale: 1.0,
+        maxScale: 3,
+        minScale: 0.3,
+        scaleSpeed: 1.2
+      },
+      trashcan: true
+    });
 
-  workspaceRef.current = workspace;
+    workspaceRef.current = workspace;
 
-  /* =========================
-     1ï¸âƒ£ CODE GENERATION LISTENER
-  ========================= */
-  workspace.addChangeListener((event) => {
-    if (
-      event.type !== Blockly.Events.BLOCK_CREATE &&
-      event.type !== Blockly.Events.BLOCK_CHANGE &&
-      event.type !== Blockly.Events.BLOCK_DELETE &&
-      event.type !== Blockly.Events.BLOCK_MOVE
-    ) {
-      return;
-    }
+    /* =========================
+       1ï¸âƒ£ CODE GENERATION LISTENER
+    ========================= */
+    workspace.addChangeListener((event) => {
+      if (
+        event.type !== Blockly.Events.BLOCK_CREATE &&
+        event.type !== Blockly.Events.BLOCK_CHANGE &&
+        event.type !== Blockly.Events.BLOCK_DELETE &&
+        event.type !== Blockly.Events.BLOCK_MOVE
+      ) {
+        return;
+      }
 
-    setCode(pythonGenerator.workspaceToCode(workspace));
-  });
+      setCode(pythonGenerator.workspaceToCode(workspace));
+    });
 
-  /* =========================
-     2ï¸âƒ£ FILE UPLOAD BLOCK HANDLER
-     (DOUBLE-CLICK SAFE)
-  ========================= */
-  workspace.addChangeListener((event) => {
-  if (
-    event.type === Blockly.Events.UI &&
-    event.element === "click"
-  ) {
-    const block = workspace.getBlockById(event.blockId);
+    /* =========================
+       2ï¸âƒ£ FILE UPLOAD BLOCK HANDLER
+       (DOUBLE-CLICK SAFE)
+    ========================= */
+    workspace.addChangeListener((event) => {
+      if (
+        event.type === Blockly.Events.UI &&
+        event.element === "click"
+      ) {
+        const block = workspace.getBlockById(event.blockId);
 
-    if (block && block.type === "file_upload") {
-      fileInputRef.current?.click();
-    }
-  }
-});
+        if (block && block.type === "file_upload") {
+          fileInputRef.current?.click();
+        }
+      }
+    });
 
 
-  return () => {
-    workspace.dispose();
-  };
-}, [toolboxXml]);
+    return () => {
+      workspace.dispose();
+    };
+  }, [toolboxXml]);
 
-useEffect(() => {
-  const script1 = document.createElement("script");
-  script1.src = "https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js";
-  script1.async = true;
+  useEffect(() => {
+    const script1 = document.createElement("script");
+    script1.src = "https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js";
+    script1.async = true;
 
-  const script2 = document.createElement("script");
-  script2.src = "https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js";
-  script2.async = true;
+    const script2 = document.createElement("script");
+    script2.src = "https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js";
+    script2.async = true;
 
-  const script3 = document.createElement("script");
-  script3.src = "https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js";
-  script3.async = true;
+    const script3 = document.createElement("script");
+    script3.src = "https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js";
+    script3.async = true;
 
-  document.body.appendChild(script1);
-  document.body.appendChild(script2);
-  document.body.appendChild(script3);
-}, []);
+    document.body.appendChild(script1);
+    document.body.appendChild(script2);
+    document.body.appendChild(script3);
+  }, []);
 
   function renderPlot(plot, labels) {
     canvasContainerRef.current.innerHTML = "";
@@ -4843,467 +4869,467 @@ useEffect(() => {
     });
   }
 
-function showSpriteOnly(spriteName) {
-  if (!canvasContainerRef.current) return;
+  function showSpriteOnly(spriteName) {
+    if (!canvasContainerRef.current) return;
 
-  canvasContainerRef.current.innerHTML = "";
+    canvasContainerRef.current.innerHTML = "";
 
-  const img = document.createElement("img");
-  img.src = `/Sprites/${spriteName}.png`;
-  img.style.maxWidth = "100%";
-  img.style.maxHeight = "100%";
-  img.style.objectFit = "contain";
-  img.style.display = "block";
-  img.style.margin = "auto";
+    const img = document.createElement("img");
+    img.src = `/Sprites/${spriteName}.png`;
+    img.style.maxWidth = "100%";
+    img.style.maxHeight = "100%";
+    img.style.objectFit = "contain";
+    img.style.display = "block";
+    img.style.margin = "auto";
 
-  canvasContainerRef.current.appendChild(img);
-}
-async function showSpriteWithWebcam(spriteName) {
-  if (!canvasContainerRef.current) return;
-
-  canvasContainerRef.current.innerHTML = "";
-
-  // Layout container
-  const wrapper = document.createElement("div");
-  wrapper.style.display = "flex";
-  wrapper.style.justifyContent = "space-between";
-  wrapper.style.alignItems = "center";
-  wrapper.style.width = "100%";
-  wrapper.style.height = "100%";
-  wrapper.style.gap = "20px";
-
-  // Webcam video
-  const video = document.createElement("video");
-  video.autoplay = true;
-  video.playsInline = true;
-  video.style.width = "48%";
-  video.style.borderRadius = "12px";
-  video.style.background = "#000";
-
-  // Emoji image
-  const img = document.createElement("img");
-  img.src = `/Sprites/${spriteName}.png`;
-  img.style.width = "48%";
-  img.style.objectFit = "contain";
-
-  wrapper.appendChild(video);
-  wrapper.appendChild(img);
-  canvasContainerRef.current.appendChild(wrapper);
-
-  try {
-    const stream = await navigator.mediaDevices.getUserMedia({
-      video: true,
-      audio: false
-    });
-    video.srcObject = stream;
-  } catch (err) {
-    console.error("Webcam error:", err);
-    alert("Webcam access denied");
+    canvasContainerRef.current.appendChild(img);
   }
-}
-function stopWebcam() {
-  // Stop sprite / HTML video webcams
-  const videos = document.querySelectorAll("video");
-  videos.forEach(v => {
-    if (v?.srcObject) {
-      v.srcObject.getTracks().forEach(t => t.stop());
-      v.srcObject = null;
-    }
-  });
+  async function showSpriteWithWebcam(spriteName) {
+    if (!canvasContainerRef.current) return;
 
-  // Stop Teachable Machine webcam
-  if (tmWebcam) {
+    canvasContainerRef.current.innerHTML = "";
+
+    // Layout container
+    const wrapper = document.createElement("div");
+    wrapper.style.display = "flex";
+    wrapper.style.justifyContent = "space-between";
+    wrapper.style.alignItems = "center";
+    wrapper.style.width = "100%";
+    wrapper.style.height = "100%";
+    wrapper.style.gap = "20px";
+
+    // Webcam video
+    const video = document.createElement("video");
+    video.autoplay = true;
+    video.playsInline = true;
+    video.style.width = "48%";
+    video.style.borderRadius = "12px";
+    video.style.background = "#000";
+
+    // Emoji image
+    const img = document.createElement("img");
+    img.src = `/Sprites/${spriteName}.png`;
+    img.style.width = "48%";
+    img.style.objectFit = "contain";
+
+    wrapper.appendChild(video);
+    wrapper.appendChild(img);
+    canvasContainerRef.current.appendChild(wrapper);
+
     try {
-      tmWebcam.stop();
-      if (tmWebcam._animationId) {
-        cancelAnimationFrame(tmWebcam._animationId);
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: true,
+        audio: false
+      });
+      video.srcObject = stream;
+    } catch (err) {
+      console.error("Webcam error:", err);
+      alert("Webcam access denied");
+    }
+  }
+  function stopWebcam() {
+    // Stop sprite / HTML video webcams
+    const videos = document.querySelectorAll("video");
+    videos.forEach(v => {
+      if (v?.srcObject) {
+        v.srcObject.getTracks().forEach(t => t.stop());
+        v.srcObject = null;
       }
-    } catch (e) {
-      console.warn("TM webcam already stopped");
-    }
-    tmWebcam = null;
-  }
+    });
 
-  // Stop predictions
-  isPredicting = false;
-  if (predictionInterval) {
-    clearInterval(predictionInterval);
-    predictionInterval = null;
-  }
-  if (predictionAnimationId) {
-    cancelAnimationFrame(predictionAnimationId);
-    predictionAnimationId = null;
-  }
-
-  // Reset state flags
-  isModelReady = false;
-  isWebcamReady = false;
-  pendingPredictionConfig = null;
-
-  // Clear model and loaded image
-  tmModel = null;
-  tmLoadedImage = null;
-
-  // Remove prediction results
-  const resultDiv = document.getElementById("tm-result");
-  if (resultDiv) {
-    resultDiv.remove();
-  }
-}
-
-let tmModel = null;
-let tmWebcam = null;
-let tmLoadedImage = null;
-let currentPrediction = null;
-let currentConfidence = 0;
-let predictionInterval = null;
-let predictionAnimationId = null;
-
-// State tracking for auto-start
-let pendingPredictionConfig = null; // {type, src, outputCallback, containerRef}
-let isModelReady = false;
-let isWebcamReady = false;
-
-function checkAndStartPrediction() {
-  if (!pendingPredictionConfig) return;
-
-  const { type, src, outputCallback, containerRef } = pendingPredictionConfig;
-
-  // Check if prerequisites are met
-  if (src === "webcam") {
-    if (isModelReady && isWebcamReady && tmModel && tmWebcam) {
-      // Start prediction automatically
-      outputCallback("ðŸŽ¯ Auto-starting prediction...");
-      predictFromWebcam(type, outputCallback, containerRef);
-      pendingPredictionConfig = null; // Clear pending
-    }
-  } else if (src === "image") {
-    if (isModelReady && tmModel && tmLoadedImage) {
-      outputCallback("ðŸŽ¯ Auto-starting prediction...");
-      predictFromImage(type, outputCallback, containerRef);
-      pendingPredictionConfig = null; // Clear pending
-    }
-  }
-}
-
-async function loadTeachableModel(url, outputCallback) {
-  // Wait for library to load if not ready
-  if (!window.tmImage) {
-    outputCallback("⏳ Teachable Machine library loading... Please wait.");
-    
-    // Wait up to 10 seconds for library to load
-    let attempts = 0;
-    const maxAttempts = 20; // 20 attempts * 500ms = 10 seconds
-    
-    while (!window.tmImage && attempts < maxAttempts) {
-      await new Promise(resolve => setTimeout(resolve, 500));
-      attempts++;
-    }
-    
-    if (!window.tmImage) {
-      const msg = "❌ Teachable Machine library failed to load. Please refresh the page.";
-      alert(msg);
-      outputCallback(msg);
-      return;
-    }
-    
-    outputCallback("✅ Library loaded successfully!");
-  }
-
-  try {
-    isModelReady = false;
-    outputCallback("🔄 Loading model from: " + url);
-    const modelURL = url + "model.json";
-    const metadataURL = url + "metadata.json";
-
-    tmModel = await window.tmImage.load(modelURL, metadataURL);
-    if (typeof window !== 'undefined') window.tmModel = tmModel;
-    isModelReady = true;
-    const successMsg = "✅ Model loaded successfully!";
-    outputCallback(successMsg);
-
-    // Check if we can auto-start prediction
-    checkAndStartPrediction();
-  } catch (error) {
-    const errorMsg = "❌ Failed to load model: " + error.message;
-    alert(errorMsg);
-    outputCallback(errorMsg);
-    isModelReady = false;
-  }
-}
-
-async function openTeachableImagePopup(outputCallback) {
-  return new Promise((resolve) => {
-    const input = document.createElement("input");
-    input.type = "file";
-    input.accept = "image/*";
-    input.capture = "environment";
-
-    input.onchange = (e) => {
-      const file = e.target.files[0];
-      if (!file) return;
-
-      const reader = new FileReader();
-      reader.onload = () => {
-        const img = new Image();
-        img.src = reader.result;
-        img.onload = () => {
-          tmLoadedImage = img;
-          if (typeof window !== 'undefined') window.tmLoadedImage = img;
-          outputCallback("✅ Image loaded successfully!");
-          checkAndStartPrediction(); // Auto-start pending prediction
-          resolve(true);
-        };
-      };
-      reader.readAsDataURL(file);
-    };
-
-    input.click();
-  });
-}
-
-async function startTeachableWebcam(containerRef, outputCallback) {
-  if (!window.tmImage || !window.tmImage.Webcam) {
-    const msg = "Teachable Machine not loaded yet. Please wait 1â€“2 seconds and run again.";
-    alert(msg);
-    outputCallback(msg);
-    return;
-  }
-
-  try {
-    isWebcamReady = false;
-
-    // Stop old webcam if exists
+    // Stop Teachable Machine webcam
     if (tmWebcam) {
       try {
         tmWebcam.stop();
         if (tmWebcam._animationId) {
           cancelAnimationFrame(tmWebcam._animationId);
         }
-      } catch {}
+      } catch (e) {
+        console.warn("TM webcam already stopped");
+      }
       tmWebcam = null;
     }
 
-    outputCallback("ðŸ“¹ Starting webcam...");
+    // Stop predictions
+    isPredicting = false;
+    if (predictionInterval) {
+      clearInterval(predictionInterval);
+      predictionInterval = null;
+    }
+    if (predictionAnimationId) {
+      cancelAnimationFrame(predictionAnimationId);
+      predictionAnimationId = null;
+    }
 
-    tmWebcam = new window.tmImage.Webcam(400, 400, true);
-    await tmWebcam.setup();
-    await tmWebcam.play();
+    // Reset state flags
+    isModelReady = false;
+    isWebcamReady = false;
+    pendingPredictionConfig = null;
 
-    // Wait a brief moment for webcam to fully initialize
-    await new Promise(resolve => setTimeout(resolve, 100));
+    // Clear model and loaded image
+    tmModel = null;
+    tmLoadedImage = null;
 
-    containerRef.current.innerHTML = "";
+    // Remove prediction results
+    const resultDiv = document.getElementById("tm-result");
+    if (resultDiv) {
+      resultDiv.remove();
+    }
+  }
 
-    const wrapper = document.createElement("div");
-    wrapper.style.display = "flex";
-    wrapper.style.flexDirection = "column";
-    wrapper.style.alignItems = "center";
-    wrapper.style.gap = "10px";
+  let tmModel = null;
+  let tmWebcam = null;
+  let tmLoadedImage = null;
+  let currentPrediction = null;
+  let currentConfidence = 0;
+  let predictionInterval = null;
+  let predictionAnimationId = null;
 
-    tmWebcam.canvas.style.width = "100%";
-    tmWebcam.canvas.style.maxWidth = "420px";
-    tmWebcam.canvas.style.borderRadius = "12px";
-    tmWebcam.canvas.style.display = "block";
+  // State tracking for auto-start
+  let pendingPredictionConfig = null; // {type, src, outputCallback, containerRef}
+  let isModelReady = false;
+  let isWebcamReady = false;
 
-    wrapper.appendChild(tmWebcam.canvas);
-    containerRef.current.appendChild(wrapper);
+  function checkAndStartPrediction() {
+    if (!pendingPredictionConfig) return;
 
-    isWebcamReady = true;
-    outputCallback("âœ… Webcam started successfully!");
+    const { type, src, outputCallback, containerRef } = pendingPredictionConfig;
 
-    // Keep webcam updating continuously
-    let animationId;
-    function loop() {
-      if (tmWebcam) {
-        tmWebcam.update();
-        animationId = requestAnimationFrame(loop);
+    // Check if prerequisites are met
+    if (src === "webcam") {
+      if (isModelReady && isWebcamReady && tmModel && tmWebcam) {
+        // Start prediction automatically
+        outputCallback("ðŸŽ¯ Auto-starting prediction...");
+        predictFromWebcam(type, outputCallback, containerRef);
+        pendingPredictionConfig = null; // Clear pending
+      }
+    } else if (src === "image") {
+      if (isModelReady && tmModel && tmLoadedImage) {
+        outputCallback("ðŸŽ¯ Auto-starting prediction...");
+        predictFromImage(type, outputCallback, containerRef);
+        pendingPredictionConfig = null; // Clear pending
       }
     }
-    loop();
-
-    // Store animation ID for cleanup
-    tmWebcam._animationId = animationId;
-
-    // Check if we can auto-start prediction
-    checkAndStartPrediction();
-  } catch (error) {
-    const errorMsg = "âŒ Webcam error: " + error.message;
-    alert(errorMsg);
-    outputCallback(errorMsg);
-    isWebcamReady = false;
   }
-}
 
-async function loadAndShowImage(containerRef, outputCallback) {
-  return new Promise((resolve) => {
-    const input = document.createElement("input");
-    input.type = "file";
-    input.accept = "image/*";
+  async function loadTeachableModel(url, outputCallback) {
+    // Wait for library to load if not ready
+    if (!window.tmImage) {
+      outputCallback("⏳ Teachable Machine library loading... Please wait.");
 
-    input.onchange = async (e) => {
-      const file = e.target.files[0];
-      if (!file) {
-        resolve();
+      // Wait up to 10 seconds for library to load
+      let attempts = 0;
+      const maxAttempts = 20; // 20 attempts * 500ms = 10 seconds
+
+      while (!window.tmImage && attempts < maxAttempts) {
+        await new Promise(resolve => setTimeout(resolve, 500));
+        attempts++;
+      }
+
+      if (!window.tmImage) {
+        const msg = "❌ Teachable Machine library failed to load. Please refresh the page.";
+        alert(msg);
+        outputCallback(msg);
         return;
       }
 
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        const img = new Image();
-        img.onload = () => {
-          tmLoadedImage = img;
-          if (typeof window !== 'undefined') window.tmLoadedImage = img;
+      outputCallback("✅ Library loaded successfully!");
+    }
 
-          containerRef.current.innerHTML = "";
+    try {
+      isModelReady = false;
+      outputCallback("🔄 Loading model from: " + url);
+      const modelURL = url + "model.json";
+      const metadataURL = url + "metadata.json";
 
-          const displayImg = document.createElement("img");
-          displayImg.src = event.target.result;
-          displayImg.style.width = "100%";
-          displayImg.style.maxWidth = "420px";
-          displayImg.style.borderRadius = "12px";
-          displayImg.style.display = "block";
-          displayImg.style.margin = "auto";
+      tmModel = await window.tmImage.load(modelURL, metadataURL);
+      if (typeof window !== 'undefined') window.tmModel = tmModel;
+      isModelReady = true;
+      const successMsg = "✅ Model loaded successfully!";
+      outputCallback(successMsg);
 
-          containerRef.current.appendChild(displayImg);
+      // Check if we can auto-start prediction
+      checkAndStartPrediction();
+    } catch (error) {
+      const errorMsg = "❌ Failed to load model: " + error.message;
+      alert(errorMsg);
+      outputCallback(errorMsg);
+      isModelReady = false;
+    }
+  }
 
-          outputCallback("âœ… Image loaded successfully!");
-          checkAndStartPrediction();
-          resolve();
+  async function openTeachableImagePopup(outputCallback) {
+    return new Promise((resolve) => {
+      const input = document.createElement("input");
+      input.type = "file";
+      input.accept = "image/*";
+      input.capture = "environment";
+
+      input.onchange = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = () => {
+          const img = new Image();
+          img.src = reader.result;
+          img.onload = () => {
+            tmLoadedImage = img;
+            if (typeof window !== 'undefined') window.tmLoadedImage = img;
+            outputCallback("✅ Image loaded successfully!");
+            checkAndStartPrediction(); // Auto-start pending prediction
+            resolve(true);
+          };
         };
-        img.src = event.target.result;
+        reader.readAsDataURL(file);
       };
-      reader.readAsDataURL(file);
-    };
 
-    input.click();
-  });
-}
-let isPredicting = false;
-
-async function predictFromWebcam(type, outputCallback, containerRef) {
-  // If not ready yet, save config for auto-start
-  if (!tmModel || !tmWebcam || !isModelReady || !isWebcamReady) {
-    outputCallback("â³ Waiting for model and webcam to be ready...");
-    pendingPredictionConfig = { type, src: "webcam", outputCallback, containerRef };
-    checkAndStartPrediction(); // Try immediately in case it just became ready
-    return;
+      input.click();
+    });
   }
 
-  // Stop any existing prediction loop
-  if (predictionInterval) {
-    clearInterval(predictionInterval);
-  }
-  if (predictionAnimationId) {
-    cancelAnimationFrame(predictionAnimationId);
-  }
-  isPredicting = false;
-
-  outputCallback(`ðŸ”„ Starting ${type} prediction from webcam...`);
-  isPredicting = true;
-
-  async function loop() {
-    if (!isPredicting || !tmWebcam || !tmModel) {
-      predictionAnimationId = null;
+  async function startTeachableWebcam(containerRef, outputCallback) {
+    if (!window.tmImage || !window.tmImage.Webcam) {
+      const msg = "Teachable Machine not loaded yet. Please wait 1â€“2 seconds and run again.";
+      alert(msg);
+      outputCallback(msg);
       return;
     }
 
     try {
-      tmWebcam.update();
-      const predictions = await tmModel.predict(tmWebcam.canvas);
-      showPredictionResult(predictions, type, outputCallback, containerRef);
-      predictionAnimationId = requestAnimationFrame(loop);
+      isWebcamReady = false;
+
+      // Stop old webcam if exists
+      if (tmWebcam) {
+        try {
+          tmWebcam.stop();
+          if (tmWebcam._animationId) {
+            cancelAnimationFrame(tmWebcam._animationId);
+          }
+        } catch { }
+        tmWebcam = null;
+      }
+
+      outputCallback("ðŸ“¹ Starting webcam...");
+
+      tmWebcam = new window.tmImage.Webcam(400, 400, true);
+      await tmWebcam.setup();
+      await tmWebcam.play();
+
+      // Wait a brief moment for webcam to fully initialize
+      await new Promise(resolve => setTimeout(resolve, 100));
+
+      containerRef.current.innerHTML = "";
+
+      const wrapper = document.createElement("div");
+      wrapper.style.display = "flex";
+      wrapper.style.flexDirection = "column";
+      wrapper.style.alignItems = "center";
+      wrapper.style.gap = "10px";
+
+      tmWebcam.canvas.style.width = "100%";
+      tmWebcam.canvas.style.maxWidth = "420px";
+      tmWebcam.canvas.style.borderRadius = "12px";
+      tmWebcam.canvas.style.display = "block";
+
+      wrapper.appendChild(tmWebcam.canvas);
+      containerRef.current.appendChild(wrapper);
+
+      isWebcamReady = true;
+      outputCallback("âœ… Webcam started successfully!");
+
+      // Keep webcam updating continuously
+      let animationId;
+      function loop() {
+        if (tmWebcam) {
+          tmWebcam.update();
+          animationId = requestAnimationFrame(loop);
+        }
+      }
+      loop();
+
+      // Store animation ID for cleanup
+      tmWebcam._animationId = animationId;
+
+      // Check if we can auto-start prediction
+      checkAndStartPrediction();
     } catch (error) {
-      outputCallback("âŒ Prediction error: " + error.message);
-      isPredicting = false;
-      predictionAnimationId = null;
+      const errorMsg = "âŒ Webcam error: " + error.message;
+      alert(errorMsg);
+      outputCallback(errorMsg);
+      isWebcamReady = false;
     }
   }
 
-  loop();
-}
+  async function loadAndShowImage(containerRef, outputCallback) {
+    return new Promise((resolve) => {
+      const input = document.createElement("input");
+      input.type = "file";
+      input.accept = "image/*";
 
-async function predictFromImage(type, outputCallback, containerRef) {
+      input.onchange = async (e) => {
+        const file = e.target.files[0];
+        if (!file) {
+          resolve();
+          return;
+        }
 
-  if (!tmModel || !tmLoadedImage || !isModelReady) {
-    outputCallback("⏳ Waiting for model and image...");
-    pendingPredictionConfig = { type, src: "image", outputCallback, containerRef };
-    return;
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          const img = new Image();
+          img.onload = () => {
+            tmLoadedImage = img;
+            if (typeof window !== 'undefined') window.tmLoadedImage = img;
+
+            containerRef.current.innerHTML = "";
+
+            const displayImg = document.createElement("img");
+            displayImg.src = event.target.result;
+            displayImg.style.width = "100%";
+            displayImg.style.maxWidth = "420px";
+            displayImg.style.borderRadius = "12px";
+            displayImg.style.display = "block";
+            displayImg.style.margin = "auto";
+
+            containerRef.current.appendChild(displayImg);
+
+            outputCallback("âœ… Image loaded successfully!");
+            checkAndStartPrediction();
+            resolve();
+          };
+          img.src = event.target.result;
+        };
+        reader.readAsDataURL(file);
+      };
+
+      input.click();
+    });
+  }
+  let isPredicting = false;
+
+  async function predictFromWebcam(type, outputCallback, containerRef) {
+    // If not ready yet, save config for auto-start
+    if (!tmModel || !tmWebcam || !isModelReady || !isWebcamReady) {
+      outputCallback("â³ Waiting for model and webcam to be ready...");
+      pendingPredictionConfig = { type, src: "webcam", outputCallback, containerRef };
+      checkAndStartPrediction(); // Try immediately in case it just became ready
+      return;
+    }
+
+    // Stop any existing prediction loop
+    if (predictionInterval) {
+      clearInterval(predictionInterval);
+    }
+    if (predictionAnimationId) {
+      cancelAnimationFrame(predictionAnimationId);
+    }
+    isPredicting = false;
+
+    outputCallback(`ðŸ”„ Starting ${type} prediction from webcam...`);
+    isPredicting = true;
+
+    async function loop() {
+      if (!isPredicting || !tmWebcam || !tmModel) {
+        predictionAnimationId = null;
+        return;
+      }
+
+      try {
+        tmWebcam.update();
+        const predictions = await tmModel.predict(tmWebcam.canvas);
+        showPredictionResult(predictions, type, outputCallback, containerRef);
+        predictionAnimationId = requestAnimationFrame(loop);
+      } catch (error) {
+        outputCallback("âŒ Prediction error: " + error.message);
+        isPredicting = false;
+        predictionAnimationId = null;
+      }
+    }
+
+    loop();
   }
 
-  try {
-    outputCallback(`🔄 Predicting ${type}...`);
+  async function predictFromImage(type, outputCallback, containerRef) {
 
-    const predictions = await tmModel.predict(tmLoadedImage);
+    if (!tmModel || !tmLoadedImage || !isModelReady) {
+      outputCallback("⏳ Waiting for model and image...");
+      pendingPredictionConfig = { type, src: "image", outputCallback, containerRef };
+      return;
+    }
 
-    // Clear canvas first
-    containerRef.current.innerHTML = "";
+    try {
+      outputCallback(`🔄 Predicting ${type}...`);
 
-    showPredictionResult(predictions, type, outputCallback, containerRef);
+      const predictions = await tmModel.predict(tmLoadedImage);
 
-  } catch (error) {
-    outputCallback("❌ Prediction error: " + error.message);
-  }
-}
+      // Clear canvas first
+      containerRef.current.innerHTML = "";
 
+      showPredictionResult(predictions, type, outputCallback, containerRef);
 
-let lastConsoleOutputTime = 0;
-const CONSOLE_OUTPUT_INTERVAL = 2000; // Output to console every 2 seconds
-
-function showPredictionResult(predictions, type, outputCallback, containerRef) {
-
-  if (!predictions || predictions.length === 0) {
-    outputCallback("❌ No predictions received.");
-    return;
+    } catch (error) {
+      outputCallback("❌ Prediction error: " + error.message);
+    }
   }
 
-  // Sort highest probability first
-  predictions.sort((a, b) => b.probability - a.probability);
 
-  const top = predictions[0];
-  currentPrediction = top.className;
-  currentConfidence = top.probability;
+  let lastConsoleOutputTime = 0;
+  const CONSOLE_OUTPUT_INTERVAL = 2000; // Output to console every 2 seconds
 
-  // Check if we already have a result displayed - prevent duplicate clears
-  const existingResult = containerRef.current.querySelector("#tm-result");
-  if (existingResult) {
-    // Update existing result instead of clearing
-    console.log("[showPredictionResult] Updating existing result");
-  } else {
-    // Clear container only if no result exists
+  function showPredictionResult(predictions, type, outputCallback, containerRef) {
+
+    if (!predictions || predictions.length === 0) {
+      outputCallback("❌ No predictions received.");
+      return;
+    }
+
+    // Sort highest probability first
+    predictions.sort((a, b) => b.probability - a.probability);
+
+    const top = predictions[0];
+    currentPrediction = top.className;
+    currentConfidence = top.probability;
+
     // Check if we already have a result displayed - prevent duplicate clears
-const existingResult = containerRef.current.querySelector("#tm-result");
-if (!existingResult) {
-  // Clear container only if no result exists
-  containerRef.current.innerHTML = "";
-}
-  }
+    const existingResult = containerRef.current.querySelector("#tm-result");
+    if (existingResult) {
+      // Update existing result instead of clearing
+      console.log("[showPredictionResult] Updating existing result");
+    } else {
+      // Clear container only if no result exists
+      // Check if we already have a result displayed - prevent duplicate clears
+      const existingResult = containerRef.current.querySelector("#tm-result");
+      if (!existingResult) {
+        // Clear container only if no result exists
+        containerRef.current.innerHTML = "";
+      }
+    }
 
-  // Create result container
-  const resultDiv = document.createElement("div");
-  resultDiv.id = "tm-result";
-  resultDiv.style.marginTop = "16px";
-  resultDiv.style.padding = "20px";
-  resultDiv.style.fontSize = "16px";
-  resultDiv.style.fontWeight = "bold";
-  resultDiv.style.textAlign = "center";
-  resultDiv.style.backgroundColor = "#ffffff";
-  resultDiv.style.borderRadius = "12px";
-  resultDiv.style.border = "1px solid #e0e0e0";
-  resultDiv.style.boxShadow = "0 2px 8px rgba(0,0,0,0.1)";
-  resultDiv.style.maxWidth = "500px";
-  resultDiv.style.marginLeft = "auto";
-  resultDiv.style.marginRight = "auto";
+    // Create result container
+    const resultDiv = document.createElement("div");
+    resultDiv.id = "tm-result";
+    resultDiv.style.marginTop = "16px";
+    resultDiv.style.padding = "20px";
+    resultDiv.style.fontSize = "16px";
+    resultDiv.style.fontWeight = "bold";
+    resultDiv.style.textAlign = "center";
+    resultDiv.style.backgroundColor = "#ffffff";
+    resultDiv.style.borderRadius = "12px";
+    resultDiv.style.border = "1px solid #e0e0e0";
+    resultDiv.style.boxShadow = "0 2px 8px rgba(0,0,0,0.1)";
+    resultDiv.style.maxWidth = "500px";
+    resultDiv.style.marginLeft = "auto";
+    resultDiv.style.marginRight = "auto";
 
-  // Generate dynamic bars (NO hardcoded logic)
-  const predictionBars = predictions.map((p, index) => {
-    const percentage = (p.probability * 100).toFixed(1);
+    // Generate dynamic bars (NO hardcoded logic)
+    const predictionBars = predictions.map((p, index) => {
+      const percentage = (p.probability * 100).toFixed(1);
 
-    // Dynamic color using HSL
-    const hue = (index * 60) % 360;
-    const barColor = `hsl(${hue}, 70%, 50%)`;
+      // Dynamic color using HSL
+      const hue = (index * 60) % 360;
+      const barColor = `hsl(${hue}, 70%, 50%)`;
 
-    return `
+      return `
       <div style="margin: 10px 0; text-align: left;">
         <div style="display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 4px;">
           <span>${p.className}</span>
@@ -5319,9 +5345,9 @@ if (!existingResult) {
         </div>
       </div>
     `;
-  }).join("");
+    }).join("");
 
-  resultDiv.innerHTML = `
+    resultDiv.innerHTML = `
     <div style="font-size: 18px; margin-bottom: 10px;">
       🎯 ${type.toUpperCase()} PREDICTION
     </div>
@@ -5337,651 +5363,651 @@ if (!existingResult) {
     ${predictionBars}
   `;
 
-  // Replace existing or append new
-  if (existingResult) {
-    containerRef.current.replaceChild(resultDiv, existingResult);
-  } else {
-    containerRef.current.appendChild(resultDiv);
-  }
+    // Replace existing or append new
+    if (existingResult) {
+      containerRef.current.replaceChild(resultDiv, existingResult);
+    } else {
+      containerRef.current.appendChild(resultDiv);
+    }
 
-  // Console output (clean, dynamic)
-  const now = Date.now();
-  if (now - lastConsoleOutputTime > CONSOLE_OUTPUT_INTERVAL) {
-    lastConsoleOutputTime = now;
+    // Console output (clean, dynamic)
+    const now = Date.now();
+    if (now - lastConsoleOutputTime > CONSOLE_OUTPUT_INTERVAL) {
+      lastConsoleOutputTime = now;
 
-    const consoleOutput = `
+      const consoleOutput = `
 🎯 ${type.toUpperCase()} PREDICTION:
 ${currentPrediction} (${(currentConfidence * 100).toFixed(1)}%)
     `.trim();
 
-    outputCallback(consoleOutput);
-  }
-}
-
-
-function predictTeachableAudio() {
-  alert("Audio model support can be added similarly using tmAudio");
-}
-
-/* =========================
-   AI LEARNING - GLOBAL VARIABLES
-========================= */
-
-// Facial Features
-let facialImage = null;
-let facialDetections = [];
-
-// Object Detection
-let objectImage = null;
-let objectDetections = [];
-let cocoModel = null;
-
-// Face Recognition
-let faceRecogImage = null;
-let faceRecogResult = null;
-
-// Finger Detection
-let fingerHands = null;
-let fingerCamera = null;
-let fingerResults = null;
-let fingerDelay = 0;
-let fingerDetecting = false;
-let fingerAnimationId = null;
-
-// Computer Vision (OpenCV)
-let cvImage = null;
-let cvMat = null;
-
-// Command Queue for async operations
-let commandQueue = [];
-let isProcessingQueue = false;
-
-async function processCommandQueue() {
-  if (isProcessingQueue || commandQueue.length === 0) return;
-
-  isProcessingQueue = true;
-
-  while (commandQueue.length > 0) {
-    const command = commandQueue.shift();
-    await command();
+      outputCallback(consoleOutput);
+    }
   }
 
-  isProcessingQueue = false;
-}
 
-/* =========================
-   FACIAL FEATURE FUNCTIONS
-========================= */
+  function predictTeachableAudio() {
+    alert("Audio model support can be added similarly using tmAudio");
+  }
 
-async function loadFacialImage(containerRef, outputCallback) {
-  return new Promise((resolve) => {
-    const input = document.createElement("input");
-    input.type = "file";
-    input.accept = "image/*";
+  /* =========================
+     AI LEARNING - GLOBAL VARIABLES
+  ========================= */
 
-    input.onchange = async (e) => {
-      const file = e.target.files[0];
-      if (!file) {
-        resolve();
-        return;
-      }
+  // Facial Features
+  let facialImage = null;
+  let facialDetections = [];
 
-      const reader = new FileReader();
-      reader.onload = async (event) => {
-        const img = new Image();
-        img.onload = async () => {
-          facialImage = img;
+  // Object Detection
+  let objectImage = null;
+  let objectDetections = [];
+  let cocoModel = null;
 
-          // Wait for face-api.js to load
-          if (typeof window.faceapi === 'undefined') {
-            outputCallback("â³ Waiting for face-api.js to load...");
-            let attempts = 0;
-            while (typeof window.faceapi === 'undefined' && attempts < 50) {
-              await new Promise(r => setTimeout(r, 100));
-              attempts++;
-            }
+  // Face Recognition
+  let faceRecogImage = null;
+  let faceRecogResult = null;
 
+  // Finger Detection
+  let fingerHands = null;
+  let fingerCamera = null;
+  let fingerResults = null;
+  let fingerDelay = 0;
+  let fingerDetecting = false;
+  let fingerAnimationId = null;
+
+  // Computer Vision (OpenCV)
+  let cvImage = null;
+  let cvMat = null;
+
+  // Command Queue for async operations
+  let commandQueue = [];
+  let isProcessingQueue = false;
+
+  async function processCommandQueue() {
+    if (isProcessingQueue || commandQueue.length === 0) return;
+
+    isProcessingQueue = true;
+
+    while (commandQueue.length > 0) {
+      const command = commandQueue.shift();
+      await command();
+    }
+
+    isProcessingQueue = false;
+  }
+
+  /* =========================
+     FACIAL FEATURE FUNCTIONS
+  ========================= */
+
+  async function loadFacialImage(containerRef, outputCallback) {
+    return new Promise((resolve) => {
+      const input = document.createElement("input");
+      input.type = "file";
+      input.accept = "image/*";
+
+      input.onchange = async (e) => {
+        const file = e.target.files[0];
+        if (!file) {
+          resolve();
+          return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = async (event) => {
+          const img = new Image();
+          img.onload = async () => {
+            facialImage = img;
+
+            // Wait for face-api.js to load
             if (typeof window.faceapi === 'undefined') {
-              outputCallback("âŒ Error: face-api.js failed to load. Please refresh the page.");
-              resolve();
-              return;
-            }
-          }
-
-          // Load face-api models if not loaded
-          try {
-            if (!window.faceapi.nets.tinyFaceDetector.isLoaded) {
-              outputCallback("Loading face detection models... (this may take 10-20 seconds)");
-
-              // Try to load from multiple CDN sources
-              const MODEL_URLS = [
-                'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model',
-                'https://justadudewhohacks.github.io/face-api.js/models',
-              ];
-
-              let modelsLoaded = false;
-              for (const MODEL_URL of MODEL_URLS) {
-                try {
-                  await Promise.race([
-                    Promise.all([
-                      window.faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
-                      window.faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
-                      window.faceapi.nets.faceExpressionNet.loadFromUri(MODEL_URL),
-                      window.faceapi.nets.ageGenderNet.loadFromUri(MODEL_URL),
-                    ]),
-                    new Promise((_, reject) => setTimeout(() => reject(new Error('Model loading timeout')), 30000))
-                  ]);
-                  modelsLoaded = true;
-                  break;
-                } catch (err) {
-                  console.warn(`Failed to load models from ${MODEL_URL}:`, err);
-                  continue;
-                }
+              outputCallback("â³ Waiting for face-api.js to load...");
+              let attempts = 0;
+              while (typeof window.faceapi === 'undefined' && attempts < 50) {
+                await new Promise(r => setTimeout(r, 100));
+                attempts++;
               }
 
-              if (!modelsLoaded) {
-                outputCallback("âŒ Failed to load face detection models from all CDN sources. Please check your internet connection and try again.");
-                facialDetections = [];
+              if (typeof window.faceapi === 'undefined') {
+                outputCallback("âŒ Error: face-api.js failed to load. Please refresh the page.");
                 resolve();
                 return;
               }
             }
 
-            // Detect faces
-            outputCallback("Detecting faces...");
-            console.log("Starting face detection...");
-            console.log("Image size:", img.width, "x", img.height);
-            console.log("TinyFaceDetector loaded:", window.faceapi.nets.tinyFaceDetector.isLoaded);
+            // Load face-api models if not loaded
+            try {
+              if (!window.faceapi.nets.tinyFaceDetector.isLoaded) {
+                outputCallback("Loading face detection models... (this may take 10-20 seconds)");
 
-            const detections = await Promise.race([
-              window.faceapi
-                .detectAllFaces(img, new window.faceapi.TinyFaceDetectorOptions())
-                .withFaceLandmarks()
-                .withFaceExpressions()
-                .withAgeAndGender(),
-              new Promise((_, reject) => setTimeout(() => reject(new Error('Face detection timeout')), 10000))
-            ]);
+                // Try to load from multiple CDN sources
+                const MODEL_URLS = [
+                  'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model',
+                  'https://justadudewhohacks.github.io/face-api.js/models',
+                ];
 
-            console.log("Detection complete, found:", detections.length, "faces");
-            facialDetections = detections;
-            outputCallback(`âœ… Image loaded! Found ${detections.length} face(s)`);
-          } catch (err) {
-            console.error("Face detection error:", err);
-            outputCallback(`âŒ Error: ${err.message}. Please try with a smaller image or refresh the page.`);
-            facialDetections = [];
-          }
+                let modelsLoaded = false;
+                for (const MODEL_URL of MODEL_URLS) {
+                  try {
+                    await Promise.race([
+                      Promise.all([
+                        window.faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
+                        window.faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
+                        window.faceapi.nets.faceExpressionNet.loadFromUri(MODEL_URL),
+                        window.faceapi.nets.ageGenderNet.loadFromUri(MODEL_URL),
+                      ]),
+                      new Promise((_, reject) => setTimeout(() => reject(new Error('Model loading timeout')), 30000))
+                    ]);
+                    modelsLoaded = true;
+                    break;
+                  } catch (err) {
+                    console.warn(`Failed to load models from ${MODEL_URL}:`, err);
+                    continue;
+                  }
+                }
 
-          resolve();
+                if (!modelsLoaded) {
+                  outputCallback("âŒ Failed to load face detection models from all CDN sources. Please check your internet connection and try again.");
+                  facialDetections = [];
+                  resolve();
+                  return;
+                }
+              }
+
+              // Detect faces
+              outputCallback("Detecting faces...");
+              console.log("Starting face detection...");
+              console.log("Image size:", img.width, "x", img.height);
+              console.log("TinyFaceDetector loaded:", window.faceapi.nets.tinyFaceDetector.isLoaded);
+
+              const detections = await Promise.race([
+                window.faceapi
+                  .detectAllFaces(img, new window.faceapi.TinyFaceDetectorOptions())
+                  .withFaceLandmarks()
+                  .withFaceExpressions()
+                  .withAgeAndGender(),
+                new Promise((_, reject) => setTimeout(() => reject(new Error('Face detection timeout')), 10000))
+              ]);
+
+              console.log("Detection complete, found:", detections.length, "faces");
+              facialDetections = detections;
+              outputCallback(`âœ… Image loaded! Found ${detections.length} face(s)`);
+            } catch (err) {
+              console.error("Face detection error:", err);
+              outputCallback(`âŒ Error: ${err.message}. Please try with a smaller image or refresh the page.`);
+              facialDetections = [];
+            }
+
+            resolve();
+          };
+          img.src = event.target.result;
         };
-        img.src = event.target.result;
+        reader.readAsDataURL(file);
       };
-      reader.readAsDataURL(file);
-    };
 
-    input.click();
-  });
-}
-
-function showFacialImage(containerRef, withBorder, outputCallback) {
-  if (!facialImage) {
-    outputCallback("âŒ No image loaded");
-    return;
-  }
-
-  containerRef.current.innerHTML = "";
-
-  const canvas = document.createElement("canvas");
-  canvas.width = facialImage.width;
-  canvas.height = facialImage.height;
-
-  const ctx = canvas.getContext("2d");
-  ctx.drawImage(facialImage, 0, 0);
-
-  if (withBorder && facialDetections.length > 0) {
-    // Draw rectangles around faces
-    facialDetections.forEach(detection => {
-      const box = detection.detection.box;
-      ctx.strokeStyle = "#00FF00";
-      ctx.lineWidth = 3;
-      ctx.strokeRect(box.x, box.y, box.width, box.height);
-
-      // Draw age and gender
-      ctx.fillStyle = "#00FF00";
-      ctx.font = "16px Arial";
-      const gender = detection.gender;
-      const age = Math.round(detection.age);
-      ctx.fillText(`${gender}, ${age}y`, box.x, box.y - 10);
+      input.click();
     });
   }
 
-  canvas.style.maxWidth = "100%";
-  canvas.style.borderRadius = "12px";
-  canvas.style.display = "block";
-  canvas.style.margin = "auto";
-
-  containerRef.current.appendChild(canvas);
-  outputCallback("âœ… Image displayed");
-}
-
-/* =========================
-   OBJECT DETECTION FUNCTIONS
-========================= */
-
-async function loadObjectImage(containerRef, outputCallback) {
-  return new Promise((resolve) => {
-    const input = document.createElement("input");
-    input.type = "file";
-    input.accept = "image/*";
-
-    input.onchange = async (e) => {
-      const file = e.target.files[0];
-      if (!file) {
-        resolve();
-        return;
-      }
-
-      const reader = new FileReader();
-      reader.onload = async (event) => {
-        const img = new Image();
-      img.onload = async () => {
-  tmLoadedImage = img;
-  if (typeof window !== 'undefined') window.tmLoadedImage = img;
-  checkAndStartPrediction();
-  outputCallback("✅ Image loaded!");
-
-  if (tmModel && isModelReady) {
-    const predictions = await tmModel.predict(img);
-    containerRef.current.innerHTML = "";
-    showPredictionResult(predictions, "image", outputCallback, containerRef);
-  }
-};
-
-        img.src = event.target.result;
-      };
-      reader.readAsDataURL(file);
-    };
-
-    input.click();
-  });
-}
-
-function showObjectImage(containerRef, withBorder, outputCallback) {
-  if (!objectImage) {
-    outputCallback("âŒ No image loaded");
-    return;
-  }
-
-  containerRef.current.innerHTML = "";
-
-  const canvas = document.createElement("canvas");
-  canvas.width = objectImage.width;
-  canvas.height = objectImage.height;
-
-  const ctx = canvas.getContext("2d");
-  ctx.drawImage(objectImage, 0, 0);
-
-  if (withBorder && objectDetections.length > 0) {
-    // Draw rectangles around objects
-    objectDetections.forEach(detection => {
-      const [x, y, width, height] = detection.bbox;
-      ctx.strokeStyle = "#FF0000";
-      ctx.lineWidth = 3;
-      ctx.strokeRect(x, y, width, height);
-
-      ctx.fillStyle = "#FF0000";
-      ctx.font = "16px Arial";
-      ctx.fillText(`${detection.class} (${Math.round(detection.score * 100)}%)`, x, y - 10);
-    });
-  }
-
-  canvas.style.maxWidth = "100%";
-  canvas.style.borderRadius = "12px";
-  canvas.style.display = "block";
-  canvas.style.margin = "auto";
-
-  containerRef.current.appendChild(canvas);
-  outputCallback("âœ… Image displayed");
-}
-
-/* =========================
-   FACE RECOGNITION FUNCTIONS
-========================= */
-
-async function loadFaceRecogImage(containerRef, outputCallback) {
-  return new Promise((resolve) => {
-    const input = document.createElement("input");
-    input.type = "file";
-    input.accept = "image/*";
-
-    input.onchange = async (e) => {
-      const file = e.target.files[0];
-      if (!file) {
-        resolve();
-        return;
-      }
-
-      const reader = new FileReader();
-      reader.onload = async (event) => {
-        const img = new Image();
-        img.onload = () => {
-          faceRecogImage = img;
-          outputCallback("âœ… Image loaded!");
-          resolve();
-        };
-        img.src = event.target.result;
-      };
-      reader.readAsDataURL(file);
-    };
-
-    input.click();
-  });
-}
-
-async function predictFaceRecog(outputCallback) {
-  if (!faceRecogImage) {
-    outputCallback("âŒ No image loaded");
-    return;
-  }
-
-  // Wait for face-api.js to load
-  if (typeof window.faceapi === 'undefined') {
-    outputCallback("â³ Waiting for face-api.js to load...");
-    let attempts = 0;
-    while (typeof window.faceapi === 'undefined' && attempts < 50) {
-      await new Promise(r => setTimeout(r, 100));
-      attempts++;
-    }
-
-    if (typeof window.faceapi === 'undefined') {
-      outputCallback("âŒ Error: face-api.js failed to load. Please refresh the page.");
+  function showFacialImage(containerRef, withBorder, outputCallback) {
+    if (!facialImage) {
+      outputCallback("âŒ No image loaded");
       return;
     }
-  }
-
-  try {
-    if (!window.faceapi.nets.tinyFaceDetector.isLoaded) {
-      outputCallback("Loading face detection models... (this may take 10-20 seconds)");
-
-      const MODEL_URLS = [
-        'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model',
-        'https://justadudewhohacks.github.io/face-api.js/models',
-      ];
-
-      let modelsLoaded = false;
-      for (const MODEL_URL of MODEL_URLS) {
-        try {
-          await Promise.race([
-            window.faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
-            new Promise((_, reject) => setTimeout(() => reject(new Error('Model loading timeout')), 30000))
-          ]);
-          modelsLoaded = true;
-          break;
-        } catch (err) {
-          console.warn(`Failed to load models from ${MODEL_URL}:`, err);
-          continue;
-        }
-      }
-
-      if (!modelsLoaded) {
-        outputCallback("âŒ Failed to load face detection models. Please check your internet connection and try again.");
-        return;
-      }
-    }
-
-    outputCallback("Detecting faces...");
-    const detections = await Promise.race([
-      window.faceapi.detectAllFaces(faceRecogImage, new window.faceapi.TinyFaceDetectorOptions()),
-      new Promise((_, reject) => setTimeout(() => reject(new Error('Face detection timeout')), 10000))
-    ]);
-
-    const faceCount = detections.length;
-    if (faceCount > 0) {
-      faceRecogResult = `Face Detected - ${faceCount} face(s) found`;
-      outputCallback(`âœ… ${faceRecogResult}`);
-    } else {
-      faceRecogResult = "No Face Detected";
-      outputCallback(`âŒ ${faceRecogResult}`);
-    }
-  } catch (err) {
-    outputCallback(`âŒ Error: ${err.message}. Please try with a smaller image or refresh the page.`);
-    console.error("Face detection error:", err);
-  }
-}
-
-function showFaceRecogImage(containerRef, withBorder, outputCallback) {
-  if (!faceRecogImage) {
-    outputCallback("âŒ No image loaded");
-    return;
-  }
-
-  containerRef.current.innerHTML = "";
-
-  const img = document.createElement("img");
-  img.src = faceRecogImage.src;
-  img.style.maxWidth = "100%";
-  img.style.borderRadius = "12px";
-  img.style.display = "block";
-  img.style.margin = "auto";
-
-  containerRef.current.appendChild(img);
-  outputCallback("âœ… Image displayed");
-}
-
-/* =========================
-   FINGER DETECTION FUNCTIONS
-========================= */
-
-async function startFingerDetection(containerRef, outputCallback) {
-
-  if (isDetectionRunning) {
-    return; // Prevent double start
-  }
-
-  if (!window.Hands || !window.Camera) {
-    outputCallback("⏳ MediaPipe loading...");
-    return;
-  }
-
-  try {
-
-    outputCallback("📹 Opening camera...");
-    isDetectionRunning = true;
 
     containerRef.current.innerHTML = "";
 
-    const wrapper = document.createElement("div");
-    wrapper.style.position = "relative";
-    wrapper.style.width = "100%";
-    wrapper.style.maxWidth = "640px";
-    wrapper.style.margin = "auto";
-
-    const video = document.createElement("video");
-    video.autoplay = true;
-    video.playsInline = true;
-    video.style.width = "100%";
-    video.style.borderRadius = "12px";
-
     const canvas = document.createElement("canvas");
-    canvas.width = 640;
-    canvas.height = 480;
-    canvas.style.position = "absolute";
-    canvas.style.top = "0";
-    canvas.style.left = "0";
-    canvas.style.width = "100%";
-    canvas.style.height = "100%";
-
-    wrapper.appendChild(video);
-    wrapper.appendChild(canvas);
-    containerRef.current.appendChild(wrapper);
+    canvas.width = facialImage.width;
+    canvas.height = facialImage.height;
 
     const ctx = canvas.getContext("2d");
+    ctx.drawImage(facialImage, 0, 0);
 
-    const stream = await navigator.mediaDevices.getUserMedia({
-      video: true
-    });
+    if (withBorder && facialDetections.length > 0) {
+      // Draw rectangles around faces
+      facialDetections.forEach(detection => {
+        const box = detection.detection.box;
+        ctx.strokeStyle = "#00FF00";
+        ctx.lineWidth = 3;
+        ctx.strokeRect(box.x, box.y, box.width, box.height);
 
-    video.srcObject = stream;
-
-    // 🔹 CREATE HANDS ONLY ONCE
-    if (!handsInstance) {
-      handsInstance = new window.Hands({
-        locateFile: (file) =>
-          `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
-      });
-
-      handsInstance.setOptions({
-        maxNumHands: 1,
-        modelComplexity: 1,
-        minDetectionConfidence: 0.7,
-        minTrackingConfidence: 0.6
+        // Draw age and gender
+        ctx.fillStyle = "#00FF00";
+        ctx.font = "16px Arial";
+        const gender = detection.gender;
+        const age = Math.round(detection.age);
+        ctx.fillText(`${gender}, ${age}y`, box.x, box.y - 10);
       });
     }
 
-    handsInstance.onResults((results) => {
+    canvas.style.maxWidth = "100%";
+    canvas.style.borderRadius = "12px";
+    canvas.style.display = "block";
+    canvas.style.margin = "auto";
 
-      fingerResults = results;
+    containerRef.current.appendChild(canvas);
+    outputCallback("âœ… Image displayed");
+  }
 
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+  /* =========================
+     OBJECT DETECTION FUNCTIONS
+  ========================= */
 
-      if (results.multiHandLandmarks) {
-        for (const landmarks of results.multiHandLandmarks) {
-          window.drawConnectors(ctx, landmarks, window.HAND_CONNECTIONS);
-          window.drawLandmarks(ctx, landmarks);
+  async function loadObjectImage(containerRef, outputCallback) {
+    return new Promise((resolve) => {
+      const input = document.createElement("input");
+      input.type = "file";
+      input.accept = "image/*";
+
+      input.onchange = async (e) => {
+        const file = e.target.files[0];
+        if (!file) {
+          resolve();
+          return;
         }
+
+        const reader = new FileReader();
+        reader.onload = async (event) => {
+          const img = new Image();
+          img.onload = async () => {
+            tmLoadedImage = img;
+            if (typeof window !== 'undefined') window.tmLoadedImage = img;
+            checkAndStartPrediction();
+            outputCallback("✅ Image loaded!");
+
+            if (tmModel && isModelReady) {
+              const predictions = await tmModel.predict(img);
+              containerRef.current.innerHTML = "";
+              showPredictionResult(predictions, "image", outputCallback, containerRef);
+            }
+          };
+
+          img.src = event.target.result;
+        };
+        reader.readAsDataURL(file);
+      };
+
+      input.click();
+    });
+  }
+
+  function showObjectImage(containerRef, withBorder, outputCallback) {
+    if (!objectImage) {
+      outputCallback("âŒ No image loaded");
+      return;
+    }
+
+    containerRef.current.innerHTML = "";
+
+    const canvas = document.createElement("canvas");
+    canvas.width = objectImage.width;
+    canvas.height = objectImage.height;
+
+    const ctx = canvas.getContext("2d");
+    ctx.drawImage(objectImage, 0, 0);
+
+    if (withBorder && objectDetections.length > 0) {
+      // Draw rectangles around objects
+      objectDetections.forEach(detection => {
+        const [x, y, width, height] = detection.bbox;
+        ctx.strokeStyle = "#FF0000";
+        ctx.lineWidth = 3;
+        ctx.strokeRect(x, y, width, height);
+
+        ctx.fillStyle = "#FF0000";
+        ctx.font = "16px Arial";
+        ctx.fillText(`${detection.class} (${Math.round(detection.score * 100)}%)`, x, y - 10);
+      });
+    }
+
+    canvas.style.maxWidth = "100%";
+    canvas.style.borderRadius = "12px";
+    canvas.style.display = "block";
+    canvas.style.margin = "auto";
+
+    containerRef.current.appendChild(canvas);
+    outputCallback("âœ… Image displayed");
+  }
+
+  /* =========================
+     FACE RECOGNITION FUNCTIONS
+  ========================= */
+
+  async function loadFaceRecogImage(containerRef, outputCallback) {
+    return new Promise((resolve) => {
+      const input = document.createElement("input");
+      input.type = "file";
+      input.accept = "image/*";
+
+      input.onchange = async (e) => {
+        const file = e.target.files[0];
+        if (!file) {
+          resolve();
+          return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = async (event) => {
+          const img = new Image();
+          img.onload = () => {
+            faceRecogImage = img;
+            outputCallback("âœ… Image loaded!");
+            resolve();
+          };
+          img.src = event.target.result;
+        };
+        reader.readAsDataURL(file);
+      };
+
+      input.click();
+    });
+  }
+
+  async function predictFaceRecog(outputCallback) {
+    if (!faceRecogImage) {
+      outputCallback("âŒ No image loaded");
+      return;
+    }
+
+    // Wait for face-api.js to load
+    if (typeof window.faceapi === 'undefined') {
+      outputCallback("â³ Waiting for face-api.js to load...");
+      let attempts = 0;
+      while (typeof window.faceapi === 'undefined' && attempts < 50) {
+        await new Promise(r => setTimeout(r, 100));
+        attempts++;
       }
-    });
 
-    cameraInstance = new window.Camera(video, {
-      onFrame: async () => {
-        if (handsInstance) {
-          await handsInstance.send({ image: video });
-        }
-      },
-      width: 640,
-      height: 480
-    });
-
-    cameraInstance.start();
-
-    outputCallback("✅ Camera started & hand detection running!");
-
-  } catch (err) {
-    outputCallback("❌ Camera error: " + err.message);
-  }
-}
-
-function stopFingerDetection(outputCallback) {
-
-  if (!isDetectionRunning) return;
-
-  if (cameraInstance) {
-    cameraInstance.stop();
-    cameraInstance = null;
-  }
-
-  const video = document.querySelector("video");
-  if (video && video.srcObject) {
-    video.srcObject.getTracks().forEach(track => track.stop());
-  }
-
-  isDetectionRunning = false;
-
-  outputCallback("🛑 Hand detection stopped");
-}
-
-/* =========================
-   COMPUTER VISION (OPENCV) FUNCTIONS
-========================= */
-
-async function loadCVImage(containerRef, outputCallback) {
-  return new Promise((resolve) => {
-    const input = document.createElement("input");
-    input.type = "file";
-    input.accept = "image/*";
-
-    input.onchange = async (e) => {
-      const file = e.target.files[0];
-      if (!file) {
-        resolve();
+      if (typeof window.faceapi === 'undefined') {
+        outputCallback("âŒ Error: face-api.js failed to load. Please refresh the page.");
         return;
       }
+    }
 
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        const img = new Image();
-        img.onload = () => {
-          cvImage = img;
+    try {
+      if (!window.faceapi.nets.tinyFaceDetector.isLoaded) {
+        outputCallback("Loading face detection models... (this may take 10-20 seconds)");
 
-          // Convert to OpenCV Mat
-          if (window.cv) {
-            const canvas = document.createElement("canvas");
-            canvas.width = img.width;
-            canvas.height = img.height;
-            const ctx = canvas.getContext("2d");
-            ctx.drawImage(img, 0, 0);
-            cvMat = window.cv.imread(canvas);
+        const MODEL_URLS = [
+          'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model',
+          'https://justadudewhohacks.github.io/face-api.js/models',
+        ];
+
+        let modelsLoaded = false;
+        for (const MODEL_URL of MODEL_URLS) {
+          try {
+            await Promise.race([
+              window.faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
+              new Promise((_, reject) => setTimeout(() => reject(new Error('Model loading timeout')), 30000))
+            ]);
+            modelsLoaded = true;
+            break;
+          } catch (err) {
+            console.warn(`Failed to load models from ${MODEL_URL}:`, err);
+            continue;
           }
+        }
 
-          outputCallback("âœ… Image loaded!");
+        if (!modelsLoaded) {
+          outputCallback("âŒ Failed to load face detection models. Please check your internet connection and try again.");
+          return;
+        }
+      }
+
+      outputCallback("Detecting faces...");
+      const detections = await Promise.race([
+        window.faceapi.detectAllFaces(faceRecogImage, new window.faceapi.TinyFaceDetectorOptions()),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('Face detection timeout')), 10000))
+      ]);
+
+      const faceCount = detections.length;
+      if (faceCount > 0) {
+        faceRecogResult = `Face Detected - ${faceCount} face(s) found`;
+        outputCallback(`âœ… ${faceRecogResult}`);
+      } else {
+        faceRecogResult = "No Face Detected";
+        outputCallback(`âŒ ${faceRecogResult}`);
+      }
+    } catch (err) {
+      outputCallback(`âŒ Error: ${err.message}. Please try with a smaller image or refresh the page.`);
+      console.error("Face detection error:", err);
+    }
+  }
+
+  function showFaceRecogImage(containerRef, withBorder, outputCallback) {
+    if (!faceRecogImage) {
+      outputCallback("âŒ No image loaded");
+      return;
+    }
+
+    containerRef.current.innerHTML = "";
+
+    const img = document.createElement("img");
+    img.src = faceRecogImage.src;
+    img.style.maxWidth = "100%";
+    img.style.borderRadius = "12px";
+    img.style.display = "block";
+    img.style.margin = "auto";
+
+    containerRef.current.appendChild(img);
+    outputCallback("âœ… Image displayed");
+  }
+
+  /* =========================
+     FINGER DETECTION FUNCTIONS
+  ========================= */
+
+  async function startFingerDetection(containerRef, outputCallback) {
+
+    if (isDetectionRunning) {
+      return; // Prevent double start
+    }
+
+    if (!window.Hands || !window.Camera) {
+      outputCallback("⏳ MediaPipe loading...");
+      return;
+    }
+
+    try {
+
+      outputCallback("📹 Opening camera...");
+      isDetectionRunning = true;
+
+      containerRef.current.innerHTML = "";
+
+      const wrapper = document.createElement("div");
+      wrapper.style.position = "relative";
+      wrapper.style.width = "100%";
+      wrapper.style.maxWidth = "640px";
+      wrapper.style.margin = "auto";
+
+      const video = document.createElement("video");
+      video.autoplay = true;
+      video.playsInline = true;
+      video.style.width = "100%";
+      video.style.borderRadius = "12px";
+
+      const canvas = document.createElement("canvas");
+      canvas.width = 640;
+      canvas.height = 480;
+      canvas.style.position = "absolute";
+      canvas.style.top = "0";
+      canvas.style.left = "0";
+      canvas.style.width = "100%";
+      canvas.style.height = "100%";
+
+      wrapper.appendChild(video);
+      wrapper.appendChild(canvas);
+      containerRef.current.appendChild(wrapper);
+
+      const ctx = canvas.getContext("2d");
+
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: true
+      });
+
+      video.srcObject = stream;
+
+      // 🔹 CREATE HANDS ONLY ONCE
+      if (!handsInstance) {
+        handsInstance = new window.Hands({
+          locateFile: (file) =>
+            `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
+        });
+
+        handsInstance.setOptions({
+          maxNumHands: 1,
+          modelComplexity: 1,
+          minDetectionConfidence: 0.7,
+          minTrackingConfidence: 0.6
+        });
+      }
+
+      handsInstance.onResults((results) => {
+
+        fingerResults = results;
+
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        if (results.multiHandLandmarks) {
+          for (const landmarks of results.multiHandLandmarks) {
+            window.drawConnectors(ctx, landmarks, window.HAND_CONNECTIONS);
+            window.drawLandmarks(ctx, landmarks);
+          }
+        }
+      });
+
+      cameraInstance = new window.Camera(video, {
+        onFrame: async () => {
+          if (handsInstance) {
+            await handsInstance.send({ image: video });
+          }
+        },
+        width: 640,
+        height: 480
+      });
+
+      cameraInstance.start();
+
+      outputCallback("✅ Camera started & hand detection running!");
+
+    } catch (err) {
+      outputCallback("❌ Camera error: " + err.message);
+    }
+  }
+
+  function stopFingerDetection(outputCallback) {
+
+    if (!isDetectionRunning) return;
+
+    if (cameraInstance) {
+      cameraInstance.stop();
+      cameraInstance = null;
+    }
+
+    const video = document.querySelector("video");
+    if (video && video.srcObject) {
+      video.srcObject.getTracks().forEach(track => track.stop());
+    }
+
+    isDetectionRunning = false;
+
+    outputCallback("🛑 Hand detection stopped");
+  }
+
+  /* =========================
+     COMPUTER VISION (OPENCV) FUNCTIONS
+  ========================= */
+
+  async function loadCVImage(containerRef, outputCallback) {
+    return new Promise((resolve) => {
+      const input = document.createElement("input");
+      input.type = "file";
+      input.accept = "image/*";
+
+      input.onchange = async (e) => {
+        const file = e.target.files[0];
+        if (!file) {
           resolve();
+          return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          const img = new Image();
+          img.onload = () => {
+            cvImage = img;
+
+            // Convert to OpenCV Mat
+            if (window.cv) {
+              const canvas = document.createElement("canvas");
+              canvas.width = img.width;
+              canvas.height = img.height;
+              const ctx = canvas.getContext("2d");
+              ctx.drawImage(img, 0, 0);
+              cvMat = window.cv.imread(canvas);
+            }
+
+            outputCallback("âœ… Image loaded!");
+            resolve();
+          };
+          img.src = event.target.result;
         };
-        img.src = event.target.result;
+        reader.readAsDataURL(file);
       };
-      reader.readAsDataURL(file);
-    };
 
-    input.click();
-  });
-}
-
-function applyCVOperations(operations, containerRef, outputCallback) {
-  if (!cvMat || !window.cv) {
-    outputCallback("âŒ No image loaded or OpenCV not ready");
-    return;
+      input.click();
+    });
   }
 
-  // Apply operations to mat
-  // Operations are stored and applied when show/save is called
-}
+  function applyCVOperations(operations, containerRef, outputCallback) {
+    if (!cvMat || !window.cv) {
+      outputCallback("âŒ No image loaded or OpenCV not ready");
+      return;
+    }
 
-function showCVImage(containerRef, name, outputCallback) {
-  if (!cvMat || !window.cv) {
-    outputCallback("âŒ No image loaded");
-    return;
+    // Apply operations to mat
+    // Operations are stored and applied when show/save is called
   }
 
-  containerRef.current.innerHTML = "";
+  function showCVImage(containerRef, name, outputCallback) {
+    if (!cvMat || !window.cv) {
+      outputCallback("âŒ No image loaded");
+      return;
+    }
 
-  const canvas = document.createElement("canvas");
-  window.cv.imshow(canvas, cvMat);
+    containerRef.current.innerHTML = "";
 
-  canvas.style.maxWidth = "100%";
-  canvas.style.borderRadius = "12px";
-  canvas.style.display = "block";
-  canvas.style.margin = "auto";
+    const canvas = document.createElement("canvas");
+    window.cv.imshow(canvas, cvMat);
 
-  containerRef.current.appendChild(canvas);
-  outputCallback(`âœ… Image displayed as: ${name}`);
-}
+    canvas.style.maxWidth = "100%";
+    canvas.style.borderRadius = "12px";
+    canvas.style.display = "block";
+    canvas.style.margin = "auto";
 
-function saveCVImage(name, outputCallback) {
-  if (!cvMat || !window.cv) {
-    outputCallback("âŒ No image to save");
-    return;
+    containerRef.current.appendChild(canvas);
+    outputCallback(`âœ… Image displayed as: ${name}`);
   }
 
-  const canvas = document.createElement("canvas");
-  window.cv.imshow(canvas, cvMat);
+  function saveCVImage(name, outputCallback) {
+    if (!cvMat || !window.cv) {
+      outputCallback("âŒ No image to save");
+      return;
+    }
 
-  canvas.toBlob((blob) => {
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = name;
-    a.click();
-    outputCallback(`âœ… Image saved as: ${name}`);
-  });
-}
+    const canvas = document.createElement("canvas");
+    window.cv.imshow(canvas, cvMat);
+
+    canvas.toBlob((blob) => {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = name;
+      a.click();
+      outputCallback(`âœ… Image saved as: ${name}`);
+    });
+  }
 
   const runCode = () => {
     if (!Sk || typeof Sk.configure !== "function") {
@@ -6211,50 +6237,50 @@ function saveCVImage(name, outputCallback) {
         }
         return;
       }
-// Finger Detection
-if (cleanText === "__FINGER_START__") {
-  startFingerDetection(containerRef, (msg) =>
-    setOutput(prev => prev + "\n" + msg)
-  );
-  return;
-}
+      // Finger Detection
+      if (cleanText === "__FINGER_START__") {
+        startFingerDetection(containerRef, (msg) =>
+          setOutput(prev => prev + "\n" + msg)
+        );
+        return;
+      }
 
-if (cleanText === "__FINGER_STOP__") {
-  stopFingerDetection((msg) =>
-    setOutput(prev => prev + "\n" + msg)
-  );
-  return;
-}
+      if (cleanText === "__FINGER_STOP__") {
+        stopFingerDetection((msg) =>
+          setOutput(prev => prev + "\n" + msg)
+        );
+        return;
+      }
 
-if (cleanText.startsWith("__FINGER_DELAY__:")) {
-  fingerDelaySeconds = parseFloat(cleanText.split(":")[1]) || 1;
-  return;
-}
+      if (cleanText.startsWith("__FINGER_DELAY__:")) {
+        fingerDelaySeconds = parseFloat(cleanText.split(":")[1]) || 1;
+        return;
+      }
 
-if (cleanText === "__FINGER_GET_COUNT__") {
+      if (cleanText === "__FINGER_GET_COUNT__") {
 
-  if (!fingerInterval) {
+        if (!fingerInterval) {
 
-    fingerInterval = setInterval(() => {
+          fingerInterval = setInterval(() => {
 
-      if (!fingerResults || !fingerResults.multiHandLandmarks) return;
+            if (!fingerResults || !fingerResults.multiHandLandmarks) return;
 
-      const landmarks = fingerResults.multiHandLandmarks[0];
-      let count = 0;
+            const landmarks = fingerResults.multiHandLandmarks[0];
+            let count = 0;
 
-      if (landmarks[4].x < landmarks[3].x) count++;
-      if (landmarks[8].y < landmarks[6].y) count++;
-      if (landmarks[12].y < landmarks[10].y) count++;
-      if (landmarks[16].y < landmarks[14].y) count++;
-      if (landmarks[20].y < landmarks[18].y) count++;
+            if (landmarks[4].x < landmarks[3].x) count++;
+            if (landmarks[8].y < landmarks[6].y) count++;
+            if (landmarks[12].y < landmarks[10].y) count++;
+            if (landmarks[16].y < landmarks[14].y) count++;
+            if (landmarks[20].y < landmarks[18].y) count++;
 
-      setOutput(prev => prev + `\nFinger count: ${count}`);
+            setOutput(prev => prev + `\nFinger count: ${count}`);
 
-    }, fingerDelaySeconds * 1000);
-  }
+          }, fingerDelaySeconds * 1000);
+        }
 
-  return;
-}
+        return;
+      }
 
       if (cleanText.startsWith("__CV_DRAW_RECTANGLE__:")) {
         const parts = cleanText.split(":");
@@ -6317,21 +6343,21 @@ if (cleanText === "__FINGER_GET_COUNT__") {
         return;
       }
     }
-function getMostFrequent(arr) {
-  const map = {};
-  let maxCount = 0;
-  let mostFrequent = 0;
+    function getMostFrequent(arr) {
+      const map = {};
+      let maxCount = 0;
+      let mostFrequent = 0;
 
-  arr.forEach(num => {
-    map[num] = (map[num] || 0) + 1;
-    if (map[num] > maxCount) {
-      maxCount = map[num];
-      mostFrequent = num;
+      arr.forEach(num => {
+        map[num] = (map[num] || 0) + 1;
+        if (map[num] > maxCount) {
+          maxCount = map[num];
+          mostFrequent = num;
+        }
+      });
+
+      return mostFrequent;
     }
-  });
-
-  return mostFrequent;
-}
 
     Sk.builtins.__facial_get_count__ = new Sk.builtin.func((feature) => {
       const f = Sk.ffi.remapToJs(feature);
@@ -6443,20 +6469,20 @@ function getMostFrequent(arr) {
 
         // Queue AI Learning commands that need async processing
         if (cleanText === "__FACIAL_LOAD_IMAGE__" ||
-            cleanText.startsWith("__FACIAL_GET_") ||
-            cleanText.startsWith("__FACIAL_SHOW__") ||
-            cleanText === "__OBJECT_LOAD_IMAGE__" ||
-            cleanText.startsWith("__OBJECT_GET_") ||
-            cleanText.startsWith("__OBJECT_SHOW__") ||
-            cleanText === "__FACERECOG_LOAD_IMAGE__" ||
-            cleanText === "__FACERECOG_PREDICT__" ||
-            cleanText.startsWith("__FACERECOG_SHOW__") ||
-            cleanText === "__FINGER_START__" ||
-            cleanText.startsWith("__FINGER_GET_") ||
-            cleanText === "__FINGER_STOP__" ||
-            cleanText.startsWith("__FINGER_DELAY__") ||
-            cleanText === "__CV_LOAD_IMAGE__" ||
-            cleanText.startsWith("__CV_")) {
+          cleanText.startsWith("__FACIAL_GET_") ||
+          cleanText.startsWith("__FACIAL_SHOW__") ||
+          cleanText === "__OBJECT_LOAD_IMAGE__" ||
+          cleanText.startsWith("__OBJECT_GET_") ||
+          cleanText.startsWith("__OBJECT_SHOW__") ||
+          cleanText === "__FACERECOG_LOAD_IMAGE__" ||
+          cleanText === "__FACERECOG_PREDICT__" ||
+          cleanText.startsWith("__FACERECOG_SHOW__") ||
+          cleanText === "__FINGER_START__" ||
+          cleanText.startsWith("__FINGER_GET_") ||
+          cleanText === "__FINGER_STOP__" ||
+          cleanText.startsWith("__FINGER_DELAY__") ||
+          cleanText === "__CV_LOAD_IMAGE__" ||
+          cleanText.startsWith("__CV_")) {
 
           commandQueue.push(async () => {
             await handleAICommand(cleanText, canvasContainerRef, setOutput);
@@ -6472,23 +6498,23 @@ function getMostFrequent(arr) {
         /* =========================
    TEACHABLE HANDLER
 ========================= */
-if (cleanText.startsWith("__TEACHABLE_LOAD__")) {
-  const url = cleanText.replace("__TEACHABLE_LOAD__:", "").trim();
-  loadTeachableModel(url, (msg) => setOutput(prev => prev + "\n" + msg));
-  return;
-}
+        if (cleanText.startsWith("__TEACHABLE_LOAD__")) {
+          const url = cleanText.replace("__TEACHABLE_LOAD__:", "").trim();
+          loadTeachableModel(url, (msg) => setOutput(prev => prev + "\n" + msg));
+          return;
+        }
 
-if (cleanText === "__TEACHABLE_LOAD_IMAGE__") {
-  if (tmLoadedImage) {
-    setOutput(prev => prev + "\n✅ Image already loaded!");
-  } else {
-    setOutput(prev => prev + "\n⚠️ Image loading required!\n📋 Please click the 'Load Image' button that appears below, then click Run again.");
-    
-    // Create visible upload button
-    if (canvasContainerRef.current) {
-      const uploadBtn = document.createElement("button");
-      uploadBtn.textContent = "📷 Click Here to Load Image";
-      uploadBtn.style.cssText = `
+        if (cleanText === "__TEACHABLE_LOAD_IMAGE__") {
+          if (tmLoadedImage) {
+            setOutput(prev => prev + "\n✅ Image already loaded!");
+          } else {
+            setOutput(prev => prev + "\n⚠️ Image loading required!\n📋 Please click the 'Load Image' button that appears below, then click Run again.");
+
+            // Create visible upload button
+            if (canvasContainerRef.current) {
+              const uploadBtn = document.createElement("button");
+              uploadBtn.textContent = "📷 Click Here to Load Image";
+              uploadBtn.style.cssText = `
         padding: 20px 40px;
         font-size: 18px;
         font-weight: bold;
@@ -6500,428 +6526,428 @@ if (cleanText === "__TEACHABLE_LOAD_IMAGE__") {
         margin: 20px auto;
         display: block;
       `;
-      
-      uploadBtn.onclick = () => {
-        const input = document.createElement("input");
-        input.type = "file";
-        input.accept = "image/*";
-        input.onchange = (e) => {
-          const file = e.target.files[0];
-          if (!file) return;
-          const reader = new FileReader();
-          reader.onload = () => {
-            const img = new Image();
-            img.src = reader.result;
-            img.onload = () => {
-              tmLoadedImage = img;
-              if (typeof window !== 'undefined') window.tmLoadedImage = img;
-              setOutput(prev => prev + "\n✅ Image loaded! Click Run again.");
-              uploadBtn.remove();
-              checkAndStartPrediction();
+
+              uploadBtn.onclick = () => {
+                const input = document.createElement("input");
+                input.type = "file";
+                input.accept = "image/*";
+                input.onchange = (e) => {
+                  const file = e.target.files[0];
+                  if (!file) return;
+                  const reader = new FileReader();
+                  reader.onload = () => {
+                    const img = new Image();
+                    img.src = reader.result;
+                    img.onload = () => {
+                      tmLoadedImage = img;
+                      if (typeof window !== 'undefined') window.tmLoadedImage = img;
+                      setOutput(prev => prev + "\n✅ Image loaded! Click Run again.");
+                      uploadBtn.remove();
+                      checkAndStartPrediction();
+                    };
+                  };
+                  reader.readAsDataURL(file);
+                };
+                input.click();
+              };
+
+              canvasContainerRef.current.innerHTML = "";
+              canvasContainerRef.current.appendChild(uploadBtn);
+            }
+          }
+          return;
+        }
+
+        if (cleanText.startsWith("__TEACHABLE_SHOW__:")) {
+          const src = cleanText.split(":")[1];
+          if (src === "webcam") {
+            startTeachableWebcam(canvasContainerRef, (msg) => setOutput(prev => prev + "\n" + msg));
+          } else if (src === "image") {
+            loadAndShowImage(canvasContainerRef, (msg) => setOutput(prev => prev + "\n" + msg));
+          }
+          return;
+        }
+
+        if (cleanText.startsWith("__TEACHABLE_PREDICT__:")) {
+          const parts = cleanText.split(":");
+          const type = parts[1]; // "image" or "pose"
+          const src = parts[2];  // "webcam" or "image"
+
+          if (src === "webcam") {
+            predictFromWebcam(type, (msg) => setOutput(prev => prev + "\n" + msg), canvasContainerRef);
+          } else if (src === "image") {
+            predictFromImage(type, (msg) => setOutput(prev => prev + "\n" + msg), canvasContainerRef);
+          }
+          return;
+        }
+
+        if (cleanText === "__TEACHABLE_PREDICT_AUDIO__") {
+          predictTeachableAudio();
+          return;
+        }
+
+        /* =========================
+           AI LEARNING HANDLERS
+        ========================= */
+
+        // Facial Features
+        if (cleanText === "__FACIAL_LOAD_IMAGE__") {
+          loadFacialImage(canvasContainerRef, (msg) => setOutput(prev => prev + "\n" + msg));
+          return;
+        }
+
+        if (cleanText.startsWith("__FACIAL_GET_COUNT__:")) {
+          const feature = cleanText.split(":")[1];
+          let count = 0;
+
+          if (!facialDetections || facialDetections.length === 0) {
+            setOutput(prev => prev + `\n${feature} count: 0`);
+            return;
+          }
+
+          if (feature === "face") {
+            count = facialDetections.length;
+          } else if (feature === "eye") {
+            facialDetections.forEach(d => {
+              if (d.landmarks) count += 2;
+            });
+          } else if (feature === "nose") {
+            facialDetections.forEach(d => {
+              if (d.landmarks) count += 1;
+            });
+          } else if (feature === "smile") {
+            facialDetections.forEach(d => {
+              if (d.expressions && d.expressions.happy > 0.5) count++;
+            });
+          }
+
+          setOutput(prev => prev + `\n${feature} count: ${count}`);
+          return;
+        }
+
+        if (cleanText.startsWith("__FACIAL_GET_GENDER__:")) {
+          const gender = cleanText.split(":")[1];
+          let count = 0;
+
+          if (!facialDetections || facialDetections.length === 0) {
+            setOutput(prev => prev + `\n${gender} count: 0`);
+            return;
+          }
+
+          facialDetections.forEach(d => {
+            if (d.gender && d.gender === gender) count++;
+          });
+
+          setOutput(prev => prev + `\n${gender} count: ${count}`);
+          return;
+        }
+
+        if (cleanText.startsWith("__FACIAL_GET_EXPRESSION__:")) {
+          const expression = cleanText.split(":")[1];
+          let count = 0;
+
+          if (!facialDetections || facialDetections.length === 0) {
+            setOutput(prev => prev + `\n${expression} count: 0`);
+            return;
+          }
+
+          facialDetections.forEach(d => {
+            if (d.expressions && d.expressions[expression] > 0.5) count++;
+          });
+
+          setOutput(prev => prev + `\n${expression} count: ${count}`);
+          return;
+        }
+
+        if (cleanText === "__FACIAL_GET_AGE_LIST__") {
+          if (!facialDetections || facialDetections.length === 0) {
+            setOutput(prev => prev + `\nAge list: []`);
+            return;
+          }
+
+          const ages = facialDetections.map(d => Math.round(d.age || 0));
+          setOutput(prev => prev + `\nAge list: [${ages.join(", ")}]`);
+          return;
+        }
+
+        if (cleanText.startsWith("__FACIAL_SHOW__:")) {
+          const border = cleanText.split(":")[1];
+          showFacialImage(canvasContainerRef, border === "with", (msg) => setOutput(prev => prev + "\n" + msg));
+          return;
+        }
+
+        // Object Detection
+        if (cleanText === "__OBJECT_LOAD_IMAGE__") {
+          loadObjectImage(canvasContainerRef, (msg) => setOutput(prev => prev + "\n" + msg));
+          return;
+        }
+
+        if (cleanText.startsWith("__OBJECT_GET_COUNT__:")) {
+          const object = cleanText.split(":")[1];
+          let count = 0;
+
+          if (!objectDetections || objectDetections.length === 0) {
+            setOutput(prev => prev + `\n${object} count: 0`);
+            return;
+          }
+
+          objectDetections.forEach(d => {
+            if (d.class === object) count++;
+          });
+
+          setOutput(prev => prev + `\n${object} count: ${count}`);
+          return;
+        }
+
+        if (cleanText.startsWith("__OBJECT_SHOW__:")) {
+          const border = cleanText.split(":")[1];
+          showObjectImage(canvasContainerRef, border === "with", (msg) => setOutput(prev => prev + "\n" + msg));
+          return;
+        }
+
+        // Face Recognition
+        if (cleanText === "__FACERECOG_LOAD_IMAGE__") {
+          loadFaceRecogImage(canvasContainerRef, (msg) => setOutput(prev => prev + "\n" + msg));
+          return;
+        }
+
+        if (cleanText === "__FACERECOG_PREDICT__") {
+          predictFaceRecog((msg) => setOutput(prev => prev + "\n" + msg));
+          return;
+        }
+
+        if (cleanText.startsWith("__FACERECOG_SHOW__:")) {
+          const border = cleanText.split(":")[1];
+          showFaceRecogImage(canvasContainerRef, border === "with", (msg) => setOutput(prev => prev + "\n" + msg));
+          return;
+        }
+
+        // Finger Detection
+        // if (cleanText === "__FINGER_START__") {
+        //   fingerCollected = [];
+        //   fingerLoopCurrent = 0;
+        //   startFingerDetection(containerRef, (msg) =>
+        //     setOutput(prev => prev + "\n" + msg)
+        //   );
+        //   return;
+        // }
+
+
+        // if (cleanText === "__FINGER_STOP__") {
+
+        //   if (fingerInterval) {
+        //     clearInterval(fingerInterval);
+        //     fingerInterval = null;
+        //   }
+
+        //   stopFingerDetection((msg) =>
+        //     setOutput(prev => prev + "\n" + msg)
+        //   );
+
+        //   return;
+        // }
+
+        // if (cleanText.startsWith("__FINGER_GET_COORD__:")) {
+        //   const parts = cleanText.split(":");
+        //   const axis = parts[1];
+        //   const point = parseInt(parts[2]);
+
+        //   if (!fingerResults || !fingerResults.multiHandLandmarks || fingerResults.multiHandLandmarks.length === 0) {
+        //     setOutput(prev => prev + `\nCoordinate ${axis} of point ${point}: 0`);
+        //     return;
+        //   }
+
+        //   const landmarks = fingerResults.multiHandLandmarks[0];
+        //   if (landmarks && landmarks[point]) {
+        //     const value = landmarks[point][axis] || 0;
+        //     setOutput(prev => prev + `\nCoordinate ${axis} of point ${point}: ${value.toFixed(3)}`);
+        //   } else {
+        //     setOutput(prev => prev + `\nCoordinate ${axis} of point ${point}: 0`);
+        //   }
+        //   return;
+        // }
+
+        // if (cleanText === "__FINGER_GET_COUNT__") {
+
+        //   if (!fingerInterval) {
+
+        //     fingerInterval = setInterval(() => {
+
+        //       if (!fingerResults || !fingerResults.multiHandLandmarks) return;
+
+        //       const landmarks = fingerResults.multiHandLandmarks[0];
+        //       let count = 0;
+
+        //       if (landmarks[4].x < landmarks[3].x) count++;
+        //       if (landmarks[8].y < landmarks[6].y) count++;
+        //       if (landmarks[12].y < landmarks[10].y) count++;
+        //       if (landmarks[16].y < landmarks[14].y) count++;
+        //       if (landmarks[20].y < landmarks[18].y) count++;
+
+        //       fingerCollected.push(count);
+
+        //       setOutput(prev => prev + `\nFinger count: ${count}`);
+
+        //       fingerLoopCurrent++;
+
+        //       if (fingerLoopCurrent >= 30) { // match repeat count
+
+        //         clearInterval(fingerInterval);
+        //         fingerInterval = null;
+
+        //         const mostFrequent = getMostFrequent(fingerCollected);
+
+        //         setOutput(prev =>
+        //           prev + `\n\n✅ Final Detected Finger Count: ${mostFrequent}`
+        //         );
+
+        //         fingerCollected = [];
+        //       }
+
+        //     }, fingerDelaySeconds * 1000);
+        //   }
+
+        //   return;
+        // }
+
+        // if (cleanText.startsWith("__FINGER_DELAY__:")) {
+        //   fingerDelaySeconds = parseFloat(cleanText.split(":")[1]) || 1;
+        //   return;
+        // }
+
+
+        // Computer Vision
+        if (cleanText === "__CV_LOAD_IMAGE__") {
+          loadCVImage(canvasContainerRef, (msg) => setOutput(prev => prev + "\n" + msg));
+          return;
+        }
+
+        if (cleanText.startsWith("__CV_PUT_TEXT__:")) {
+          const parts = cleanText.split(":");
+          const text = parts[1].replace(/"/g, '');
+          const x = parseInt(parts[2]);
+          const y = parseInt(parts[3]);
+          const font = parts[4];
+          const size = parseFloat(parts[5]);
+          const r = parseInt(parts[6]);
+          const g = parseInt(parts[7]);
+          const b = parseInt(parts[8]);
+          const thickness = parseInt(parts[9]);
+
+          if (cvMat && window.cv) {
+            const fontMap = {
+              'SIMPLEX': window.cv.FONT_HERSHEY_SIMPLEX,
+              'PLAIN': window.cv.FONT_HERSHEY_PLAIN,
+              'DUPLEX': window.cv.FONT_HERSHEY_DUPLEX,
+              'COMPLEX': window.cv.FONT_HERSHEY_COMPLEX,
+              'TRIPLEX': window.cv.FONT_HERSHEY_TRIPLEX,
+              'COMPLEX_SMALL': window.cv.FONT_HERSHEY_COMPLEX_SMALL,
+              'SCRIPT_SIMPLEX': window.cv.FONT_HERSHEY_SCRIPT_SIMPLEX,
+              'SCRIPT_COMPLEX': window.cv.FONT_HERSHEY_SCRIPT_COMPLEX
             };
-          };
-          reader.readAsDataURL(file);
-        };
-        input.click();
-      };
-      
-      canvasContainerRef.current.innerHTML = "";
-      canvasContainerRef.current.appendChild(uploadBtn);
-    }
-  }
-  return;
-}
-
-if (cleanText.startsWith("__TEACHABLE_SHOW__:")) {
-  const src = cleanText.split(":")[1];
-  if (src === "webcam") {
-    startTeachableWebcam(canvasContainerRef, (msg) => setOutput(prev => prev + "\n" + msg));
-  } else if (src === "image") {
-    loadAndShowImage(canvasContainerRef, (msg) => setOutput(prev => prev + "\n" + msg));
-  }
-  return;
-}
-
-if (cleanText.startsWith("__TEACHABLE_PREDICT__:")) {
-  const parts = cleanText.split(":");
-  const type = parts[1]; // "image" or "pose"
-  const src = parts[2];  // "webcam" or "image"
-
-  if (src === "webcam") {
-    predictFromWebcam(type, (msg) => setOutput(prev => prev + "\n" + msg), canvasContainerRef);
-  } else if (src === "image") {
-    predictFromImage(type, (msg) => setOutput(prev => prev + "\n" + msg), canvasContainerRef);
-  }
-  return;
-}
-
-if (cleanText === "__TEACHABLE_PREDICT_AUDIO__") {
-  predictTeachableAudio();
-  return;
-}
-
-/* =========================
-   AI LEARNING HANDLERS
-========================= */
-
-// Facial Features
-if (cleanText === "__FACIAL_LOAD_IMAGE__") {
-  loadFacialImage(canvasContainerRef, (msg) => setOutput(prev => prev + "\n" + msg));
-  return;
-}
-
-if (cleanText.startsWith("__FACIAL_GET_COUNT__:")) {
-  const feature = cleanText.split(":")[1];
-  let count = 0;
-
-  if (!facialDetections || facialDetections.length === 0) {
-    setOutput(prev => prev + `\n${feature} count: 0`);
-    return;
-  }
-
-  if (feature === "face") {
-    count = facialDetections.length;
-  } else if (feature === "eye") {
-    facialDetections.forEach(d => {
-      if (d.landmarks) count += 2;
-    });
-  } else if (feature === "nose") {
-    facialDetections.forEach(d => {
-      if (d.landmarks) count += 1;
-    });
-  } else if (feature === "smile") {
-    facialDetections.forEach(d => {
-      if (d.expressions && d.expressions.happy > 0.5) count++;
-    });
-  }
-
-  setOutput(prev => prev + `\n${feature} count: ${count}`);
-  return;
-}
-
-if (cleanText.startsWith("__FACIAL_GET_GENDER__:")) {
-  const gender = cleanText.split(":")[1];
-  let count = 0;
-
-  if (!facialDetections || facialDetections.length === 0) {
-    setOutput(prev => prev + `\n${gender} count: 0`);
-    return;
-  }
-
-  facialDetections.forEach(d => {
-    if (d.gender && d.gender === gender) count++;
-  });
-
-  setOutput(prev => prev + `\n${gender} count: ${count}`);
-  return;
-}
-
-if (cleanText.startsWith("__FACIAL_GET_EXPRESSION__:")) {
-  const expression = cleanText.split(":")[1];
-  let count = 0;
-
-  if (!facialDetections || facialDetections.length === 0) {
-    setOutput(prev => prev + `\n${expression} count: 0`);
-    return;
-  }
-
-  facialDetections.forEach(d => {
-    if (d.expressions && d.expressions[expression] > 0.5) count++;
-  });
-
-  setOutput(prev => prev + `\n${expression} count: ${count}`);
-  return;
-}
-
-if (cleanText === "__FACIAL_GET_AGE_LIST__") {
-  if (!facialDetections || facialDetections.length === 0) {
-    setOutput(prev => prev + `\nAge list: []`);
-    return;
-  }
-
-  const ages = facialDetections.map(d => Math.round(d.age || 0));
-  setOutput(prev => prev + `\nAge list: [${ages.join(", ")}]`);
-  return;
-}
-
-if (cleanText.startsWith("__FACIAL_SHOW__:")) {
-  const border = cleanText.split(":")[1];
-  showFacialImage(canvasContainerRef, border === "with", (msg) => setOutput(prev => prev + "\n" + msg));
-  return;
-}
-
-// Object Detection
-if (cleanText === "__OBJECT_LOAD_IMAGE__") {
-  loadObjectImage(canvasContainerRef, (msg) => setOutput(prev => prev + "\n" + msg));
-  return;
-}
-
-if (cleanText.startsWith("__OBJECT_GET_COUNT__:")) {
-  const object = cleanText.split(":")[1];
-  let count = 0;
-
-  if (!objectDetections || objectDetections.length === 0) {
-    setOutput(prev => prev + `\n${object} count: 0`);
-    return;
-  }
-
-  objectDetections.forEach(d => {
-    if (d.class === object) count++;
-  });
-
-  setOutput(prev => prev + `\n${object} count: ${count}`);
-  return;
-}
-
-if (cleanText.startsWith("__OBJECT_SHOW__:")) {
-  const border = cleanText.split(":")[1];
-  showObjectImage(canvasContainerRef, border === "with", (msg) => setOutput(prev => prev + "\n" + msg));
-  return;
-}
-
-// Face Recognition
-if (cleanText === "__FACERECOG_LOAD_IMAGE__") {
-  loadFaceRecogImage(canvasContainerRef, (msg) => setOutput(prev => prev + "\n" + msg));
-  return;
-}
-
-if (cleanText === "__FACERECOG_PREDICT__") {
-  predictFaceRecog((msg) => setOutput(prev => prev + "\n" + msg));
-  return;
-}
-
-if (cleanText.startsWith("__FACERECOG_SHOW__:")) {
-  const border = cleanText.split(":")[1];
-  showFaceRecogImage(canvasContainerRef, border === "with", (msg) => setOutput(prev => prev + "\n" + msg));
-  return;
-}
-
-// Finger Detection
-// if (cleanText === "__FINGER_START__") {
-//   fingerCollected = [];
-//   fingerLoopCurrent = 0;
-//   startFingerDetection(containerRef, (msg) =>
-//     setOutput(prev => prev + "\n" + msg)
-//   );
-//   return;
-// }
-
-
-// if (cleanText === "__FINGER_STOP__") {
-
-//   if (fingerInterval) {
-//     clearInterval(fingerInterval);
-//     fingerInterval = null;
-//   }
-
-//   stopFingerDetection((msg) =>
-//     setOutput(prev => prev + "\n" + msg)
-//   );
-
-//   return;
-// }
-
-// if (cleanText.startsWith("__FINGER_GET_COORD__:")) {
-//   const parts = cleanText.split(":");
-//   const axis = parts[1];
-//   const point = parseInt(parts[2]);
-
-//   if (!fingerResults || !fingerResults.multiHandLandmarks || fingerResults.multiHandLandmarks.length === 0) {
-//     setOutput(prev => prev + `\nCoordinate ${axis} of point ${point}: 0`);
-//     return;
-//   }
-
-//   const landmarks = fingerResults.multiHandLandmarks[0];
-//   if (landmarks && landmarks[point]) {
-//     const value = landmarks[point][axis] || 0;
-//     setOutput(prev => prev + `\nCoordinate ${axis} of point ${point}: ${value.toFixed(3)}`);
-//   } else {
-//     setOutput(prev => prev + `\nCoordinate ${axis} of point ${point}: 0`);
-//   }
-//   return;
-// }
-
-// if (cleanText === "__FINGER_GET_COUNT__") {
-
-//   if (!fingerInterval) {
-
-//     fingerInterval = setInterval(() => {
-
-//       if (!fingerResults || !fingerResults.multiHandLandmarks) return;
-
-//       const landmarks = fingerResults.multiHandLandmarks[0];
-//       let count = 0;
-
-//       if (landmarks[4].x < landmarks[3].x) count++;
-//       if (landmarks[8].y < landmarks[6].y) count++;
-//       if (landmarks[12].y < landmarks[10].y) count++;
-//       if (landmarks[16].y < landmarks[14].y) count++;
-//       if (landmarks[20].y < landmarks[18].y) count++;
-
-//       fingerCollected.push(count);
-
-//       setOutput(prev => prev + `\nFinger count: ${count}`);
-
-//       fingerLoopCurrent++;
-
-//       if (fingerLoopCurrent >= 30) { // match repeat count
-
-//         clearInterval(fingerInterval);
-//         fingerInterval = null;
-
-//         const mostFrequent = getMostFrequent(fingerCollected);
-
-//         setOutput(prev =>
-//           prev + `\n\n✅ Final Detected Finger Count: ${mostFrequent}`
-//         );
-
-//         fingerCollected = [];
-//       }
-
-//     }, fingerDelaySeconds * 1000);
-//   }
-
-//   return;
-// }
-
-// if (cleanText.startsWith("__FINGER_DELAY__:")) {
-//   fingerDelaySeconds = parseFloat(cleanText.split(":")[1]) || 1;
-//   return;
-// }
-
-
-// Computer Vision
-if (cleanText === "__CV_LOAD_IMAGE__") {
-  loadCVImage(canvasContainerRef, (msg) => setOutput(prev => prev + "\n" + msg));
-  return;
-}
-
-if (cleanText.startsWith("__CV_PUT_TEXT__:")) {
-  const parts = cleanText.split(":");
-  const text = parts[1].replace(/"/g, '');
-  const x = parseInt(parts[2]);
-  const y = parseInt(parts[3]);
-  const font = parts[4];
-  const size = parseFloat(parts[5]);
-  const r = parseInt(parts[6]);
-  const g = parseInt(parts[7]);
-  const b = parseInt(parts[8]);
-  const thickness = parseInt(parts[9]);
-
-  if (cvMat && window.cv) {
-    const fontMap = {
-      'SIMPLEX': window.cv.FONT_HERSHEY_SIMPLEX,
-      'PLAIN': window.cv.FONT_HERSHEY_PLAIN,
-      'DUPLEX': window.cv.FONT_HERSHEY_DUPLEX,
-      'COMPLEX': window.cv.FONT_HERSHEY_COMPLEX,
-      'TRIPLEX': window.cv.FONT_HERSHEY_TRIPLEX,
-      'COMPLEX_SMALL': window.cv.FONT_HERSHEY_COMPLEX_SMALL,
-      'SCRIPT_SIMPLEX': window.cv.FONT_HERSHEY_SCRIPT_SIMPLEX,
-      'SCRIPT_COMPLEX': window.cv.FONT_HERSHEY_SCRIPT_COMPLEX
-    };
-    window.cv.putText(cvMat, text, new window.cv.Point(x, y), fontMap[font] || window.cv.FONT_HERSHEY_SIMPLEX, size, new window.cv.Scalar(b, g, r), thickness);
-    setOutput(prev => prev + `\nâœ… Text added: "${text}"`);
-  }
-  return;
-}
-
-if (cleanText.startsWith("__CV_DRAW_LINE__:")) {
-  const parts = cleanText.split(":");
-  const x1 = parseInt(parts[1]);
-  const y1 = parseInt(parts[2]);
-  const x2 = parseInt(parts[3]);
-  const y2 = parseInt(parts[4]);
-  const r = parseInt(parts[5]);
-  const g = parseInt(parts[6]);
-  const b = parseInt(parts[7]);
-  const thickness = parseInt(parts[8]);
-
-  if (cvMat && window.cv) {
-    window.cv.line(cvMat, new window.cv.Point(x1, y1), new window.cv.Point(x2, y2), new window.cv.Scalar(b, g, r), thickness);
-    setOutput(prev => prev + `\nâœ… Line drawn from (${x1},${y1}) to (${x2},${y2})`);
-  }
-  return;
-}
-
-if (cleanText.startsWith("__CV_DRAW_RECT__:")) {
-  const parts = cleanText.split(":");
-  const x1 = parseInt(parts[1]);
-  const y1 = parseInt(parts[2]);
-  const x2 = parseInt(parts[3]);
-  const y2 = parseInt(parts[4]);
-  const r = parseInt(parts[5]);
-  const g = parseInt(parts[6]);
-  const b = parseInt(parts[7]);
-  const thickness = parseInt(parts[8]);
-
-  if (cvMat && window.cv) {
-    window.cv.rectangle(cvMat, new window.cv.Point(x1, y1), new window.cv.Point(x2, y2), new window.cv.Scalar(b, g, r), thickness);
-    setOutput(prev => prev + `\nâœ… Rectangle drawn from (${x1},${y1}) to (${x2},${y2})`);
-  }
-  return;
-}
-
-if (cleanText.startsWith("__CV_DRAW_CIRCLE__:")) {
-  const parts = cleanText.split(":");
-  const x = parseInt(parts[1]);
-  const y = parseInt(parts[2]);
-  const radius = parseInt(parts[3]);
-  const r = parseInt(parts[4]);
-  const g = parseInt(parts[5]);
-  const b = parseInt(parts[6]);
-  const thickness = parseInt(parts[7]);
-
-  if (cvMat && window.cv) {
-    window.cv.circle(cvMat, new window.cv.Point(x, y), radius, new window.cv.Scalar(b, g, r), thickness);
-    setOutput(prev => prev + `\nâœ… Circle drawn at (${x},${y}) with radius ${radius}`);
-  }
-  return;
-}
-
-if (cleanText.startsWith("__CV_RESIZE__:")) {
-  const parts = cleanText.split(":");
-  const width = parseInt(parts[1]);
-  const height = parseInt(parts[2]);
-
-  if (cvMat && window.cv) {
-    const dsize = new window.cv.Size(width, height);
-    window.cv.resize(cvMat, cvMat, dsize, 0, 0, window.cv.INTER_AREA);
-    setOutput(prev => prev + `\nâœ… Image resized to ${width}x${height}`);
-  }
-  return;
-}
-
-if (cleanText.startsWith("__CV_SHOW__:")) {
-  const name = cleanText.split(":")[1].replace(/"/g, '');
-  showCVImage(canvasContainerRef, name, (msg) => setOutput(prev => prev + "\n" + msg));
-  return;
-}
-
-if (cleanText.startsWith("__CV_SAVE__:")) {
-  const name = cleanText.split(":")[1].replace(/"/g, '');
-  saveCVImage(name, (msg) => setOutput(prev => prev + "\n" + msg));
-  return;
-}
+            window.cv.putText(cvMat, text, new window.cv.Point(x, y), fontMap[font] || window.cv.FONT_HERSHEY_SIMPLEX, size, new window.cv.Scalar(b, g, r), thickness);
+            setOutput(prev => prev + `\nâœ… Text added: "${text}"`);
+          }
+          return;
+        }
+
+        if (cleanText.startsWith("__CV_DRAW_LINE__:")) {
+          const parts = cleanText.split(":");
+          const x1 = parseInt(parts[1]);
+          const y1 = parseInt(parts[2]);
+          const x2 = parseInt(parts[3]);
+          const y2 = parseInt(parts[4]);
+          const r = parseInt(parts[5]);
+          const g = parseInt(parts[6]);
+          const b = parseInt(parts[7]);
+          const thickness = parseInt(parts[8]);
+
+          if (cvMat && window.cv) {
+            window.cv.line(cvMat, new window.cv.Point(x1, y1), new window.cv.Point(x2, y2), new window.cv.Scalar(b, g, r), thickness);
+            setOutput(prev => prev + `\nâœ… Line drawn from (${x1},${y1}) to (${x2},${y2})`);
+          }
+          return;
+        }
+
+        if (cleanText.startsWith("__CV_DRAW_RECT__:")) {
+          const parts = cleanText.split(":");
+          const x1 = parseInt(parts[1]);
+          const y1 = parseInt(parts[2]);
+          const x2 = parseInt(parts[3]);
+          const y2 = parseInt(parts[4]);
+          const r = parseInt(parts[5]);
+          const g = parseInt(parts[6]);
+          const b = parseInt(parts[7]);
+          const thickness = parseInt(parts[8]);
+
+          if (cvMat && window.cv) {
+            window.cv.rectangle(cvMat, new window.cv.Point(x1, y1), new window.cv.Point(x2, y2), new window.cv.Scalar(b, g, r), thickness);
+            setOutput(prev => prev + `\nâœ… Rectangle drawn from (${x1},${y1}) to (${x2},${y2})`);
+          }
+          return;
+        }
+
+        if (cleanText.startsWith("__CV_DRAW_CIRCLE__:")) {
+          const parts = cleanText.split(":");
+          const x = parseInt(parts[1]);
+          const y = parseInt(parts[2]);
+          const radius = parseInt(parts[3]);
+          const r = parseInt(parts[4]);
+          const g = parseInt(parts[5]);
+          const b = parseInt(parts[6]);
+          const thickness = parseInt(parts[7]);
+
+          if (cvMat && window.cv) {
+            window.cv.circle(cvMat, new window.cv.Point(x, y), radius, new window.cv.Scalar(b, g, r), thickness);
+            setOutput(prev => prev + `\nâœ… Circle drawn at (${x},${y}) with radius ${radius}`);
+          }
+          return;
+        }
+
+        if (cleanText.startsWith("__CV_RESIZE__:")) {
+          const parts = cleanText.split(":");
+          const width = parseInt(parts[1]);
+          const height = parseInt(parts[2]);
+
+          if (cvMat && window.cv) {
+            const dsize = new window.cv.Size(width, height);
+            window.cv.resize(cvMat, cvMat, dsize, 0, 0, window.cv.INTER_AREA);
+            setOutput(prev => prev + `\nâœ… Image resized to ${width}x${height}`);
+          }
+          return;
+        }
+
+        if (cleanText.startsWith("__CV_SHOW__:")) {
+          const name = cleanText.split(":")[1].replace(/"/g, '');
+          showCVImage(canvasContainerRef, name, (msg) => setOutput(prev => prev + "\n" + msg));
+          return;
+        }
+
+        if (cleanText.startsWith("__CV_SAVE__:")) {
+          const name = cleanText.split(":")[1].replace(/"/g, '');
+          saveCVImage(name, (msg) => setOutput(prev => prev + "\n" + msg));
+          return;
+        }
 
         if (code.includes("__UPLOAD_FILE__")) {
-  fileInputRef.current.click();
-  return; // wait for upload
-}
+          fileInputRef.current.click();
+          return; // wait for upload
+        }
 
-/* =========================
-   ðŸ–¼ï¸ SPRITE HANDLER
-========================= */
-if (cleanText.startsWith("__SPRITE__:")) {
-  const raw = cleanText.replace("__SPRITE__:", "").trim();
-  const [spriteName, cam] = raw.split("|");
+        /* =========================
+           ðŸ–¼ï¸ SPRITE HANDLER
+        ========================= */
+        if (cleanText.startsWith("__SPRITE__:")) {
+          const raw = cleanText.replace("__SPRITE__:", "").trim();
+          const [spriteName, cam] = raw.split("|");
 
-  if (cam === "on") {
-    showSpriteWithWebcam(spriteName);
-  } else {
-    showSpriteOnly(spriteName);
-  }
-  return;
-}
+          if (cam === "on") {
+            showSpriteWithWebcam(spriteName);
+          } else {
+            showSpriteOnly(spriteName);
+          }
+          return;
+        }
 
         if (cleanText.startsWith("__SPEAK__:")) {
           const spokenText = cleanText.replace("__SPEAK__:", "").trim();
@@ -7019,13 +7045,13 @@ if (cleanText.startsWith("__SPRITE__:")) {
         ctx.fillRect(0, 0, canvas.width, canvas.height);
       }
     };
-const needsUpload = code.includes("__UPLOAD_FILE__");
-  const cleanedCode = code.replace(/__UPLOAD_FILE__/g, "");
+    const needsUpload = code.includes("__UPLOAD_FILE__");
+    const cleanedCode = code.replace(/__UPLOAD_FILE__/g, "");
 
-  if (needsUpload && !window.__fileUploaded) {
-    fileInputRef.current.click();
-    return;
-  }
+    if (needsUpload && !window.__fileUploaded) {
+      fileInputRef.current.click();
+      return;
+    }
     // ðŸ‘‡ Only inject turtle init if required
     let initCode = "";
     if (code.includes("playsound.say")) {
@@ -7037,14 +7063,14 @@ class playsound:
 `;
     }
 
-  if (code.includes("sprites.show")) {
-  initCode += `
+    if (code.includes("sprites.show")) {
+      initCode += `
 class sprites:
     @staticmethod
     def show(name, cam):
         print("__SPRITE__:" + str(name) + "|" + str(cam))
 `;
-}
+    }
 
     if (code.includes("serial")) {
       initCode += `
@@ -7197,24 +7223,24 @@ plt = _FakePlt()
     );
   };
 
-function handleFileUpload(e) {
-  const file = e.target.files[0];
-  if (!file) return;
+  function handleFileUpload(e) {
+    const file = e.target.files[0];
+    if (!file) return;
 
-  const reader = new FileReader();
+    const reader = new FileReader();
 
-  reader.onload = () => {
-    if (!Sk.builtinFiles) {
-      Sk.builtinFiles = { files: {} };
-    }
+    reader.onload = () => {
+      if (!Sk.builtinFiles) {
+        Sk.builtinFiles = { files: {} };
+      }
 
-    Sk.builtinFiles["files"][file.name] = reader.result;
+      Sk.builtinFiles["files"][file.name] = reader.result;
 
-    alert(`File "${file.name}" uploaded successfully`);
-  };
+      alert(`File "${file.name}" uploaded successfully`);
+    };
 
-  reader.readAsText(file);
-}
+    reader.readAsText(file);
+  }
 
   const resetWorkspace = () => {
     if (workspaceRef.current) {
@@ -7230,163 +7256,158 @@ function handleFileUpload(e) {
 
   return (
     <>
-    <script
-  defer
-  src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"
-/>
+      <Script
+        src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"
+        strategy="afterInteractive"
+      />
 
-    <Script
-  src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"
-  strategy="afterInteractive"
-/>
+      <Script
+        src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js"
+        strategy="afterInteractive"
+      />
 
-<Script
-  src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js"
-  strategy="afterInteractive"
-/>
+      <Script
+        src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"
+        strategy="beforeInteractive"
+      />
 
-    <Script
-  src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"
-  strategy="beforeInteractive"
-/>
+      <Script
+        src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"
+        strategy="beforeInteractive"
+      />
 
-<Script
-  src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"
-  strategy="beforeInteractive"
-/>
+      <Script
+        src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@latest"
+        strategy="beforeInteractive"
+      />
 
-<Script
-  src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@latest"
-  strategy="beforeInteractive"
-/>
+      <Script
+        src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils@latest"
+        strategy="beforeInteractive"
+      />
 
-<Script
-  src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils@latest"
-  strategy="beforeInteractive"
-/>
+      <Script
+        src="https://docs.opencv.org/4.x/opencv.js"
+        strategy="beforeInteractive"
+      />
 
-<Script
-  src="https://docs.opencv.org/4.x/opencv.js"
-  strategy="beforeInteractive"
-/>
+      <Script
+        src="https://cdn.jsdelivr.net/npm/face-api.js@latest/dist/face-api.min.js"
+        strategy="beforeInteractive"
+      />
 
-<Script
-  src="https://cdn.jsdelivr.net/npm/face-api.js@latest/dist/face-api.min.js"
-  strategy="beforeInteractive"
-/>
-
-    <input
-      type="file"
-      ref={fileInputRef}
-      style={{ display: "none" }}
-      onChange={handleFileUpload}
-    />
-    <div style={{ width: '100vw', height: '100vh', display: 'flex', flexDirection: 'column', fontFamily: 'Arial, sans-serif' }}>
-      {/* Header */}
-      <div style={{ height: '60px', background: '#7C88CC', display: 'flex', alignItems: 'center', padding: '0 20px', gap: '10px' }}>
-        <button style={{ padding: '8px 16px', background: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>
-          ☰
-        </button>
-        <button onClick={resetWorkspace} style={{ padding: '8px 16px', background: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
-          🔄 Reset
-        </button>
-        <button onClick={runCode} style={{ padding: '8px 24px', background: '#4CAF50', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>
-          ▶ Run
-        </button>
-        <div style={{ marginLeft: 'auto', display: 'flex', gap: '10px' }}>
-          <button
-            onClick={() => setView('blocks')}
-            style={{ padding: '8px 16px', background: view === 'blocks' ? '#fff' : '#9BA5D8', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
-            Blocks
+      <input
+        type="file"
+        ref={fileInputRef}
+        style={{ display: "none" }}
+        onChange={handleFileUpload}
+      />
+      <div style={{ width: '100vw', height: '100vh', display: 'flex', flexDirection: 'column', fontFamily: 'Arial, sans-serif' }}>
+        {/* Header */}
+        <div style={{ height: '60px', background: '#7C88CC', display: 'flex', alignItems: 'center', padding: '0 20px', gap: '10px' }}>
+          <button style={{ padding: '8px 16px', background: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>
+            ☰
           </button>
-          <button
-            onClick={() => setView('code')}
-            style={{ padding: '8px 16px', background: view === 'code' ? '#fff' : '#9BA5D8', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
-            Code
+          <button onClick={resetWorkspace} style={{ padding: '8px 16px', background: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
+            🔄 Reset
           </button>
-          <button
-            onClick={() => setView('canvas')}
-            style={{ padding: '8px 16px', background: view === 'canvas' ? '#fff' : '#9BA5D8', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
-            Canvas
+          <button onClick={runCode} style={{ padding: '8px 24px', background: '#4CAF50', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>
+            ▶ Run
           </button>
+          <div style={{ marginLeft: 'auto', display: 'flex', gap: '10px' }}>
+            <button
+              onClick={() => setView('blocks')}
+              style={{ padding: '8px 16px', background: view === 'blocks' ? '#fff' : '#9BA5D8', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
+              Blocks
+            </button>
+            <button
+              onClick={() => setView('code')}
+              style={{ padding: '8px 16px', background: view === 'code' ? '#fff' : '#9BA5D8', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
+              Code
+            </button>
+            <button
+              onClick={() => setView('canvas')}
+              style={{ padding: '8px 16px', background: view === 'canvas' ? '#fff' : '#9BA5D8', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
+              Canvas
+            </button>
+          </div>
         </div>
-      </div>
 
-      {/* Main Content */}
-      <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
-        {/* Blockly Workspace - Sidebar + Editor (LEFT SIDE) */}
-        <div style={{
-          flex: view === 'blocks' ? 1 : 0.6,
-          display: view === 'canvas' ? 'none' : 'block',
-          minWidth: '400px',
-          height: '100%',
-          position: 'relative',
-          backgroundColor: '#fff'
-        }}>
-          <div ref={blocklyDiv} style={{ width: '100%', height: '100%', display: view === 'blocks' ? 'block' : 'none' }} />
-          {view === 'code' && (
-            <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column' }}>
-              <div style={{ padding: '10px', borderBottom: '1px solid #ccc', fontWeight: 'bold', background: '#ddd' }}>Generated Python Code</div>
-              <pre style={{ margin: 0, padding: '20px', flex: 1, overflow: 'auto', fontSize: '13px', fontFamily: 'monospace', whiteSpace: 'pre-wrap', wordWrap: 'break-word' }}>
-                {code || '# Drag blocks to generate code...'}
+        {/* Main Content */}
+        <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
+          {/* Blockly Workspace - Sidebar + Editor (LEFT SIDE) */}
+          <div style={{
+            flex: view === 'blocks' ? 1 : 0.6,
+            display: view === 'canvas' ? 'none' : 'block',
+            minWidth: '400px',
+            height: '100%',
+            position: 'relative',
+            backgroundColor: '#fff'
+          }}>
+            <div ref={blocklyDiv} style={{ width: '100%', height: '100%', display: view === 'blocks' ? 'block' : 'none' }} />
+            {view === 'code' && (
+              <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column' }}>
+                <div style={{ padding: '10px', borderBottom: '1px solid #ccc', fontWeight: 'bold', background: '#ddd' }}>Generated Python Code</div>
+                <pre style={{ margin: 0, padding: '20px', flex: 1, overflow: 'auto', fontSize: '13px', fontFamily: 'monospace', whiteSpace: 'pre-wrap', wordWrap: 'break-word' }}>
+                  {code || '# Drag blocks to generate code...'}
+                </pre>
+              </div>
+            )}
+          </div>
+
+          {/* Canvas/Output Area (RIGHT SIDE) */}
+          <div style={{
+            flex: view === 'blocks' ? 1 : (view === 'code' ? 1 : 1),
+            background: '#7C88CC',
+            display: view === 'canvas' || view === 'blocks' || view === 'code' ? 'flex' : 'none',
+            flexDirection: 'column',
+            padding: '20px',
+            overflow: 'auto',
+            borderLeft: view === 'blocks' || view === 'code' ? '2px solid #555' : 'none'
+          }}>
+            {/* Canvas Container */}
+            <div
+              ref={canvasContainerRef}
+              style={{
+                width: '100%',
+                flex: view === 'canvas' ? 0.8 : 0.6,
+                marginBottom: '20px',
+                background: '#ffffff',
+                borderRadius: '8px',
+                border: '2px solid #5566AA',
+                position: 'relative',
+                minHeight: '300px'
+              }}
+            />
+
+            {/* Output Box */}
+            <div style={{
+              padding: '15px',
+              background: '#5566AA',
+              borderRadius: '8px',
+              color: 'white',
+              flex: view === 'canvas' ? 0.2 : 0.4,
+              overflow: 'auto',
+              display: 'flex',
+              flexDirection: 'column'
+            }}>
+              <div style={{ fontWeight: 'bold', marginBottom: '10px', color: '#ffffff', fontSize: '14px' }}>Output:</div>
+              <pre style={{
+                fontSize: '12px',
+                margin: 0,
+                whiteSpace: 'pre-wrap',
+                wordWrap: 'break-word',
+                overflow: 'auto',
+                color: '#ffffff',
+                flex: 1,
+                fontFamily: 'monospace'
+              }}>
+                {output || 'Ready to run...'}
               </pre>
             </div>
-          )}
-        </div>
-
-        {/* Canvas/Output Area (RIGHT SIDE) */}
-        <div style={{
-          flex: view === 'blocks' ? 1 : (view === 'code' ? 1 : 1),
-          background: '#7C88CC',
-          display: view === 'canvas' || view === 'blocks' || view === 'code' ? 'flex' : 'none',
-          flexDirection: 'column',
-          padding: '20px',
-          overflow: 'auto',
-          borderLeft: view === 'blocks' || view === 'code' ? '2px solid #555' : 'none'
-        }}>
-          {/* Canvas Container */}
-          <div
-            ref={canvasContainerRef}
-            style={{
-              width: '100%',
-              flex: view === 'canvas' ? 0.8 : 0.6,
-              marginBottom: '20px',
-              background: '#ffffff',
-              borderRadius: '8px',
-              border: '2px solid #5566AA',
-              position: 'relative',
-              minHeight: '300px'
-            }}
-          />
-
-          {/* Output Box */}
-          <div style={{
-            padding: '15px',
-            background: '#5566AA',
-            borderRadius: '8px',
-            color: 'white',
-            flex: view === 'canvas' ? 0.2 : 0.4,
-            overflow: 'auto',
-            display: 'flex',
-            flexDirection: 'column'
-          }}>
-            <div style={{ fontWeight: 'bold', marginBottom: '10px', color: '#ffffff', fontSize: '14px' }}>Output:</div>
-            <pre style={{
-              fontSize: '12px',
-              margin: 0,
-              whiteSpace: 'pre-wrap',
-              wordWrap: 'break-word',
-              overflow: 'auto',
-              color: '#ffffff',
-              flex: 1,
-              fontFamily: 'monospace'
-            }}>
-              {output || 'Ready to run...'}
-            </pre>
           </div>
         </div>
       </div>
-    </div>
     </>
   );
 }

@@ -4410,18 +4410,72 @@ function createBlocklyBlock(workspace, row) {
       zoom: {
         controls: true,
         wheel: true,
-        startScale: 1.0, // ✅ Keep simple - let users zoom if needed
+        startScale: 1.0,
         maxScale: 3,
         minScale: 0.3,
         scaleSpeed: 1.2
       },
       trashcan: true,
-      renderer: 'zelos' // ✅ Modern renderer
+      renderer: 'zelos',
+      // Fixed block size configuration
+      grid: {
+        spacing: 20,
+        length: 1,
+        colour: '#888',
+        snap: false
+      }
     });
 
+    // Apply fixed block sizes via CSS
+    const style = document.createElement('style');
+    style.textContent = `
+      .blocklyText {
+        font-size: 12pt !important;
+        font-family: sans-serif !important;
+      }
+      .blocklyNonEditableText > text,
+      .blocklyEditableText > text {
+        font-size: 12pt !important;
+      }
+      .blocklyFlyoutButton .blocklyText {
+        font-size: 12pt !important;
+      }
+      /* Ensure consistent block rendering */
+      .blocklyBlockCanvas {
+        transform-origin: 0 0;
+      }
+      /* Fix scrollbar persistence when flyout closes */
+      .blocklyFlyout.blocklyHidden ~ .blocklyFlyoutScrollbar {
+        display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+      }
+      
+      /* Keep flyout blocks at fixed size regardless of workspace zoom */
+      .blocklyFlyout .blocklyBlockCanvas {
+        transform: scale(1) !important;
+      }
+      .blocklyFlyout .blocklyText {
+        font-size: 12pt !important;
+      }
+      /* Override any zoom-based transforms on flyout */
+      .blocklyFlyout svg.blocklySvg > g {
+        transform: scale(1) !important;
+      }
+    `;
+    document.head.appendChild(style);
+
     workspaceRef.current = workspace;
-    setWorkspaceReady(true); // ✅ ADD THIS
+    setWorkspaceReady(true);
+    
+    // Listen for zoom changes and keep flyout blocks at fixed size
     workspace.addChangeListener((e: any) => {
+      // Handle zoom events
+      if (e.type === Blockly.Events.VIEWPORT_CHANGE) {
+        // Enforce fixed flyout size whenever viewport changes (zoom/pan)
+        enforceFlyoutFixedSize();
+      }
+      
       if (e.type === Blockly.Events.TOOLBOX_ITEM_SELECT) {
         requestAnimationFrame(() => {
           // 1. Normal resize
@@ -4440,7 +4494,26 @@ function createBlocklyBlock(workspace, row) {
             workspace.scrollbar.setVisible(true);
           }
 
-          // 5. Snap back to origin
+          // 5. Clean up flyout scrollbars properly
+          const flyout = blocklyDiv.current?.querySelector('.blocklyFlyout');
+          const scrollbars = blocklyDiv.current?.querySelectorAll('.blocklyFlyoutScrollbar');
+          
+          scrollbars?.forEach((scrollbar) => {
+            const el = scrollbar as HTMLElement;
+            if (!flyout || flyout.classList.contains('blocklyHidden')) {
+              // Hide scrollbar when flyout is closed
+              el.style.display = 'none';
+              el.style.visibility = 'hidden';
+            } else {
+              el.style.display = '';
+              el.style.visibility = '';
+            }
+          });
+          
+          // 6. Ensure flyout blocks stay at fixed size
+          enforceFlyoutFixedSize();
+
+          // 7. Snap back to origin
           workspace.scroll(0, 0);
         });
       }
@@ -4450,15 +4523,41 @@ function createBlocklyBlock(workspace, row) {
       const scrollbars = blocklyDiv.current?.querySelectorAll('.blocklyFlyoutScrollbar');
 
       scrollbars?.forEach((scrollbar) => {
+        const el = scrollbar as HTMLElement;
         const flyout = scrollbar.previousElementSibling as HTMLElement | null;
 
-        // Hide scrollbar if flyout is hidden or doesn't exist
-        if (!flyout || flyout.classList.contains('blocklyHidden')) {
-          (scrollbar as HTMLElement).style.display = 'none';
+        // Hide scrollbar if flyout is hidden, doesn't exist, or has no content
+        if (!flyout || 
+            flyout.classList.contains('blocklyHidden') || 
+            flyout.style.display === 'none' ||
+            !flyout.querySelector('.blocklyBlockCanvas')) {
+          el.style.display = 'none';
+          el.style.visibility = 'hidden';
+          el.style.opacity = '0';
         } else {
-          (scrollbar as HTMLElement).style.display = '';
+          el.style.display = '';
+          el.style.visibility = '';
+          el.style.opacity = '';
         }
       });
+    };
+
+    // Function to enforce fixed flyout block sizes
+    const enforceFlyoutFixedSize = () => {
+      const flyout = blocklyDiv.current?.querySelector('.blocklyFlyout');
+      if (!flyout || flyout.classList.contains('blocklyHidden')) return;
+      
+      // Force all transform groups in flyout to scale(1)
+      const flyoutSvgGroups = flyout.querySelectorAll('svg.blocklySvg > g');
+      flyoutSvgGroups.forEach((group) => {
+        (group as SVGElement).setAttribute('transform', 'scale(1)');
+      });
+      
+      // Also fix the canvas transform
+      const flyoutCanvas = flyout.querySelector('.blocklyBlockCanvas');
+      if (flyoutCanvas) {
+        (flyoutCanvas as SVGElement).style.transform = 'scale(1)';
+      }
     };
 
     let flyoutObserver: MutationObserver | null = null;
@@ -4474,11 +4573,14 @@ function createBlocklyBlock(workspace, row) {
 
       flyoutObserver = new MutationObserver(() => {
         updateFlyoutScrollbars();
+        enforceFlyoutFixedSize(); // Keep blocks at fixed size
       });
 
       flyoutObserver.observe(flyout, {
         attributes: true,
         attributeFilter: ['class', 'style'],
+        childList: true,
+        subtree: true
       });
     };
 
@@ -4501,12 +4603,14 @@ function createBlocklyBlock(workspace, row) {
       preventToolboxScroll();
       attachFlyoutObserver();
       updateFlyoutScrollbars();
+      enforceFlyoutFixedSize(); // Initial enforcement
     }, 100);
 
     if (blocklyDiv.current) {
       containerObserver = new MutationObserver(() => {
         attachFlyoutObserver();
         updateFlyoutScrollbars();
+        enforceFlyoutFixedSize();
       });
 
       containerObserver.observe(blocklyDiv.current, {
@@ -4520,6 +4624,7 @@ function createBlocklyBlock(workspace, row) {
         setTimeout(() => {
           preventToolboxScroll();
           updateFlyoutScrollbars();
+          enforceFlyoutFixedSize(); // Enforce on category change
         }, 50);
       }
     });
