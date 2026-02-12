@@ -4409,7 +4409,13 @@ function AICodingPage() {
 
 
   const workspaceRef = useRef<Blockly.WorkspaceSvg | null>(null)
-
+const isDetectionRunningRef = useRef(false);
+const fingerIntervalRef = useRef<any>(null);
+const handsRef = useRef<any>(null);
+const cameraRef = useRef<any>(null);
+const fingerResultsRef = useRef<any>(null);
+const fingerDelayRef = useRef<number>(1);
+const cameraWrapperRef = useRef<any>(null);
   // hidden input
   function debugLog(message: string, data?: any) {
     const timestamp = new Date().toLocaleTimeString();
@@ -4919,6 +4925,62 @@ function AICodingPage() {
     }
 
     switch (row.block_type) {
+
+      case "FINGER_START_DETECTION": {
+  const block = workspace.newBlock("finger_start_detection");
+  block.initSvg();
+  block.render();
+  return block;
+}
+case "CONTROLS_REPEAT": {
+  const block = workspace.newBlock("controls_repeat");
+
+  const num = workspace.newBlock("math_number");
+  num.setFieldValue(String(cfg.times || 1), "NUM");
+
+  num.initSvg();
+  num.render();
+
+  block.getInput("TIMES")
+    ?.connection
+    ?.connect(num.outputConnection);
+
+  block.initSvg();
+  block.render();
+
+  return block;
+}
+case "FINGER_GET_COUNT": {
+  const block = workspace.newBlock("finger_get_count");
+  block.initSvg();
+  block.render();
+  return block;
+}
+case "FINGER_SET_DELAY": {
+  const block = workspace.newBlock("finger_set_delay");
+
+  const num = workspace.newBlock("math_number");
+  num.setFieldValue(String(cfg.seconds || 1), "NUM");
+
+  num.initSvg();
+  num.render();
+
+  block.getInput("DELAY")
+    ?.connection
+    ?.connect(num.outputConnection);
+
+  block.initSvg();
+  block.render();
+
+  return block;
+}
+case "FINGER_STOP_DETECTION": {
+  const block = workspace.newBlock("finger_stop_detection");
+  block.initSvg();
+  block.render();
+  return block;
+}
+
       /* =====================
          CV BLOCKS
       ===================== */
@@ -4997,67 +5059,126 @@ function AICodingPage() {
     }
   }
 
-  function loadBlocksIntoWorkspace(blocks: any[]) {
-    debugLog('Loading blocks into workspace', { count: blocks.length, blocks });
-    const workspace = workspaceRef.current;
-    if (!workspace) {
-      debugLog('ERROR: Workspace not available');
-      return;
+function loadBlocksIntoWorkspace(blocks: any[]) {
+  debugLog('Loading blocks into workspace', { count: blocks.length, blocks });
+
+  const workspace = workspaceRef.current;
+  if (!workspace) {
+    debugLog('ERROR: Workspace not available');
+    return;
+  }
+
+  workspace.clear();
+
+  /* ======================================
+     1️⃣ Create Variables First
+  ====================================== */
+  blocks.forEach((row) => {
+    const cfg = typeof row.block_config === 'string'
+      ? JSON.parse(row.block_config)
+      : row.block_config;
+
+    if (cfg?.variable) {
+      ensureVariable(workspace, cfg.variable);
+    }
+  });
+
+  /* ======================================
+     2️⃣ Create All Blocks (No Connections Yet)
+  ====================================== */
+  const blockMap: Record<number, Blockly.Block> = {};
+
+  blocks.forEach((row) => {
+    const block = createBlocklyBlock(workspace, row);
+    if (!block) return;
+
+    block.initSvg();
+    block.render();
+
+    blockMap[row.id] = block;
+  });
+
+  /* ======================================
+     3️⃣ Handle Parent → Children Nesting
+     (Proper stacking inside DO)
+  ====================================== */
+
+  // Get unique parents
+  const parentIds = [...new Set(
+    blocks.filter(b => b.parent_id).map(b => b.parent_id)
+  )];
+
+  parentIds.forEach((parentId) => {
+    const parentBlock = blockMap[parentId];
+    if (!parentBlock) return;
+
+    const children = blocks
+      .filter(b => b.parent_id === parentId)
+      .sort((a, b) => a.block_order - b.block_order);
+
+    if (children.length === 0) return;
+
+    let previousChild: Blockly.Block | null = null;
+
+    children.forEach((childRow, index) => {
+      const childBlock = blockMap[childRow.id];
+      if (!childBlock) return;
+
+      if (index === 0) {
+        // First child connects to DO input
+        parentBlock
+          .getInput("DO")
+          ?.connection
+          ?.connect(childBlock.previousConnection);
+      } else {
+        // Chain next children
+        previousChild
+          ?.nextConnection
+          ?.connect(childBlock.previousConnection);
+      }
+
+      previousChild = childBlock;
+    });
+  });
+
+  /* ======================================
+     4️⃣ Connect Top-Level Blocks Sequentially
+  ====================================== */
+
+  const topLevelBlocks = blocks
+    .filter(b => !b.parent_id)
+    .sort((a, b) => a.block_order - b.block_order);
+
+  let previousTop: Blockly.Block | null = null;
+  let y = 40;
+
+  topLevelBlocks.forEach((row) => {
+    const block = blockMap[row.id];
+    if (!block) return;
+
+    if (!previousTop) {
+      // First root block positioning
+      block.moveBy(40, y);
+      y += block.getHeightWidth().height + 30;
+    } else {
+      previousTop.nextConnection
+        ?.connect(block.previousConnection);
     }
 
-    workspace.clear();
+    previousTop = block;
+  });
 
-    // First pass: Create all variables that will be needed
-    debugLog('First pass: Creating variables');
-    blocks.forEach((row) => {
-      const cfg = typeof row.block_config === 'string'
-        ? JSON.parse(row.block_config)
-        : row.block_config;
+  /* ======================================
+     5️⃣ Final Render Adjustments
+  ====================================== */
 
-      if (cfg?.variable) {
-        ensureVariable(workspace, cfg.variable);
-        debugLog(`Created variable: ${cfg.variable}`);
-      }
-    });
+  workspace.render();
+  Blockly.svgResize(workspace);
+  workspace.scrollCenter();
 
-    let previousBlock: Blockly.Block | null = null;
-    let y = 40;
+  debugLog('✅ Nested blocks loaded successfully');
+}
 
-    blocks.forEach((row) => {
-      const newBlock = createBlocklyBlock(workspace, row);
-      if (!newBlock) return;
-
-      // Init SVG first (required)
-      newBlock.initSvg();
-
-      if (!previousBlock) {
-        // ⭐ Root block
-        newBlock.render();
-        newBlock.moveBy(40, y);
-        y += newBlock.getHeightWidth().height + 30;
-      } else {
-        // ⭐ Connect BEFORE render
-        if (
-          previousBlock.nextConnection &&
-          newBlock.previousConnection
-        ) {
-          previousBlock.nextConnection.connect(
-            newBlock.previousConnection
-          );
-        }
-        newBlock.render();
-      }
-
-      previousBlock = newBlock;
-    });
-
-    workspace.render();
-    Blockly.svgResize(workspace);
-    workspace.scrollCenter();
-
-
-    debugLog('✅ Finished loading blocks successfully');
-  }
 
   useEffect(() => {
     defineBlocks();
@@ -6306,123 +6427,154 @@ ${currentPrediction} (${(currentConfidence * 100).toFixed(1)}%)
      FINGER DETECTION FUNCTIONS
   ========================= */
 
-  async function startFingerDetection(containerRef, outputCallback) {
+  async function startFingerDetection(
+  blocklyDivRef,
+  canvasContainerRef,
+  outputCallback
+) {
+  if (isDetectionRunningRef.current) return;
 
-    if (isDetectionRunning) {
-      return; // Prevent double start
-    }
+  if (!window.Hands || !window.Camera) {
+    outputCallback("⏳ MediaPipe loading...");
+    return;
+  }
 
-    if (!window.Hands || !window.Camera) {
-      outputCallback("⏳ MediaPipe loading...");
-      return;
-    }
+  try {
+    outputCallback("📹 Opening camera...");
+    isDetectionRunningRef.current = true;
 
-    try {
+    // Ensure Blockly container allows overlay
+    blocklyDivRef.current.style.position = "relative";
 
-      outputCallback("📹 Opening camera...");
-      isDetectionRunning = true;
+    // Create popup wrapper
+    const wrapper = document.createElement("div");
+    wrapper.style.position = "absolute";
+    wrapper.style.top = "20px";
+    wrapper.style.right = "20px";
+    wrapper.style.width = "300px";
+    wrapper.style.zIndex = "9999";
+    wrapper.style.borderRadius = "12px";
+    wrapper.style.overflow = "hidden";
+    wrapper.style.boxShadow = "0 4px 12px rgba(0,0,0,0.3)";
+    wrapper.style.background = "#000";
 
-      containerRef.current.innerHTML = "";
+    cameraWrapperRef.current = wrapper;
 
-      const wrapper = document.createElement("div");
-      wrapper.style.position = "relative";
-      wrapper.style.width = "100%";
-      wrapper.style.maxWidth = "640px";
-      wrapper.style.margin = "auto";
+    // Video
+    const video = document.createElement("video");
+    video.autoplay = true;
+    video.playsInline = true;
+    video.style.width = "100%";
 
-      const video = document.createElement("video");
-      video.autoplay = true;
-      video.playsInline = true;
-      video.style.width = "100%";
-      video.style.borderRadius = "12px";
+    // Canvas overlay
+    const canvas = document.createElement("canvas");
+    canvas.width = 640;
+    canvas.height = 480;
+    canvas.style.position = "absolute";
+    canvas.style.top = "0";
+    canvas.style.left = "0";
+    canvas.style.width = "100%";
+    canvas.style.height = "100%";
 
-      const canvas = document.createElement("canvas");
-      canvas.width = 640;
-      canvas.height = 480;
-      canvas.style.position = "absolute";
-      canvas.style.top = "0";
-      canvas.style.left = "0";
-      canvas.style.width = "100%";
-      canvas.style.height = "100%";
+    wrapper.appendChild(video);
+    wrapper.appendChild(canvas);
+    blocklyDivRef.current.appendChild(wrapper);
 
-      wrapper.appendChild(video);
-      wrapper.appendChild(canvas);
-      containerRef.current.appendChild(wrapper);
+    const ctx = canvas.getContext("2d");
 
-      const ctx = canvas.getContext("2d");
+    // Get camera stream
+    const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+    video.srcObject = stream;
 
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: true
+    // Create Hands instance once
+    if (!handsRef.current) {
+      handsRef.current = new window.Hands({
+        locateFile: (file) =>
+          `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
       });
 
-      video.srcObject = stream;
+      handsRef.current.setOptions({
+        maxNumHands: 1,
+        modelComplexity: 1,
+        minDetectionConfidence: 0.7,
+        minTrackingConfidence: 0.6
+      });
+    }
 
-      // 🔹 CREATE HANDS ONLY ONCE
-      if (!handsInstance) {
-        handsInstance = new window.Hands({
-          locateFile: (file) =>
-            `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
-        });
+    handsRef.current.onResults((results) => {
+      fingerResultsRef.current = results;
 
-        handsInstance.setOptions({
-          maxNumHands: 1,
-          modelComplexity: 1,
-          minDetectionConfidence: 0.7,
-          minTrackingConfidence: 0.6
-        });
-      }
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      handsInstance.onResults((results) => {
-
-        fingerResults = results;
-
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-        if (results.multiHandLandmarks) {
-          for (const landmarks of results.multiHandLandmarks) {
-            window.drawConnectors(ctx, landmarks, window.HAND_CONNECTIONS);
-            window.drawLandmarks(ctx, landmarks);
-          }
+      if (results.multiHandLandmarks) {
+        for (const landmarks of results.multiHandLandmarks) {
+          window.drawConnectors(ctx, landmarks, window.HAND_CONNECTIONS);
+          window.drawLandmarks(ctx, landmarks);
         }
-      });
+      }
+    });
 
-      cameraInstance = new window.Camera(video, {
-        onFrame: async () => {
-          if (handsInstance) {
-            await handsInstance.send({ image: video });
-          }
-        },
-        width: 640,
-        height: 480
-      });
+    // Start Camera
+    cameraRef.current = new window.Camera(video, {
+      onFrame: async () => {
+        if (handsRef.current) {
+          await handsRef.current.send({ image: video });
+        }
+      },
+      width: 640,
+      height: 480
+    });
 
-      cameraInstance.start();
+    cameraRef.current.start();
 
-      outputCallback("✅ Camera started & hand detection running!");
+    outputCallback("✅ Camera started & hand detection running!");
+  } catch (err) {
+    outputCallback("❌ Camera error: " + err.message);
+  }
+}
 
-    } catch (err) {
-      outputCallback("❌ Camera error: " + err.message);
-    }
+function stopFingerDetection(canvasContainerRef, outputCallback) {
+  if (!isDetectionRunningRef.current) return;
+
+  // Stop interval
+  if (fingerIntervalRef.current) {
+    clearInterval(fingerIntervalRef.current);
+    fingerIntervalRef.current = null;
   }
 
-  function stopFingerDetection(outputCallback) {
-
-    if (!isDetectionRunning) return;
-
-    if (cameraInstance) {
-      cameraInstance.stop();
-      cameraInstance = null;
-    }
-
-    const video = document.querySelector("video");
-    if (video && video.srcObject) {
-      video.srcObject.getTracks().forEach(track => track.stop());
-    }
-
-    isDetectionRunning = false;
-
-    outputCallback("🛑 Hand detection stopped");
+  // Stop camera
+  if (cameraRef.current) {
+    cameraRef.current.stop();
+    cameraRef.current = null;
   }
+
+  // Close hands
+  if (handsRef.current) {
+    handsRef.current.close?.();
+    handsRef.current = null;
+  }
+
+  // Stop video tracks
+  const video = document.querySelector("video");
+  if (video && video.srcObject) {
+    video.srcObject.getTracks().forEach(track => track.stop());
+  }
+
+  // Remove popup
+  if (cameraWrapperRef.current) {
+    cameraWrapperRef.current.remove();
+    cameraWrapperRef.current = null;
+  }
+
+  // Clear output container
+  if (canvasContainerRef?.current) {
+    canvasContainerRef.current.innerHTML = "";
+  }
+
+  isDetectionRunningRef.current = false;
+
+  outputCallback("🛑 Hand detection stopped");
+}
 
   /* =========================
      COMPUTER VISION (OPENCV) FUNCTIONS
@@ -7209,37 +7361,62 @@ file_handle = None
       }
       // Finger Detection
       if (cleanText === "__FINGER_START__") {
-        startFingerDetection(containerRef, (msg) =>
+        startFingerDetection(blocklyDiv,containerRef, (msg) =>
           setOutput(prev => prev + "\n" + msg)
         );
         return;
       }
       if (cleanText === "__FINGER_STOP__") {
         stopFingerDetection((msg) =>
-          setOutput(prev => prev + "\n" + msg)
+          setOutput(prev => prev + "\n" + msg), outputCallback
         );
         return;
       }
       if (cleanText.startsWith("__FINGER_DELAY__:")) {
-        fingerDelaySeconds = parseFloat(cleanText.split(":")[1]) || 1;
+        fingerDelayRef.current =
+  parseFloat(cleanText.split(":")[1]) || 1;
         return;
       }
-      if (cleanText === "__FINGER_GET_COUNT__") {
-        if (!fingerInterval) {
-          fingerInterval = setInterval(() => {
-            if (!fingerResults || !fingerResults.multiHandLandmarks) return;
-            const landmarks = fingerResults.multiHandLandmarks[0];
-            let count = 0;
-            if (landmarks[4].x < landmarks[3].x) count++;
-            if (landmarks[8].y < landmarks[6].y) count++;
-            if (landmarks[12].y < landmarks[10].y) count++;
-            if (landmarks[16].y < landmarks[14].y) count++;
-            if (landmarks[20].y < landmarks[18].y) count++;
-            setOutput(prev => prev + `\nFinger count: ${count}`);
-          }, fingerDelaySeconds * 1000);
-        }
-        return;
-      }
+     if (cleanText === "__FINGER_GET_COUNT__") {
+
+  if (fingerIntervalRef.current) {
+    clearInterval(fingerIntervalRef.current);
+  }
+
+  fingerIntervalRef.current = setInterval(() => {
+
+    const results = fingerResultsRef.current;
+    if (!results || !results.multiHandLandmarks) return;
+
+    const landmarks = results.multiHandLandmarks[0];
+    let count = 0;
+
+    if (landmarks[4].x < landmarks[3].x) count++;
+    if (landmarks[8].y < landmarks[6].y) count++;
+    if (landmarks[12].y < landmarks[10].y) count++;
+    if (landmarks[16].y < landmarks[14].y) count++;
+    if (landmarks[20].y < landmarks[18].y) count++;
+
+    setOutput(prev => prev + `\nFinger count: ${count}`);
+
+    if (canvasContainerRef?.current) {
+      canvasContainerRef.current.innerHTML = `
+        <div style="
+          font-size:28px;
+          font-weight:bold;
+          text-align:center;
+          color:#5566AA;
+        ">
+          ✋ Finger Count: ${count}
+        </div>
+      `;
+    }
+
+  }, fingerDelayRef.current * 1000);
+
+  return;
+}
+
       if (cleanText.startsWith("__CV_DRAW_RECT__:")) {
         if (!cvMat || !window.cv) {
           setOutput(prev => prev + "\n❌ Draw Rectangle: no image loaded. Use Load Image first.");
@@ -7663,9 +7840,9 @@ file_handle = None
         //   return;
         // }
         // if (cleanText === "__FINGER_STOP__") {
-        //   if (fingerInterval) {
-        //     clearInterval(fingerInterval);
-        //     fingerInterval = null;
+        //   if (fingerIntervalRef) {
+        //     clearInterval(fingerIntervalRef);
+        //     fingerIntervalRef = null;
         //   }
         //   stopFingerDetection((msg) =>
         //     setOutput(prev => prev + "\n" + msg)
@@ -7690,8 +7867,8 @@ file_handle = None
         //   return;
         // }
         // if (cleanText === "__FINGER_GET_COUNT__") {
-        //   if (!fingerInterval) {
-        //     fingerInterval = setInterval(() => {
+        //   if (!fingerIntervalRef) {
+        //     fingerIntervalRef = setInterval(() => {
         //       if (!fingerResults || !fingerResults.multiHandLandmarks) return;
         //       const landmarks = fingerResults.multiHandLandmarks[0];
         //       let count = 0;
@@ -7704,8 +7881,8 @@ file_handle = None
         //       setOutput(prev => prev + `\nFinger count: ${count}`);
         //       fingerLoopCurrent++;
         //       if (fingerLoopCurrent >= 30) { // match repeat count
-        //         clearInterval(fingerInterval);
-        //         fingerInterval = null;
+        //         clearInterval(fingerIntervalRef);
+        //         fingerIntervalRef = null;
         //         const mostFrequent = getMostFrequent(fingerCollected);
         //         setOutput(prev =>
         //           prev + `\n\n✅ Final Detected Finger Count: ${mostFrequent}`

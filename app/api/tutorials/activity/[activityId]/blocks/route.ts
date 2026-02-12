@@ -21,9 +21,11 @@ export async function GET(
     const result = await pool.query(
       `
       SELECT
-        block_type,
-        block_order,
-        block_config
+          id,
+    block_type,
+    block_order,
+    block_config,
+    parent_id
       FROM tutorials.tutorial_blocks
       WHERE tutorial_id = $1
       ORDER BY block_order
