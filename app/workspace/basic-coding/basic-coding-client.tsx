@@ -4451,16 +4451,8 @@ function createBlocklyBlock(workspace, row) {
         opacity: 0 !important;
       }
       
-      /* Keep flyout blocks at fixed size regardless of workspace zoom */
-      .blocklyFlyout .blocklyBlockCanvas {
-        transform: scale(1) !important;
-      }
       .blocklyFlyout .blocklyText {
         font-size: 12pt !important;
-      }
-      /* Override any zoom-based transforms on flyout */
-      .blocklyFlyout svg.blocklySvg > g {
-        transform: scale(1) !important;
       }
     `;
     document.head.appendChild(style);

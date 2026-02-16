@@ -5263,16 +5263,8 @@ function loadBlocksIntoWorkspace(blocks: any[]) {
         overscroll-behavior: none !important;
       }
       
-      /* Keep flyout blocks at fixed size regardless of workspace zoom */
-      .blocklyFlyout .blocklyBlockCanvas {
-        transform: scale(1) !important;
-      }
       .blocklyFlyout .blocklyText {
         font-size: 12pt !important;
-      }
-      /* Override any zoom-based transforms on flyout */
-      .blocklyFlyout svg.blocklySvg > g {
-        transform: scale(1) !important;
       }
     `;
     document.head.appendChild(style);
@@ -5280,12 +5272,12 @@ function loadBlocksIntoWorkspace(blocks: any[]) {
     workspaceRef.current = workspace;
     setWorkspaceReady(true);
 
-    // Listen for zoom changes and keep flyout blocks at fixed size
+    // Listen for zoom changes
     workspace.addChangeListener((e: any) => {
       // Handle zoom events
       if (e.type === Blockly.Events.VIEWPORT_CHANGE) {
-        // Enforce fixed flyout size whenever viewport changes (zoom/pan)
-        enforceFlyoutFixedSize();
+        // Keep layout in sync after zoom/pan updates
+        updateFlyoutScrollbars();
       }
 
       if (e.type === Blockly.Events.TOOLBOX_ITEM_SELECT) {
@@ -5322,10 +5314,7 @@ function loadBlocksIntoWorkspace(blocks: any[]) {
             }
           });
 
-          // 6. Ensure flyout blocks stay at fixed size
-          enforceFlyoutFixedSize();
-
-          // 7. Snap back to origin
+          // 6. Snap back to origin
           workspace.scroll(0, 0);
         });
       }
@@ -5354,24 +5343,6 @@ function loadBlocksIntoWorkspace(blocks: any[]) {
       });
     };
 
-    // Function to enforce fixed flyout block sizes
-    const enforceFlyoutFixedSize = () => {
-      const flyout = blocklyDiv.current?.querySelector('.blocklyFlyout');
-      if (!flyout || flyout.classList.contains('blocklyHidden')) return;
-
-      // Force all transform groups in flyout to scale(1)
-      const flyoutSvgGroups = flyout.querySelectorAll('svg.blocklySvg > g');
-      flyoutSvgGroups.forEach((group) => {
-        (group as SVGElement).setAttribute('transform', 'scale(1)');
-      });
-
-      // Also fix the canvas transform
-      const flyoutCanvas = flyout.querySelector('.blocklyBlockCanvas');
-      if (flyoutCanvas) {
-        (flyoutCanvas as SVGElement).style.transform = 'scale(1)';
-      }
-    };
-
     let flyoutObserver: MutationObserver | null = null;
     let containerObserver: MutationObserver | null = null;
 
@@ -5385,7 +5356,6 @@ function loadBlocksIntoWorkspace(blocks: any[]) {
 
       flyoutObserver = new MutationObserver(() => {
         updateFlyoutScrollbars();
-        enforceFlyoutFixedSize(); // Keep blocks at fixed size
       });
 
       flyoutObserver.observe(flyout, {
@@ -5412,14 +5382,12 @@ function loadBlocksIntoWorkspace(blocks: any[]) {
       preventToolboxScroll();
       attachFlyoutObserver();
       updateFlyoutScrollbars();
-      enforceFlyoutFixedSize(); // Initial enforcement
     }, 100);
 
     if (blocklyDiv.current) {
       containerObserver = new MutationObserver(() => {
         attachFlyoutObserver();
         updateFlyoutScrollbars();
-        enforceFlyoutFixedSize();
       });
 
       containerObserver.observe(blocklyDiv.current, {
@@ -5433,7 +5401,6 @@ function loadBlocksIntoWorkspace(blocks: any[]) {
         setTimeout(() => {
           preventToolboxScroll();
           updateFlyoutScrollbars();
-          enforceFlyoutFixedSize(); // Enforce on category change
         }, 50);
       }
     });
