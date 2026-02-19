@@ -4467,6 +4467,11 @@ const cameraWrapperRef = useRef<any>(null);
   useEffect(() => {
     const initTensorFlow = async () => {
       try {
+        // Expose bundled TensorFlow on window for code paths that expect window.tf.
+        if (!window.tf) {
+          window.tf = tf;
+        }
+
         // Wait for CDN script to load
         let attempts = 0;
         while (!window.tf && attempts < 50) {
@@ -5502,59 +5507,11 @@ function loadBlocksIntoWorkspace(blocks: any[]) {
       alert("Webcam access denied");
     }
   }
-  function stopWebcam() {
-    // Stop sprite / HTML video webcams
-    const videos = document.querySelectorAll("video");
-    videos.forEach(v => {
-      if (v?.srcObject) {
-        v.srcObject.getTracks().forEach(t => t.stop());
-        v.srcObject = null;
-      }
-    });
-
-    // Stop Teachable Machine webcam
-    if (tmWebcam) {
-      try {
-        tmWebcam.stop();
-        if (tmWebcam._animationId) {
-          cancelAnimationFrame(tmWebcam._animationId);
-        }
-      } catch (e) {
-        console.warn("TM webcam already stopped");
-      }
-      tmWebcam = null;
-    }
-
-    // Stop predictions
-    isPredicting = false;
-    if (predictionInterval) {
-      clearInterval(predictionInterval);
-      predictionInterval = null;
-    }
-    if (predictionAnimationId) {
-      cancelAnimationFrame(predictionAnimationId);
-      predictionAnimationId = null;
-    }
-
-    // Reset state flags
-    isModelReady = false;
-    isWebcamReady = false;
-    pendingPredictionConfig = null;
-
-    // Clear model and loaded image
-    tmModel = null;
-    tmLoadedImage = null;
-
-    // Remove prediction results
-    const resultDiv = document.getElementById("tm-result");
-    if (resultDiv) {
-      resultDiv.remove();
-    }
-  }
-
   let tmModel = null;
   let tmWebcam = null;
   let tmLoadedImage = null;
+  let tmClassNames: string[] = [];
+  let tmModelMode: "tmImage" | "tfjs" | null = null;
   let currentPrediction = null;
   let currentConfidence = 0;
   let predictionInterval = null;
@@ -5577,6 +5534,10 @@ function loadBlocksIntoWorkspace(blocks: any[]) {
         outputCallback("ðŸŽ¯ Auto-starting prediction...");
         predictFromWebcam(type, outputCallback, containerRef);
         pendingPredictionConfig = null; // Clear pending
+      } else if (isModelReady && tmModel && tmLoadedImage) {
+        outputCallback("Webcam not ready. Running prediction from loaded image.");
+        predictFromImage(type, outputCallback, containerRef);
+        pendingPredictionConfig = null;
       }
     } else if (src === "image") {
       if (isModelReady && tmModel && tmLoadedImage) {
@@ -5588,36 +5549,164 @@ function loadBlocksIntoWorkspace(blocks: any[]) {
   }
 
   async function loadTeachableModel(url, outputCallback) {
-    // Wait for library to load if not ready
-    if (!window.tmImage) {
-      outputCallback("⏳ Teachable Machine library loading... Please wait.");
+    const normalizeModelUrls = (rawUrl: string) => {
+      let input = (rawUrl || "").trim().replace(/^["']|["']$/g, "");
+      if (!input) {
+        return { modelURL: "", metadataURL: "" };
+      }
 
-      // Wait up to 10 seconds for library to load
+      if (!/^https?:\/\//i.test(input)) {
+        input = "https://" + input;
+      }
+
+      const lower = input.toLowerCase();
+      if (lower.endsWith("model.json")) {
+        return {
+          modelURL: input,
+          metadataURL: input.slice(0, -("model.json".length)) + "metadata.json",
+        };
+      }
+      if (lower.endsWith("metadata.json")) {
+        return {
+          modelURL: input.slice(0, -("metadata.json".length)) + "model.json",
+          metadataURL: input,
+        };
+      }
+
+      const base = input.endsWith("/") ? input : input + "/";
+      return {
+        modelURL: base + "model.json",
+        metadataURL: base + "metadata.json",
+      };
+    };
+
+    const loadScript = (src: string, forceReload = false): Promise<void> => {
+      return new Promise((resolve, reject) => {
+        const existing = document.querySelector(`script[src="${src}"]`) as HTMLScriptElement | null;
+        if (existing && !forceReload) {
+          if ((existing as any).dataset?.loaded === "true") {
+            resolve();
+            return;
+          }
+          existing.addEventListener("load", () => resolve(), { once: true });
+          existing.addEventListener("error", () => reject(new Error(`Failed to load ${src}`)), { once: true });
+          return;
+        }
+
+        const script = document.createElement("script");
+        script.src = forceReload ? `${src}${src.includes("?") ? "&" : "?"}t=${Date.now()}` : src;
+        script.async = true;
+        script.onload = () => {
+          (script as any).dataset.loaded = "true";
+          resolve();
+        };
+        script.onerror = () => reject(new Error(`Failed to load ${src}`));
+        document.head.appendChild(script);
+      });
+    };
+
+    const ensureTeachableReady = async () => {
+      if (typeof window === "undefined") return false;
+
+      const ensureCompatibleTfForTM = async () => {
+        const version = String(window.tf?.version_core || "");
+        // TM 0.8 models are commonly exported with very old tfjs-layers versions.
+        // Load a TFJS 1.x runtime for the TM browser runtime if needed.
+        if (version.startsWith("1.")) {
+          await window.tf?.ready?.();
+          return;
+        }
+        const tfCandidates = [
+          "https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@1.7.4/dist/tf.min.js",
+          "https://unpkg.com/@tensorflow/tfjs@1.7.4/dist/tf.min.js",
+        ];
+        for (const tfSrc of tfCandidates) {
+          try {
+            await loadScript(tfSrc, true);
+            if (String(window.tf?.version_core || "").startsWith("1.")) {
+              await window.tf?.ready?.();
+              return;
+            }
+          } catch {
+            // try next source
+          }
+        }
+      };
+      await ensureCompatibleTfForTM();
+
+      if (window.tmImage?.load) return true;
+
+      outputCallback("⏳ Loading Teachable Machine library...");
+      const tmScriptCandidates = [
+        "https://cdn.jsdelivr.net/npm/@teachablemachine/image@0.8/dist/teachablemachine-image.min.js",
+        "https://unpkg.com/@teachablemachine/image@0.8/dist/teachablemachine-image.min.js",
+        // Legacy filename fallback kept for compatibility with older mirrors.
+        "https://cdn.jsdelivr.net/npm/@teachablemachine/image@0.8/dist/tf-teachablemachine-image.min.js",
+        "https://unpkg.com/@teachablemachine/image@0.8/dist/tf-teachablemachine-image.min.js",
+      ];
+
+      let loaded = false;
+      for (const src of tmScriptCandidates) {
+        try {
+          await loadScript(src, true);
+          loaded = true;
+          break;
+        } catch {
+          // try next candidate
+        }
+      }
+      if (!loaded) return false;
+
       let attempts = 0;
-      const maxAttempts = 20; // 20 attempts * 500ms = 10 seconds
-
-      while (!window.tmImage && attempts < maxAttempts) {
-        await new Promise(resolve => setTimeout(resolve, 500));
+      while (!window.tmImage?.load && attempts < 20) {
+        await new Promise(resolve => setTimeout(resolve, 150));
         attempts++;
       }
+      return !!window.tmImage?.load;
+    };
 
-      if (!window.tmImage) {
-        const msg = "❌ Teachable Machine library failed to load. Please refresh the page.";
-        alert(msg);
-        outputCallback(msg);
-        return;
-      }
-
-      outputCallback("✅ Library loaded successfully!");
+    const ready = await ensureTeachableReady();
+    if (!ready) {
+      outputCallback("⚠️ Teachable Machine library failed to load. Continuing with TensorFlow.js fallback.");
     }
 
     try {
       isModelReady = false;
-      outputCallback("🔄 Loading model from: " + url);
-      const modelURL = url + "model.json";
-      const metadataURL = url + "metadata.json";
+      tmModelMode = null;
+      tmClassNames = [];
+      const { modelURL, metadataURL } = normalizeModelUrls(url);
+      if (!modelURL || !metadataURL) {
+        outputCallback("❌ Invalid model URL.");
+        return;
+      }
 
-      tmModel = await window.tmImage.load(modelURL, metadataURL);
+      outputCallback("🔄 Loading model from: " + modelURL);
+
+      if (ready && window.tmImage?.load) {
+        try {
+          tmModel = await window.tmImage.load(modelURL, metadataURL);
+          tmModelMode = "tmImage";
+        } catch (tmErr) {
+          outputCallback("TM runtime load failed, trying TensorFlow fallback...");
+          const metadataRes = await fetch(metadataURL);
+          if (!metadataRes.ok) {
+            throw new Error(`Failed to load metadata.json (${metadataRes.status})`);
+          }
+          const metadata = await metadataRes.json();
+          tmClassNames = Array.isArray(metadata?.labels) ? metadata.labels : [];
+          tmModel = await tf.loadLayersModel(modelURL);
+          tmModelMode = "tfjs";
+        }
+      } else {
+        const metadataRes = await fetch(metadataURL);
+        if (!metadataRes.ok) {
+          throw new Error(`Failed to load metadata.json (${metadataRes.status})`);
+        }
+        const metadata = await metadataRes.json();
+        tmClassNames = Array.isArray(metadata?.labels) ? metadata.labels : [];
+        tmModel = await tf.loadLayersModel(modelURL);
+        tmModelMode = "tfjs";
+      }
       if (typeof window !== 'undefined') window.tmModel = tmModel;
       isModelReady = true;
       const successMsg = "✅ Model loaded successfully!";
@@ -5780,11 +5869,227 @@ function loadBlocksIntoWorkspace(blocks: any[]) {
       input.click();
     });
   }
+  function showTeachableImageSourcePicker(containerRef, outputCallback) {
+    if (typeof window === "undefined") return;
+
+    const existing = document.getElementById("tm-image-picker-overlay");
+    if (existing) existing.remove();
+
+    const overlay = document.createElement("div");
+    overlay.id = "tm-image-picker-overlay";
+    overlay.style.cssText = `
+      position: fixed;
+      inset: 0;
+      z-index: 100000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(15, 23, 42, 0.56);
+      padding: 16px;
+    `;
+
+    const modal = document.createElement("div");
+    modal.style.cssText = `
+      width: min(90vw, 560px);
+      max-height: 90vh;
+      overflow: auto;
+      border-radius: 14px;
+      background: #ffffff;
+      border: 1px solid #e5e7eb;
+      box-shadow: 0 20px 45px rgba(0, 0, 0, 0.28);
+      padding: 18px;
+    `;
+
+    const title = document.createElement("div");
+    title.textContent = "Select image source";
+    title.style.cssText = "font-size:18px;font-weight:700;color:#111827;margin-bottom:8px;";
+    modal.appendChild(title);
+
+    const subtitle = document.createElement("div");
+    subtitle.textContent = "Choose from device or capture photo, then click Use This Image.";
+    subtitle.style.cssText = "font-size:13px;color:#4b5563;margin-bottom:14px;";
+    modal.appendChild(subtitle);
+
+    const previewWrap = document.createElement("div");
+    previewWrap.style.cssText = "min-height:120px;display:flex;align-items:center;justify-content:center;background:#f8fafc;border:1px dashed #cbd5e1;border-radius:10px;padding:10px;";
+    previewWrap.textContent = "No image selected yet.";
+    modal.appendChild(previewWrap);
+
+    let selectedDataUrl = "";
+    let stream: MediaStream | null = null;
+    let captureRow: HTMLDivElement | null = null;
+
+    const stopStream = () => {
+      if (!stream) return;
+      stream.getTracks().forEach((track) => track.stop());
+      stream = null;
+    };
+
+    const closeModal = () => {
+      stopStream();
+      overlay.remove();
+    };
+
+    const showPreview = (dataUrl: string) => {
+      selectedDataUrl = dataUrl;
+      previewWrap.innerHTML = "";
+      const img = document.createElement("img");
+      img.src = dataUrl;
+      img.style.cssText = "max-width:100%;max-height:340px;border-radius:10px;display:block;";
+      previewWrap.appendChild(img);
+    };
+
+    const baseBtn = "padding:10px 14px;border-radius:8px;border:none;font-weight:600;cursor:pointer;";
+    const actionRow = document.createElement("div");
+    actionRow.style.cssText = "display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:14px;";
+
+    const deviceBtn = document.createElement("button");
+    deviceBtn.textContent = "Choose from Device";
+    deviceBtn.style.cssText = `${baseBtn}background:#16a34a;color:#fff;`;
+
+    const cameraBtn = document.createElement("button");
+    cameraBtn.textContent = "Use Camera";
+    cameraBtn.style.cssText = `${baseBtn}background:#0284c7;color:#fff;`;
+
+    const useBtn = document.createElement("button");
+    useBtn.textContent = "Use This Image";
+    useBtn.style.cssText = `${baseBtn}background:#7c3aed;color:#fff;`;
+
+    const cancelBtn = document.createElement("button");
+    cancelBtn.textContent = "Cancel";
+    cancelBtn.style.cssText = `${baseBtn}background:#f3f4f6;color:#111827;border:1px solid #d1d5db;`;
+
+    const openDevicePicker = () => {
+      const input = document.createElement("input");
+      input.type = "file";
+      input.accept = "image/*";
+      input.onchange = (e) => {
+        const file = (e.target as HTMLInputElement).files?.[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          const data = String(event.target?.result || "");
+          if (!data) return;
+          stopStream();
+          if (captureRow) {
+            captureRow.remove();
+            captureRow = null;
+          }
+          showPreview(data);
+        };
+        reader.readAsDataURL(file);
+      };
+      input.click();
+    };
+
+    const openCameraPreview = async () => {
+      stopStream();
+      if (captureRow) {
+        captureRow.remove();
+        captureRow = null;
+      }
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: "environment" },
+          audio: false,
+        });
+      } catch (error: any) {
+        outputCallback("Camera access failed: " + (error?.message || "permission denied"));
+        return;
+      }
+
+      previewWrap.innerHTML = "";
+      const video = document.createElement("video");
+      video.autoplay = true;
+      video.playsInline = true;
+      video.srcObject = stream;
+      video.style.cssText = "max-width:100%;max-height:340px;border-radius:10px;display:block;background:#000;";
+      previewWrap.appendChild(video);
+
+      captureRow = document.createElement("div");
+      captureRow.style.cssText = "display:flex;justify-content:center;margin-top:10px;";
+      const captureBtn = document.createElement("button");
+      captureBtn.textContent = "Capture Photo";
+      captureBtn.style.cssText = `${baseBtn}background:#2563eb;color:#fff;`;
+      captureBtn.onclick = () => {
+        const canvas = document.createElement("canvas");
+        const w = video.videoWidth || 400;
+        const h = video.videoHeight || 400;
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) return;
+        ctx.drawImage(video, 0, 0, w, h);
+        const dataUrl = canvas.toDataURL("image/png");
+        stopStream();
+        if (captureRow) {
+          captureRow.remove();
+          captureRow = null;
+        }
+        showPreview(dataUrl);
+      };
+      captureRow.appendChild(captureBtn);
+      modal.appendChild(captureRow);
+    };
+
+    deviceBtn.onclick = openDevicePicker;
+    cameraBtn.onclick = openCameraPreview;
+    cancelBtn.onclick = closeModal;
+    useBtn.onclick = () => {
+      if (!selectedDataUrl) {
+        outputCallback("Please choose or capture an image first.");
+        return;
+      }
+
+      const img = new Image();
+      img.onload = () => {
+        tmLoadedImage = img;
+        if (typeof window !== "undefined") window.tmLoadedImage = img;
+
+        if (containerRef.current) {
+          containerRef.current.innerHTML = "";
+          const displayImg = document.createElement("img");
+          displayImg.src = selectedDataUrl;
+          displayImg.style.width = "100%";
+          displayImg.style.maxWidth = "420px";
+          displayImg.style.borderRadius = "12px";
+          displayImg.style.display = "block";
+          displayImg.style.margin = "auto";
+          containerRef.current.appendChild(displayImg);
+        }
+
+        outputCallback("Image loaded successfully!");
+        closeModal();
+        checkAndStartPrediction();
+      };
+      img.src = selectedDataUrl;
+    };
+
+    actionRow.appendChild(deviceBtn);
+    actionRow.appendChild(cameraBtn);
+    actionRow.appendChild(useBtn);
+    actionRow.appendChild(cancelBtn);
+    modal.appendChild(actionRow);
+
+    overlay.onclick = (e) => {
+      if (e.target === overlay) closeModal();
+    };
+
+    overlay.appendChild(modal);
+    document.body.appendChild(overlay);
+    outputCallback("Select image source popup opened.");
+  }
+
   let isPredicting = false;
 
   async function predictFromWebcam(type, outputCallback, containerRef) {
     // If not ready yet, save config for auto-start
     if (!tmModel || !tmWebcam || !isModelReady || !isWebcamReady) {
+      if (tmModel && isModelReady && tmLoadedImage) {
+        outputCallback("Webcam not ready. Using loaded image for prediction.");
+        await predictFromImage(type, outputCallback, containerRef);
+        return;
+      }
       outputCallback("â³ Waiting for model and webcam to be ready...");
       pendingPredictionConfig = { type, src: "webcam", outputCallback, containerRef };
       checkAndStartPrediction(); // Try immediately in case it just became ready
@@ -5811,7 +6116,7 @@ function loadBlocksIntoWorkspace(blocks: any[]) {
 
       try {
         tmWebcam.update();
-        const predictions = await tmModel.predict(tmWebcam.canvas);
+        const predictions = await predictTeachableFromSource(tmWebcam.canvas);
         showPredictionResult(predictions, type, outputCallback, containerRef);
         predictionAnimationId = requestAnimationFrame(loop);
       } catch (error) {
@@ -5835,10 +6140,7 @@ function loadBlocksIntoWorkspace(blocks: any[]) {
     try {
       outputCallback(`🔄 Predicting ${type}...`);
 
-      const predictions = await tmModel.predict(tmLoadedImage);
-
-      // Clear canvas first
-      containerRef.current.innerHTML = "";
+      const predictions = await predictTeachableFromSource(tmLoadedImage);
 
       showPredictionResult(predictions, type, outputCallback, containerRef);
 
@@ -5865,20 +6167,8 @@ function loadBlocksIntoWorkspace(blocks: any[]) {
     currentPrediction = top.className;
     currentConfidence = top.probability;
 
-    // Check if we already have a result displayed - prevent duplicate clears
+    // Update/append prediction card without wiping current media preview.
     const existingResult = containerRef.current.querySelector("#tm-result");
-    if (existingResult) {
-      // Update existing result instead of clearing
-      console.log("[showPredictionResult] Updating existing result");
-    } else {
-      // Clear container only if no result exists
-      // Check if we already have a result displayed - prevent duplicate clears
-      const existingResult = containerRef.current.querySelector("#tm-result");
-      if (!existingResult) {
-        // Clear container only if no result exists
-        containerRef.current.innerHTML = "";
-      }
-    }
 
     // Create result container
     const resultDiv = document.createElement("div");
@@ -7059,12 +7349,101 @@ function stopFingerDetection(canvasContainerRef, outputCallback) {
     }
   }
   function stopWebcam() {
+    // Stop sprite / HTML video webcams
     const videos = document.querySelectorAll("video");
     videos.forEach(v => {
-      if (v.srcObject) {
+      if (v?.srcObject) {
         v.srcObject.getTracks().forEach(t => t.stop());
+        v.srcObject = null;
       }
     });
+
+    // Stop Teachable Machine webcam
+    if (tmWebcam) {
+      try {
+        tmWebcam.stop();
+        if (tmWebcam._animationId) {
+          cancelAnimationFrame(tmWebcam._animationId);
+        }
+      } catch (e) {
+        console.warn("TM webcam already stopped");
+      }
+      tmWebcam = null;
+    }
+
+    // Stop predictions
+    isPredicting = false;
+    if (predictionInterval) {
+      clearInterval(predictionInterval);
+      predictionInterval = null;
+    }
+    if (predictionAnimationId) {
+      cancelAnimationFrame(predictionAnimationId);
+      predictionAnimationId = null;
+    }
+
+    // Reset state flags
+    isModelReady = false;
+    isWebcamReady = false;
+    pendingPredictionConfig = null;
+
+    // Clear model and loaded image
+    tmModel = null;
+    tmLoadedImage = null;
+
+    // Remove prediction results
+    const resultDiv = document.getElementById("tm-result");
+    if (resultDiv) {
+      resultDiv.remove();
+    }
+    const pickerOverlay = document.getElementById("tm-image-picker-overlay");
+    if (pickerOverlay) {
+      pickerOverlay.remove();
+    }
+  }
+
+  async function predictTeachableFromSource(source: HTMLImageElement | HTMLCanvasElement) {
+    if (!tmModel || !tmModelMode) {
+      throw new Error("Model not ready");
+    }
+
+    if (tmModelMode === "tmImage") {
+      return tmModel.predict(source);
+    }
+
+    const rawScores = tf.tidy(() => {
+      const inputShape = tmModel.inputs?.[0]?.shape || [null, 224, 224, 3];
+      const targetH = Number(inputShape[1]) || 224;
+      const targetW = Number(inputShape[2]) || 224;
+
+      let tensor = tf.browser.fromPixels(source).toFloat();
+      tensor = tf.image.resizeBilinear(tensor, [targetH, targetW]);
+      tensor = tensor.div(127.5).sub(1);
+
+      const batched = tensor.expandDims(0);
+      const output = tmModel.predict(batched) as tf.Tensor | tf.Tensor[];
+      const primary = Array.isArray(output) ? output[0] : output;
+      return Array.from(primary.dataSync() as Float32Array);
+    });
+
+    let probs = rawScores.map((v) => Number(v));
+    const sum = probs.reduce((a, b) => a + b, 0);
+    const alreadyProbabilities =
+      sum > 0.99 &&
+      sum < 1.01 &&
+      probs.every((v) => Number.isFinite(v) && v >= 0 && v <= 1);
+
+    if (!alreadyProbabilities) {
+      const max = Math.max(...probs);
+      const exps = probs.map((v) => Math.exp(v - max));
+      const expSum = exps.reduce((a, b) => a + b, 0) || 1;
+      probs = exps.map((v) => v / expSum);
+    }
+
+    return probs.map((probability, i) => ({
+      className: tmClassNames[i] ?? `Class ${i + 1}`,
+      probability,
+    }));
   }
 
   function injectUploadedFiles(code) {
@@ -7588,53 +7967,10 @@ file_handle = None
           return;
         }
         if (cleanText === "__TEACHABLE_LOAD_IMAGE__") {
-          if (tmLoadedImage) {
-            setOutput(prev => prev + "\n✅ Image already loaded!");
-          } else {
-            setOutput(prev => prev + "\n⚠️ Image loading required!\n📋 Please click the 'Load Image' button that appears below, then click Run again.");
-            // Create visible upload button
-            if (canvasContainerRef.current) {
-              const uploadBtn = document.createElement("button");
-              uploadBtn.textContent = "📷 Click Here to Load Image";
-              uploadBtn.style.cssText = `
-        padding: 20px 40px;
-        font-size: 18px;
-        font-weight: bold;
-        background: #FF9800;
-        color: white;
-        border: none;
-        border-radius: 8px;
-        cursor: pointer;
-        margin: 20px auto;
-        display: block;
-      `;
-              uploadBtn.onclick = () => {
-                const input = document.createElement("input");
-                input.type = "file";
-                input.accept = "image/*";
-                input.onchange = (e) => {
-                  const file = e.target.files[0];
-                  if (!file) return;
-                  const reader = new FileReader();
-                  reader.onload = () => {
-                    const img = new Image();
-                    img.src = reader.result;
-                    img.onload = () => {
-                      tmLoadedImage = img;
-                      if (typeof window !== 'undefined') window.tmLoadedImage = img;
-                      setOutput(prev => prev + "\n✅ Image loaded! Click Run again.");
-                      uploadBtn.remove();
-                      checkAndStartPrediction();
-                    };
-                  };
-                  reader.readAsDataURL(file);
-                };
-                input.click();
-              };
-              canvasContainerRef.current.innerHTML = "";
-              canvasContainerRef.current.appendChild(uploadBtn);
-            }
-          }
+          showTeachableImageSourcePicker(
+            canvasContainerRef,
+            (msg) => setOutput(prev => prev + "\n" + msg)
+          );
           return;
         }
         if (cleanText.startsWith("__TEACHABLE_SHOW__:")) {
@@ -8290,7 +8626,7 @@ plt = _FakePlt()
     <>
 
 <Script
-  src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@0.8/dist/tf-teachablemachine-image.min.js"
+  src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@0.8/dist/teachablemachine-image.min.js"
   strategy="beforeInteractive"
 />
 
@@ -8650,3 +8986,5 @@ plt = _FakePlt()
 }
 
 export default AICodingPage;
+
+

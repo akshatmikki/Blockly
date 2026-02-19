@@ -4460,12 +4460,28 @@ function createBlocklyBlock(workspace, row) {
     workspaceRef.current = workspace;
     setWorkspaceReady(true);
     
+    const lockFlyoutScale = () => {
+      const flyout = (workspace as any).getFlyout?.();
+      const flyoutWorkspace = flyout?.getWorkspace?.();
+      if (!flyoutWorkspace) return;
+
+      // Keep toolbox/flyout blocks visually fixed, independent of main workspace zoom.
+      if (typeof flyoutWorkspace.setScale === 'function') {
+        flyoutWorkspace.setScale(1);
+      } else {
+        flyoutWorkspace.scale = 1;
+      }
+
+      flyoutWorkspace.resizeContents?.();
+      flyoutWorkspace.render?.();
+    };
+
     // Listen for zoom changes and keep flyout blocks at fixed size
     workspace.addChangeListener((e: any) => {
       // Handle zoom events
       if (e.type === Blockly.Events.VIEWPORT_CHANGE) {
-        // Enforce fixed flyout size whenever viewport changes (zoom/pan)
-        enforceFlyoutFixedSize();
+        // Keep flyout size fixed whenever viewport changes (zoom/pan)
+        lockFlyoutScale();
       }
       
       if (e.type === Blockly.Events.TOOLBOX_ITEM_SELECT) {
@@ -4503,7 +4519,7 @@ function createBlocklyBlock(workspace, row) {
           });
           
           // 6. Ensure flyout blocks stay at fixed size
-          enforceFlyoutFixedSize();
+          lockFlyoutScale();
 
           // 7. Snap back to origin
           workspace.scroll(0, 0);
@@ -4534,26 +4550,9 @@ function createBlocklyBlock(workspace, row) {
       });
     };
 
-    // Function to enforce fixed flyout block sizes
-    const enforceFlyoutFixedSize = () => {
-      const flyout = blocklyDiv.current?.querySelector('.blocklyFlyout');
-      if (!flyout || flyout.classList.contains('blocklyHidden')) return;
-      
-      // Force all transform groups in flyout to scale(1)
-      const flyoutSvgGroups = flyout.querySelectorAll('svg.blocklySvg > g');
-      flyoutSvgGroups.forEach((group) => {
-        (group as SVGElement).setAttribute('transform', 'scale(1)');
-      });
-      
-      // Also fix the canvas transform
-      const flyoutCanvas = flyout.querySelector('.blocklyBlockCanvas');
-      if (flyoutCanvas) {
-        (flyoutCanvas as SVGElement).style.transform = 'scale(1)';
-      }
-    };
-
     let flyoutObserver: MutationObserver | null = null;
     let containerObserver: MutationObserver | null = null;
+    let detachToolboxGuards: (() => void) | null = null;
 
     const attachFlyoutObserver = () => {
       const flyout = blocklyDiv.current?.querySelector('.blocklyFlyout');
@@ -4565,7 +4564,7 @@ function createBlocklyBlock(workspace, row) {
 
       flyoutObserver = new MutationObserver(() => {
         updateFlyoutScrollbars();
-        enforceFlyoutFixedSize(); // Keep blocks at fixed size
+        lockFlyoutScale(); // Keep blocks at fixed size
       });
 
       flyoutObserver.observe(flyout, {
@@ -4580,29 +4579,49 @@ function createBlocklyBlock(workspace, row) {
       const flyout = blocklyDiv.current?.querySelector('.blocklyFlyout');
       const toolboxDiv = blocklyDiv.current?.querySelector('.blocklyToolboxDiv');
 
+      const onWheel = (e: Event) => {
+        e.preventDefault();
+        e.stopPropagation();
+      };
+
+      const onTouchMove = (e: Event) => {
+        e.stopPropagation();
+      };
+
       if (flyout) {
-        flyout.addEventListener('wheel', (e) => e.stopPropagation(), { passive: true });
-        flyout.addEventListener('touchmove', (e) => e.stopPropagation(), { passive: true });
+        flyout.addEventListener('wheel', onWheel, { passive: false });
+        flyout.addEventListener('touchmove', onTouchMove, { passive: true });
       }
 
       if (toolboxDiv) {
-        toolboxDiv.addEventListener('wheel', (e) => e.stopPropagation(), { passive: true });
-        toolboxDiv.addEventListener('touchmove', (e) => e.stopPropagation(), { passive: true });
+        toolboxDiv.addEventListener('wheel', onWheel, { passive: false });
+        toolboxDiv.addEventListener('touchmove', onTouchMove, { passive: true });
       }
+
+      detachToolboxGuards = () => {
+        if (flyout) {
+          flyout.removeEventListener('wheel', onWheel as EventListener);
+          flyout.removeEventListener('touchmove', onTouchMove as EventListener);
+        }
+        if (toolboxDiv) {
+          toolboxDiv.removeEventListener('wheel', onWheel as EventListener);
+          toolboxDiv.removeEventListener('touchmove', onTouchMove as EventListener);
+        }
+      };
     };
 
     setTimeout(() => {
       preventToolboxScroll();
       attachFlyoutObserver();
       updateFlyoutScrollbars();
-      enforceFlyoutFixedSize(); // Initial enforcement
+      lockFlyoutScale(); // Initial enforcement
     }, 100);
 
     if (blocklyDiv.current) {
       containerObserver = new MutationObserver(() => {
         attachFlyoutObserver();
         updateFlyoutScrollbars();
-        enforceFlyoutFixedSize();
+        lockFlyoutScale();
       });
 
       containerObserver.observe(blocklyDiv.current, {
@@ -4616,7 +4635,7 @@ function createBlocklyBlock(workspace, row) {
         setTimeout(() => {
           preventToolboxScroll();
           updateFlyoutScrollbars();
-          enforceFlyoutFixedSize(); // Enforce on category change
+          lockFlyoutScale(); // Enforce on category change
         }, 50);
       }
     });
@@ -4652,6 +4671,9 @@ function createBlocklyBlock(workspace, row) {
       }
       if (containerObserver) {
         containerObserver.disconnect();
+      }
+      if (detachToolboxGuards) {
+        detachToolboxGuards();
       }
       workspace.dispose();
       setWorkspaceReady(false); // ✅ ADD THIS
