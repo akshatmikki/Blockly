@@ -14,16 +14,22 @@ const turtleEngineRef = { current: null as any };
 
 
 const variablesRef = { current: {} as Record<string, any> }
+
 class CleanNumberInput extends Blockly.FieldNumber {
   showEditor_() {
-    // Hide SVG text
-    this.textElement_.style.display = 'none';
+    if (this.textElement_) {
+      this.textElement_.style.display = 'none';
+    }
 
     super.showEditor_();
 
-    const oldDispose = this.htmlInput_.onblur;
-    this.htmlInput_.onblur = (e) => {
-      this.textElement_.style.display = '';
+    const htmlInput = this.htmlInput_;
+    if (!htmlInput) return;
+    const oldDispose = htmlInput.onblur;
+    htmlInput.onblur = (e) => {
+      if (this.textElement_) {
+        this.textElement_.style.display = '';
+      }
       oldDispose?.(e);
     };
   }
@@ -31,15 +37,19 @@ class CleanNumberInput extends Blockly.FieldNumber {
 
 class CleanTextInput extends Blockly.FieldTextInput {
   showEditor_() {
-    // Hide SVG text
-    this.textElement_.style.display = 'none';
+    if (this.textElement_) {
+      this.textElement_.style.display = 'none';
+    }
 
     super.showEditor_();
 
-    // When editing ends, show SVG text again
-    const oldDispose = this.htmlInput_.onblur;
-    this.htmlInput_.onblur = (e) => {
-      this.textElement_.style.display = '';
+    const htmlInput = this.htmlInput_;
+    if (!htmlInput) return;
+    const oldDispose = htmlInput.onblur;
+    htmlInput.onblur = (e) => {
+      if (this.textElement_) {
+        this.textElement_.style.display = '';
+      }
       oldDispose?.(e);
     };
   }
@@ -619,7 +629,7 @@ const defineBlocks = () => {
     init: function () {
       this.appendDummyInput()
         .appendField("define")
-        .appendField(new CleanTextInput("do_something"), "NAME");
+        .appendField(new Blockly.FieldTextInput("do_something"), "NAME");
 
       this.appendStatementInput("STACK");
 
@@ -634,7 +644,7 @@ const defineBlocks = () => {
     init: function () {
       this.appendDummyInput()
         .appendField("define")
-        .appendField(new CleanTextInput("do_something"), "NAME");
+        .appendField(new Blockly.FieldTextInput("do_something"), "NAME");
 
       this.appendStatementInput("STACK");
 
@@ -2123,7 +2133,7 @@ Blockly.Blocks["turtle_fill_color"] = {
   Blockly.Blocks['number_literal'] = {
     init: function () {
       this.appendDummyInput()
-        .appendField(new Blockly.FieldNumber(0, -Infinity, Infinity, 1), 'VALUE');
+        .appendField(new CleanNumberInput(0, -Infinity, Infinity, 1), 'VALUE');
 
       this.setOutput(true, 'Number');
       this.setColour(120);
@@ -4450,6 +4460,29 @@ function createBlocklyBlock(workspace, row) {
         visibility: hidden !important;
         opacity: 0 !important;
       }
+
+      /* Keep Blockly HTML editors interactive (text/number field input) */
+      .blocklyWidgetDiv, .blocklyDropDownDiv {
+        pointer-events: auto !important;
+      }
+
+      .blocklySvg {
+        pointer-events: auto !important;
+      }
+
+      .blocklyBlockCanvas, .blocklyFlyout, .blocklyScrollbarHandle,
+      .blocklyZoom, .blocklyTrash, .blocklyToolboxDiv {
+        pointer-events: auto !important;
+      }
+
+      .blocklyFlyoutScrollbar {
+        pointer-events: auto !important;
+      }
+
+      .blocklyFlyout {
+        touch-action: auto !important;
+        overscroll-behavior: none !important;
+      }
       
       .blocklyFlyout .blocklyText {
         font-size: 12pt !important;
@@ -4460,10 +4493,15 @@ function createBlocklyBlock(workspace, row) {
     workspaceRef.current = workspace;
     setWorkspaceReady(true);
     
+    const isFieldEditorOpen = () => Boolean((Blockly as any).WidgetDiv?.isVisible?.());
+
     const lockFlyoutScale = () => {
+      if (isFieldEditorOpen()) return;
       const flyout = (workspace as any).getFlyout?.();
       const flyoutWorkspace = flyout?.getWorkspace?.();
       if (!flyoutWorkspace) return;
+      const currentScale = typeof flyoutWorkspace.scale === 'number' ? flyoutWorkspace.scale : 1;
+      if (Math.abs(currentScale - 1) < 0.001) return;
 
       // Keep toolbox/flyout blocks visually fixed, independent of main workspace zoom.
       if (typeof flyoutWorkspace.setScale === 'function') {
@@ -4473,7 +4511,6 @@ function createBlocklyBlock(workspace, row) {
       }
 
       flyoutWorkspace.resizeContents?.();
-      flyoutWorkspace.render?.();
     };
 
     // Listen for zoom changes and keep flyout blocks at fixed size
@@ -4552,7 +4589,6 @@ function createBlocklyBlock(workspace, row) {
 
     let flyoutObserver: MutationObserver | null = null;
     let containerObserver: MutationObserver | null = null;
-    let detachToolboxGuards: (() => void) | null = null;
 
     const attachFlyoutObserver = () => {
       const flyout = blocklyDiv.current?.querySelector('.blocklyFlyout');
@@ -4576,38 +4612,13 @@ function createBlocklyBlock(workspace, row) {
     };
 
     const preventToolboxScroll = () => {
-      const flyout = blocklyDiv.current?.querySelector('.blocklyFlyout');
-      const toolboxDiv = blocklyDiv.current?.querySelector('.blocklyToolboxDiv');
-
-      const onWheel = (e: Event) => {
-        e.preventDefault();
-        e.stopPropagation();
-      };
-
-      const onTouchMove = (e: Event) => {
-        e.stopPropagation();
-      };
-
-      if (flyout) {
-        flyout.addEventListener('wheel', onWheel, { passive: false });
-        flyout.addEventListener('touchmove', onTouchMove, { passive: true });
-      }
+      const toolboxDiv = blocklyDiv.current?.querySelector('.blocklyToolboxDiv') as HTMLElement;
 
       if (toolboxDiv) {
-        toolboxDiv.addEventListener('wheel', onWheel, { passive: false });
-        toolboxDiv.addEventListener('touchmove', onTouchMove, { passive: true });
+        toolboxDiv.addEventListener('wheel', (e) => {
+          e.stopPropagation();
+        }, { passive: false });
       }
-
-      detachToolboxGuards = () => {
-        if (flyout) {
-          flyout.removeEventListener('wheel', onWheel as EventListener);
-          flyout.removeEventListener('touchmove', onTouchMove as EventListener);
-        }
-        if (toolboxDiv) {
-          toolboxDiv.removeEventListener('wheel', onWheel as EventListener);
-          toolboxDiv.removeEventListener('touchmove', onTouchMove as EventListener);
-        }
-      };
     };
 
     setTimeout(() => {
@@ -4671,9 +4682,6 @@ function createBlocklyBlock(workspace, row) {
       }
       if (containerObserver) {
         containerObserver.disconnect();
-      }
-      if (detachToolboxGuards) {
-        detachToolboxGuards();
       }
       workspace.dispose();
       setWorkspaceReady(false); // ✅ ADD THIS
