@@ -5137,15 +5137,11 @@ const usesTurtle = ws
 
   canvasContainerRef.current.appendChild(canvas);
 
-  // ✅ Sync real resolution AFTER append
+  // Sync drawing resolution AFTER append.
+  // Keep the internal size aligned with visible size so turtle starts centered.
   const rect = canvas.getBoundingClientRect();
-  const dpr = window.devicePixelRatio || 1;
-
-  canvas.width = rect.width * dpr;
-  canvas.height = rect.height * dpr;
-
-  const ctx = canvas.getContext("2d");
-  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  canvas.width = Math.max(1, Math.floor(rect.width));
+  canvas.height = Math.max(1, Math.floor(rect.height));
 }
 
 
@@ -5182,17 +5178,21 @@ const usesTurtle = ws
           return; // ⛔ stop further processing
         }
         if (text.startsWith("__PYGAL_RENDER__")) {
-          const raw = text.replace("__PYGAL_RENDER__", "").trim();
-          const [type, seriesStr, xlabelsStr, titleStr] = raw.split("|");
+          try {
+            const raw = text.replace("__PYGAL_RENDER__", "").trim();
+            const [type, seriesStr, xlabelsStr, titleStr] = raw.split("|");
 
-          const chart = {
-            type,
-            series: eval(seriesStr),
-            x_labels: eval(xlabelsStr),
-            title: titleStr || ""
-          };
+            const chart = {
+              type,
+              series: eval(seriesStr),
+              xlabels: eval(xlabelsStr),
+              title: titleStr || ""
+            };
 
-          renderPygalChart(chart);
+            renderPygalChart(chart);
+          } catch (e) {
+            console.error("Pygal parse error:", e, text);
+          }
           return;
         }
         /* =========================
