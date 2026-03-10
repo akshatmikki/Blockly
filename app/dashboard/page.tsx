@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/button";
 const modules = [
   { title: "Basic\nCoding", description: "Let's learn the basics of Python.", color: "bg-red-800", textColor: "text-black", href: "/workspace/basic-coding" },
   { title: "AI\nCoding", description: "Unlock ML & AI.", color: "bg-purple-700", textColor: "text-white", href: "/workspace/ai-coding" },
+  { title: "Micro:bit\nMakeCode", description: "Build and flash micro:bit projects.", color: "bg-cyan-700", textColor: "text-white", href: "/workspace/makecode" },
+  { title: "PXT\nBlocks", description: "Create projects with custom PXT blocks.", color: "bg-teal-700", textColor: "text-white", href: "/workspace/blockly-editor" },
   { title: "Tinker Orbits\nCoding", description: "Explore technology.", color: "bg-amber-800", textColor: "text-white", href: "/workspace/tinker-orbits" },
   { title: "STEMBOT\nCoding", description: "NLP & ML.", color: "bg-blue-600", textColor: "text-white", href: "/workspace/stembot" },
   { title: "STEM\nLIGHT", description: "STEM concepts.", color: "bg-indigo-900", textColor: "text-white", href: "/workspace/stem-light" },
@@ -146,13 +148,15 @@ export default function DashboardPage() {
     setProjectName("");
     setIsCreatingNewProject(false);
 
-    router.push(`${selectedModule.href}?projectId=${data.projectId}`);
+    const nextUrl = data?.projectId ? `${selectedModule.href}?projectId=${data.projectId}` : selectedModule.href;
+    router.push(nextUrl);
   };
 
   /* ---------- SELECT PROJECT ---------- */
   const openProject = (projectId: number) => {
     setShowModal(false);
-    router.push(`${selectedModule.href}?projectId=${projectId}`);
+    const nextUrl = projectId ? `${selectedModule.href}?projectId=${projectId}` : selectedModule.href;
+    router.push(nextUrl);
   };
 
   return (
