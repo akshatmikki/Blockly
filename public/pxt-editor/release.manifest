@@ -1,0 +1,90 @@
+CACHE MANIFEST
+
+CACHE:
+/pxt-editor/semantic.js
+/pxt-editor/main.js
+/pxt-editor/pxtapp.js
+/pxt-editor/typescript.js
+/pxt-editor/marked/marked.min.js
+/pxt-editor/highlight.js/highlight.pack.js
+/pxt-editor/jquery.js
+/pxt-editor/pxtlib.js
+/pxt-editor/pxtcompiler.js
+/pxt-editor/pxtpy.js
+/pxt-editor/pxteditor.js
+/pxt-editor/pxtsim.js
+/pxt-editor/pxtembed.js
+/pxt-editor/pxtworker.js
+/pxt-editor/pxtweb.js
+/pxt-editor/blockly.css
+/pxt-editor/semantic.css
+/pxt-editor/rtlsemantic.css
+
+
+/pxt-editor/editor.js
+/pxt-editor/fieldeditors.js
+
+# blockly
+/pxt-editor/blockly/media/sprites.png
+/pxt-editor/blockly/media/click.mp3
+/pxt-editor/blockly/media/disconnect.wav
+/pxt-editor/blockly/media/delete.mp3
+
+# monaco; keep in sync with webapp/public/index.html
+/pxt-editor/vs/loader.js
+/pxt-editor/vs/base/worker/workerMain.js
+/pxt-editor/vs/basic-languages/bat/bat.js
+/pxt-editor/vs/basic-languages/cpp/cpp.js
+/pxt-editor/vs/basic-languages/python/python.js
+/pxt-editor/vs/basic-languages/typescript/typescript.js
+/pxt-editor/vs/basic-languages/markdown/markdown.js
+/pxt-editor/vs/editor/editor.main.css
+/pxt-editor/vs/editor/editor.main.js
+/pxt-editor/vs/editor/editor.main.nls.js
+/pxt-editor/vs/language/json/jsonMode.js
+/pxt-editor/vs/language/json/jsonWorker.js
+/pxt-editor/vs/language/typescript/tsMode.js
+/pxt-editor/vs/language/typescript/tsWorker.js
+
+# charts
+/pxt-editor/smoothie/smoothie_compressed.js
+/pxt-editor/images/Bars_black.gif
+
+# gifjs
+/pxt-editor/gifjs/gif.js
+
+# ai
+/pxt-editor/ai.0.js
+
+/pxt-editor/worker.js
+/pxt-editor/monacoworker.js
+
+# ver Tue Mar 10 2026 10:59:43 GMT+0530 (India Standard Time)
+
+# target
+/pxt-editor/docs\static\providers\github-mark.png
+/pxt-editor/docs\static\providers\microsoft-logo.svg
+/pxt-editor/docs\static\providers\google-logo.svg
+/pxt-editor/docs\static\providers\clever-logo.png
+/pxt-editor/docs\static\logo.portrait.white.svg
+/pxt-editor/docs\static\logo.square.white.svg
+/pxt-editor/docs\static\logo.portrait.black.svg
+/pxt-editor/docs\static\icons\apple-touch-icon.png
+/pxt-editor/docs\static\Microsoft_logo_rgb_W-white_D-square.png
+/pxt-editor/docs\static\Microsoft_logo_rgb_W-white_D.png
+/pxt-editor/docs\static\herogallery\hero-banner.png
+/pxt-editor/docs\static\download\transfer.png
+/pxt-editor/docs\static\download\connect-microbit.gif
+/pxt-editor/docs\static\download\full-reset.gif
+/pxt-editor/docs\static\download\selecting-microbit.gif
+/pxt-editor/docs\static\download\successfully-paired.png
+/pxt-editor/docs\static\download\incompatible.png
+/pxt-editor/docs\static\download\device-forgotten.gif
+/pxt-editor/docs\static\download\browser-unpair-image.gif
+/pxt-editor/docs\static\winapp.PNG
+/pxt-editor/docs\static\profile\microbit-cloud.png
+
+/pxt-editor/target.js
+
+NETWORK:
+*

@@ -6,6 +6,7 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
+  serverExternalPackages: ["bcrypt", "pg"],
 }
 
 export default nextConfig

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState, type ChangeEvent } from "react";
-import * as Blockly from "blockly";
+import * as Blockly from "blockly/core";
 import "blockly/blocks";
 import "blockly/msg/en";
 import { javascriptGenerator, Order } from "blockly/javascript";
@@ -36,13 +36,13 @@ const toolbox = {
           }
         },
         { kind: "block", type: "device_clear_screen" },
-        { kind: "block", type: "basic_forever" },
-        { kind: "block", type: "on_start" },
+        { kind: "block", type: "device_forever" },
+        { kind: "block", type: "device_on_start" },
         {
           kind: "block",
-          type: "basic_pause",
+          type: "device_pause",
           inputs: {
-            TIME: {
+            time: {
               shadow: { type: "math_number", fields: { NUM: 100 } }
             }
           }
@@ -427,14 +427,17 @@ const pythonBasicContents = [
   { kind: "block", type: "device_clear_screen" },
   { kind: "label", text: "Turn off all LEDs." },
   { kind: "sep", gap: "8" },
-  { kind: "block", type: "basic_forever" },
+  { kind: "block", type: "device_on_start" },
+  { kind: "label", text: "Runs once when program starts." },
+  { kind: "sep", gap: "8" },
+  { kind: "block", type: "device_forever" },
   { kind: "label", text: "Repeats the code forever in the background." },
   { kind: "sep", gap: "8" },
   {
     kind: "block",
-    type: "basic_pause",
+    type: "device_pause",
     inputs: {
-      TIME: {
+      time: {
         shadow: { type: "math_number", fields: { NUM: 100 } }
       }
     }
@@ -1039,6 +1042,10 @@ function registerPxtLikeBlocks() {
   if (pxtLikeBlocksRegistered) return;
   pxtLikeBlocksRegistered = true;
 
+  if (!Blockly.Msg.CONTROLS_REPEAT_TITLE || !Blockly.Msg.CONTROLS_REPEAT_TITLE.includes("%1")) {
+    Blockly.Msg.CONTROLS_REPEAT_TITLE = "repeat %1";
+  }
+
   Blockly.common.defineBlocksWithJsonArray([
     {
       type: "on_start",
@@ -1060,6 +1067,38 @@ function registerPxtLikeBlocks() {
       ],
       colour: 210,
       tooltip: "Runs repeatedly forever",
+      helpUrl: ""
+    },
+    {
+      type: "device_on_start",
+      message0: "on start %1 %2",
+      args0: [
+        { type: "input_dummy" },
+        { type: "input_statement", name: "DO" }
+      ],
+      colour: 120,
+      tooltip: "Runs once when program starts",
+      helpUrl: ""
+    },
+    {
+      type: "device_forever",
+      message0: "forever %1 %2",
+      args0: [
+        { type: "input_dummy" },
+        { type: "input_statement", name: "DO" }
+      ],
+      colour: 120,
+      tooltip: "Runs repeatedly forever",
+      helpUrl: ""
+    },
+    {
+      type: "device_pause",
+      message0: "pause (ms) %1",
+      args0: [{ type: "input_value", name: "time", check: "Number" }],
+      previousStatement: null,
+      nextStatement: null,
+      colour: 230,
+      tooltip: "Pause for some milliseconds",
       helpUrl: ""
     },
     {
@@ -2248,13 +2287,28 @@ function registerPxtLikeBlocks() {
     return `// on start\n${body}`;
   };
 
+  asAny.forBlock["device_on_start"] = (block: Blockly.Block, generator: Blockly.CodeGenerator) => {
+    const body = generator.statementToCode(block, "DO");
+    return `\n${body}\n`;
+  };
+
   asAny.forBlock["basic_forever"] = (block: Blockly.Block, generator: Blockly.CodeGenerator) => {
+    const body = generator.statementToCode(block, "DO");
+    return `basic.forever(function () {\n${body}});\n`;
+  };
+
+  asAny.forBlock["device_forever"] = (block: Blockly.Block, generator: Blockly.CodeGenerator) => {
     const body = generator.statementToCode(block, "DO");
     return `basic.forever(function () {\n${body}});\n`;
   };
 
   asAny.forBlock["basic_pause"] = (block: Blockly.Block, generator: Blockly.CodeGenerator) => {
     const time = generator.valueToCode(block, "TIME", Order.NONE) || "100";
+    return `basic.pause(${time});\n`;
+  };
+
+  asAny.forBlock["device_pause"] = (block: Blockly.Block, generator: Blockly.CodeGenerator) => {
+    const time = generator.valueToCode(block, "time", Order.NONE) || "100";
     return `basic.pause(${time});\n`;
   };
 

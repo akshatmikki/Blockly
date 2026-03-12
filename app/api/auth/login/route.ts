@@ -4,6 +4,9 @@ import jwt from "jsonwebtoken";
 import pool from "@/lib/db";
 import { rateLimit } from "@/lib/rateLimit";
 
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
 export async function POST(req: Request) {
   // ⬇️⬇️⬇️ RATE LIMIT GOES HERE ⬇️⬇️⬇️
   const ip =

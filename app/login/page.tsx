@@ -14,26 +14,37 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
 
   const handleLogin = async (e: React.FormEvent) => {
-  e.preventDefault();
+    e.preventDefault();
 
-  const res = await fetch("/api/auth/login", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email, password }),
-  });
+    const res = await fetch("/api/auth/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password }),
+    });
 
-  const data = await res.json();
+    let data: { message?: string; user?: { UserId?: string; Email?: string } } = {};
+    const contentType = res.headers.get("content-type") ?? "";
+    if (contentType.includes("application/json")) {
+      data = await res.json();
+    } else {
+      const text = await res.text();
+      data = { message: `Unexpected response (${res.status}): ${text.slice(0, 200)}` };
+    }
 
-  if (!res.ok) {
-    alert(data.message);
-    return;
-  }
+    if (!res.ok) {
+      alert(data.message);
+      return;
+    }
 
-  localStorage.setItem("userId", data.user.UserId);
-  localStorage.setItem("userEmail", data.user.Email);
+    if (data.user?.UserId) {
+      localStorage.setItem("userId", data.user.UserId);
+    }
+    if (data.user?.Email) {
+      localStorage.setItem("userEmail", data.user.Email);
+    }
 
-  router.push("/dashboard");
-};
+    router.push("/dashboard");
+  };
 
 
   const handleGoogleLogin = () => {
@@ -134,13 +145,13 @@ export default function LoginPage() {
             <span className="text-sm text-gray-500">or</span>
             <div className="flex-1 h-px bg-gray-300" />
           </div>
-<Button
-  type="button"
-  onClick={() => router.push("/admin_login")}
-  className="w-full h-12 flex items-center justify-center gap-2 cursor-pointer bg-purple-600 hover:bg-purple-700"
->
-  Admin Login
-</Button>
+          <Button
+            type="button"
+            onClick={() => router.push("/admin_login")}
+            className="w-full h-12 flex items-center justify-center gap-2 cursor-pointer bg-purple-600 hover:bg-purple-700"
+          >
+            Admin Login
+          </Button>
           {/* Google Login */}
           <Button
             type="button"
