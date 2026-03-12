@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, type ChangeEvent } from "react";
+import { useEffect, useRef, useState, type ChangeEvent } from "react";
 import * as Blockly from "blockly/core";
 import "blockly/blocks";
 import "blockly/msg/en";
 import { javascriptGenerator, Order } from "blockly/javascript";
+import { Search, Code, Info } from "lucide-react";
 import PxtSimulatorPane from "./pxt-simulator-pane";
 
 const toolbox = {
@@ -12,7 +13,7 @@ const toolbox = {
   contents: [
     {
       kind: "category",
-      name: "Basic",
+      name: "\uD83D\uDFE6 Basic",
       colour: "#1f88e5",
       contents: [
         {
@@ -52,7 +53,7 @@ const toolbox = {
     },
     {
       kind: "category",
-      name: "Input",
+      name: "\uD83D\uDD18 Input",
       colour: "#b400d6",
       contents: [
         { kind: "block", type: "input_on_button_pressed" },
@@ -62,7 +63,7 @@ const toolbox = {
     },
     {
       kind: "category",
-      name: "Music",
+      name: "\uD83C\uDFB5 Music",
       colour: "#d83b01",
       contents: [
         { kind: "label", text: "Melody" },
@@ -102,7 +103,7 @@ const toolbox = {
     },
     {
       kind: "category",
-      name: "LED",
+      name: "\u25A4 LED",
       colour: "#5e35b1",
       contents: [
         { kind: "block", type: "led_plot" },
@@ -113,7 +114,7 @@ const toolbox = {
     },
     {
       kind: "category",
-      name: "Radio",
+      name: "\uD83D\uDCE1 Radio",
       colour: "#e91e63",
       contents: [
         { kind: "block", type: "radio_set_group" },
@@ -126,7 +127,7 @@ const toolbox = {
     { kind: "sep" },
     {
       kind: "category",
-      name: "Loops",
+      name: "\uD83D\uDD04 Loops",
       colour: "#5ca65c",
       contents: [
         { kind: "block", type: "controls_repeat_ext" },
@@ -138,7 +139,7 @@ const toolbox = {
     },
     {
       kind: "category",
-      name: "Logic",
+      name: "\u2B28 Logic",
       colour: "#5c81a6",
       contents: [
         { kind: "block", type: "controls_if" },
@@ -150,13 +151,13 @@ const toolbox = {
     },
     {
       kind: "category",
-      name: "Variables",
+      name: "\uD835\uDCE7 Variables",
       custom: "VARIABLE",
       colour: "#a65c81"
     },
     {
       kind: "category",
-      name: "Math",
+      name: "\u2211 Math",
       colour: "#5c68a6",
       contents: [
         { kind: "block", type: "math_number" },
@@ -168,7 +169,7 @@ const toolbox = {
     },
     {
       kind: "category",
-      name: "Advanced",
+      name: "\u23F5 Advanced",
       colour: "#0f766e",
       contents: [
         {
@@ -958,78 +959,51 @@ const pythonAdvancedContents = [
 const pythonToolbox = {
   ...toolbox,
   contents: toolbox.contents.reduce<(typeof toolbox.contents)[number][]>((acc, entry) => {
-    if (entry.kind === "category" && (entry.name === "Text" || entry.name === "Functions")) {
-      return acc;
-    }
-    if (entry.kind === "category" && entry.name === "Basic") {
-      acc.push({
-        ...entry,
-        contents: pythonBasicContents
-      });
-      return acc;
-    }
-    if (entry.kind === "category" && entry.name === "Input") {
-      acc.push({
-        ...entry,
-        contents: pythonInputContents
-      });
-      return acc;
-    }
-    if (entry.kind === "category" && entry.name === "Music") {
-      acc.push({
-        ...entry,
-        contents: pythonMusicContents
-      });
-      return acc;
-    }
-    if (entry.kind === "category" && entry.name === "LED") {
-      acc.push({
-        ...entry,
-        contents: pythonLedContents
-      });
-      return acc;
-    }
-    if (entry.kind === "category" && entry.name === "Radio") {
-      acc.push({
-        ...entry,
-        contents: pythonRadioContents
-      });
-      return acc;
-    }
-    if (entry.kind === "category" && entry.name === "Loops") {
-      acc.push({
-        ...entry,
-        contents: pythonLoopsContents
-      });
-      return acc;
-    }
-    if (entry.kind === "category" && entry.name === "Logic") {
-      acc.push({
-        ...entry,
-        contents: pythonLogicContents
-      });
-      return acc;
-    }
-    if (entry.kind === "category" && entry.name === "Variables") {
-      acc.push({
-        ...entry,
-        contents: pythonVariablesContents
-      });
-      return acc;
-    }
-    if (entry.kind === "category" && entry.name === "Math") {
-      acc.push({
-        ...entry,
-        contents: pythonMathContents
-      });
-      return acc;
-    }
-    if (entry.kind === "category" && entry.name === "Advanced") {
-      acc.push({
-        ...entry,
-        contents: pythonAdvancedContents
-      });
-      return acc;
+    if (entry.kind === "category" && "name" in entry) {
+      const name = (entry as any).name as string;
+      if (name.includes("Text") || name.includes("Functions")) {
+        return acc;
+      }
+      if (name.includes("Basic")) {
+        acc.push({ ...entry, contents: pythonBasicContents } as any);
+        return acc;
+      }
+      if (name.includes("Input")) {
+        acc.push({ ...entry, contents: pythonInputContents } as any);
+        return acc;
+      }
+      if (name.includes("Music")) {
+        acc.push({ ...entry, contents: pythonMusicContents } as any);
+        return acc;
+      }
+      if (name.includes("LED")) {
+        acc.push({ ...entry, contents: pythonLedContents } as any);
+        return acc;
+      }
+      if (name.includes("Radio")) {
+        acc.push({ ...entry, contents: pythonRadioContents } as any);
+        return acc;
+      }
+      if (name.includes("Loops")) {
+        acc.push({ ...entry, contents: pythonLoopsContents } as any);
+        return acc;
+      }
+      if (name.includes("Logic")) {
+        acc.push({ ...entry, contents: pythonLogicContents } as any);
+        return acc;
+      }
+      if (name.includes("Variables")) {
+        acc.push({ ...entry, contents: pythonVariablesContents } as any);
+        return acc;
+      }
+      if (name.includes("Math")) {
+        acc.push({ ...entry, contents: pythonMathContents } as any);
+        return acc;
+      }
+      if (name.includes("Advanced")) {
+        acc.push({ ...entry, contents: pythonAdvancedContents } as any);
+        return acc;
+      }
     }
     acc.push(entry);
     return acc;
@@ -2801,76 +2775,22 @@ function registerWorkspaceCallbacks(workspace: Blockly.WorkspaceSvg) {
   });
 }
 
-function getLineFromIndex(text: string, index: number) {
-  return text.slice(0, Math.max(0, index)).split("\n").length;
-}
-
-function findCodeProblems(code: string) {
-  const issues: string[] = [];
-  const stack: { ch: string; line: number }[] = [];
-  const openToClose: Record<string, string> = { "(": ")", "[": "]", "{": "}" };
-  const closeToOpen: Record<string, string> = { ")": "(", "]": "[", "}": "{" };
-
-  for (let i = 0; i < code.length; i += 1) {
-    const ch = code[i];
-    if (openToClose[ch]) {
-      stack.push({ ch, line: getLineFromIndex(code, i) });
-      continue;
-    }
-    if (closeToOpen[ch]) {
-      const top = stack.pop();
-      if (!top || top.ch !== closeToOpen[ch]) {
-        issues.push(`Line ${getLineFromIndex(code, i)}: unmatched '${ch}'`);
-      }
-    }
-  }
-
-  while (stack.length) {
-    const top = stack.pop();
-    if (top) issues.push(`Line ${top.line}: missing '${openToClose[top.ch]}'`);
-  }
-
-  try {
-    // Lightweight parser check for editor feedback.
-    // eslint-disable-next-line no-new-func
-    new Function(code);
-  } catch (err) {
-    const message = err instanceof Error ? err.message : "Invalid syntax";
-    issues.push(`Syntax: ${message}`);
-  }
-
-  const lenCallMatch = code.match(/\blen\s*\(/);
-  if (lenCallMatch && !/\b(function|const|let|var)\s+len\b/.test(code)) {
-    issues.push(`Line ${getLineFromIndex(code, lenCallMatch.index ?? 0)}: can't find called function 'len'`);
-  }
-
-  const listUseMatch = code.match(/\blist\b/);
-  if (listUseMatch && !/\b(const|let|var)\s+list\b/.test(code)) {
-    issues.push(`Line ${getLineFromIndex(code, listUseMatch.index ?? 0)}: name 'list' is not defined`);
-  }
-
-  return Array.from(new Set(issues));
-}
-
 export default function BlocklyEditorClient() {
   const blocklyHostRef = useRef<HTMLDivElement | null>(null);
   const workspaceRef = useRef<Blockly.WorkspaceSvg | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const manualCodeEditRef = useRef(false);
   const editorModeRef = useRef<"blocks" | "python">("blocks");
+  const blocksXmlRef = useRef<string | null>(null);
 
   const [editorMode, setEditorMode] = useState<"blocks" | "python">("blocks");
   const [generatedCode, setGeneratedCode] = useState("// Drag blocks to generate MakeCode-like TypeScript");
   const [codeEditorValue, setCodeEditorValue] = useState("// Drag blocks to generate MakeCode-like TypeScript");
-  const [isManualCodeEdit, setIsManualCodeEdit] = useState(false);
-  const [status, setStatus] = useState("Ready");
-
-  const blockCount = useMemo(() => {
-    const workspace = workspaceRef.current;
-    return workspace ? workspace.getAllBlocks(false).length : 0;
-  }, [generatedCode]);
+  const [toolboxWidth, setToolboxWidth] = useState(180); // Total offset including flyout
+  const [sidebarWidth, setSidebarWidth] = useState(180); // Just the category bar
 
   const syncCode = (workspace: Blockly.Workspace) => {
+    if (editorModeRef.current === "python") return;
     javascriptGenerator.init(workspace);
     const nextCode = javascriptGenerator.workspaceToCode(workspace) || "// No code generated yet";
     setGeneratedCode(nextCode);
@@ -2879,21 +2799,69 @@ export default function BlocklyEditorClient() {
     }
   };
 
-  const activeCode = editorMode === "python" ? codeEditorValue : generatedCode;
+  const normalizeBlockCode = (raw: string | string[]) => {
+    const code = Array.isArray(raw) ? raw[0] : raw;
+    return String(code || "").trim();
+  };
 
-  const codeProblems = useMemo(() => {
-    const trimmed = activeCode.trim();
-    if (!trimmed || trimmed.startsWith("// No code generated yet")) return [];
-    return findCodeProblems(activeCode);
-  }, [activeCode]);
+  const appendPythonSnippet = (snippet: string) => {
+    const trimmed = snippet.trim();
+    if (!trimmed) return;
+    setCodeEditorValue((prev) => {
+      const separator = prev.trim().length ? "\n\n" : "";
+      return `${prev}${separator}${trimmed}\n`;
+    });
+    manualCodeEditRef.current = true;
+  };
+
+  const translateToPython = (jsCode: string) => {
+    if (!jsCode) return jsCode;
+    
+    // Convert the default "No code" message
+    if (jsCode.includes("No code generated yet")) {
+      return "# No code generated yet";
+    }
+
+    // Process line by line to handle comments and basic syntax
+    const lines = jsCode.split("\n").map(line => {
+      let l = line.trim();
+      if (!l || l.startsWith("//")) {
+        // Convert JS comment to Python comment
+        if (l.startsWith("//")) return "#" + l.substring(2);
+        return l;
+      }
+      
+      l = l.replace(/basic\.showNumber\(/g, "basic.show_number(");
+      l = l.replace(/basic\.showString\(/g, "basic.show_string(");
+      l = l.replace(/basic\.showIcon\(IconNames\.(\w+)\);/g, "basic.show_icon(IconNames.$1)");
+      l = l.replace(/basic\.showArrow\(ArrowNames\.(\w+)\);/g, "basic.show_arrow(ArrowNames.$1)");
+      l = l.replace(/basic\.clearScreen\(\);/g, "basic.clear_screen()");
+      l = l.replace(/basic\.pause\(/g, "basic.pause(");
+      l = l.replace(/;/g, "");
+      l = l.replace(/let (\w+) =/g, "$1 =");
+      l = l.replace(/function \(\)/g, "lambda:");
+      return l;
+    });
+    
+    let py = lines.join("\n");
+    // Handle complex multiline blocks on the joined result
+    py = py.replace(/input\.onButtonPressed\(Button\.(\w+), lambda: \{([\s\S]*?)\}\)/g, (_, btn, body) => {
+      const pBody = body.trim().split("\n").map((l: string) => "    " + l.trim()).filter(Boolean).join("\n") || "    pass";
+      return `def on_button_pressed_${btn.toLowerCase()}():\n${pBody}\ninput.on_button_pressed(Button.${btn}, on_button_pressed_${btn.toLowerCase()})`;
+    });
+
+    return py.trim();
+  };
+
+  const activeCode = editorMode === "python"
+    ? (manualCodeEditRef.current ? codeEditorValue : translateToPython(generatedCode))
+    : generatedCode;
+  const lineCount = Math.max(1, activeCode.split("\n").length);
+  const lineNumbers = Array.from({ length: lineCount }, (_, index) => index + 1);
 
   useEffect(() => {
     editorModeRef.current = editorMode;
   }, [editorMode]);
-
-  useEffect(() => {
-    manualCodeEditRef.current = isManualCodeEdit;
-  }, [isManualCodeEdit]);
 
   useEffect(() => {
     if (!blocklyHostRef.current) return;
@@ -2924,7 +2892,30 @@ export default function BlocklyEditorClient() {
     workspaceRef.current = workspace;
     syncCode(workspace);
 
-    const listener = () => syncCode(workspace);
+    const listener = (event: Blockly.Events.Abstract) => {
+      if (event.isUiEvent) return;
+      if (editorModeRef.current === "python") {
+        if (event.type === Blockly.Events.BLOCK_CREATE) {
+          const createEvent = event as Blockly.Events.BlockCreate;
+          const ids = createEvent.ids ?? [];
+          const blocks = ids
+            .map((id) => workspace.getBlockById(id))
+            .filter((block): block is Blockly.Block => Boolean(block))
+            .filter((block) => !block.isShadow() && !block.getParent());
+
+          blocks.forEach((block) => {
+            javascriptGenerator.init(workspace);
+            const snippet = normalizeBlockCode(javascriptGenerator.blockToCode(block));
+            appendPythonSnippet(snippet);
+            block.dispose(true);
+          });
+
+          // Blocks are consumed into Python code, no workspace status needed.
+        }
+        return;
+      }
+      syncCode(workspace);
+    };
     workspace.addChangeListener(listener);
 
     return () => {
@@ -2938,20 +2929,94 @@ export default function BlocklyEditorClient() {
     const workspace = workspaceRef.current;
     if (!workspace) return;
     workspace.updateToolbox(editorMode === "blocks" ? toolbox : pythonToolbox);
-    if (editorMode === "blocks") {
-      setCodeEditorValue(generatedCode);
-      setIsManualCodeEdit(false);
-      manualCodeEditRef.current = false;
+    if (editorMode === "python") {
+      blocksXmlRef.current = Blockly.Xml.domToText(Blockly.Xml.workspaceToDom(workspace));
+      workspace.clear();
+      return;
     }
-    setStatus(editorMode === "blocks" ? "Blocks mode active." : "Python mode active.");
+
+    if (blocksXmlRef.current) {
+      workspace.clear();
+      const xmlDom = Blockly.utils.xml.textToDom(blocksXmlRef.current);
+      Blockly.Xml.domToWorkspace(xmlDom, workspace);
+      blocksXmlRef.current = null;
+    }
+
+    setCodeEditorValue(generatedCode);
+    manualCodeEditRef.current = false;
   }, [editorMode, generatedCode]);
+
+  useEffect(() => {
+    if (editorMode !== "python") return;
+    const host = blocklyHostRef.current;
+    if (!host) return;
+
+    const updateWidth = () => {
+      const toolboxDiv = host.querySelector(".blocklyToolboxDiv") as HTMLDivElement | null;
+      // Flyout is the popup that shows blocks
+      const flyout = host.querySelector(".blocklyFlyout") as SVGElement | null;
+      
+      const hostRect = host.getBoundingClientRect();
+      let currentSidebarWidth = 180;
+      let currentTotalWidth = 0;
+
+      if (toolboxDiv) {
+        const toolboxRect = toolboxDiv.getBoundingClientRect();
+        currentSidebarWidth = Math.round(toolboxRect.right - hostRect.left);
+        currentTotalWidth = currentSidebarWidth;
+      } else {
+        currentTotalWidth = 180;
+      }
+
+      // Check if flyout is visible and add its width
+      if (flyout && flyout.getAttribute("display") !== "none" && flyout.style.display !== "none") {
+        const flyoutRect = flyout.getBoundingClientRect();
+        currentTotalWidth = Math.max(currentTotalWidth, Math.round(flyoutRect.right - hostRect.left));
+      }
+
+      setSidebarWidth(currentSidebarWidth);
+      setToolboxWidth(currentTotalWidth);
+    };
+
+    let rafId = 0;
+    let attempts = 0;
+    const tick = () => {
+      updateWidth();
+      attempts += 1;
+      // Continue polling for a while to catch late-renders and flyout animations
+      if (attempts < 150) {
+        rafId = requestAnimationFrame(tick);
+      }
+    };
+
+    tick();
+    const observer = new ResizeObserver(updateWidth);
+    observer.observe(host); // Observe host for layout changes
+    
+    // Also observe the workspace for category clicks which change flyout visibility
+    const workspace = workspaceRef.current;
+    const listener = () => {
+      // Small delay to let Blockly finish rendering the flyout
+      setTimeout(updateWidth, 50);
+    };
+    if (workspace) {
+      workspace.addChangeListener(listener);
+    }
+
+    return () => {
+      cancelAnimationFrame(rafId);
+      observer.disconnect();
+      if (workspace) {
+        workspace.removeChangeListener(listener);
+      }
+    };
+  }, [editorMode]);
 
   const handleReset = () => {
     const workspace = workspaceRef.current;
     if (!workspace) return;
     workspace.clear();
     syncCode(workspace);
-    setStatus("Workspace cleared.");
   };
 
   const handleExportXml = () => {
@@ -2959,7 +3024,6 @@ export default function BlocklyEditorClient() {
     if (!workspace) return;
     const xmlText = Blockly.Xml.domToPrettyText(Blockly.Xml.workspaceToDom(workspace));
     downloadTextFile("pxt-blocks-workspace.xml", xmlText);
-    setStatus("Workspace XML exported.");
   };
 
   const handleImportClick = () => {
@@ -2977,34 +3041,33 @@ export default function BlocklyEditorClient() {
       const xmlDom = Blockly.utils.xml.textToDom(xmlText);
       Blockly.Xml.domToWorkspace(xmlDom, workspace);
       syncCode(workspace);
-      setStatus(`Imported: ${file.name}`);
     } catch {
-      setStatus("Import failed: invalid XML.");
     } finally {
       event.currentTarget.value = "";
     }
   };
 
   return (
-    <main className="h-screen w-full bg-slate-100 text-slate-900">
+    <main
+      className="h-screen w-full bg-slate-100 text-slate-900"
+      data-editor={editorMode}
+    >
       <div className="flex h-14 items-center justify-between border-b border-slate-300 bg-blue-700 px-4 text-white">
         <h1 className="text-sm font-semibold sm:text-base">PXT Blocks Editor</h1>
         <div className="hidden items-center rounded-full border border-blue-900 bg-blue-800 p-0.5 md:flex">
           <button
             type="button"
             onClick={() => setEditorMode("blocks")}
-            className={`rounded-full px-6 py-1.5 text-sm font-semibold transition ${
-              editorMode === "blocks" ? "bg-white text-blue-700" : "text-blue-100 hover:bg-blue-700"
-            }`}
+            className={`rounded-full px-6 py-1.5 text-sm font-semibold transition ${editorMode === "blocks" ? "bg-white text-blue-700" : "text-blue-100 hover:bg-blue-700"
+              }`}
           >
             Blocks
           </button>
           <button
             type="button"
             onClick={() => setEditorMode("python")}
-            className={`rounded-full px-6 py-1.5 text-sm font-semibold transition ${
-              editorMode === "python" ? "bg-white text-blue-700" : "text-blue-100 hover:bg-blue-700"
-            }`}
+            className={`rounded-full px-6 py-1.5 text-sm font-semibold transition ${editorMode === "python" ? "bg-white text-blue-700" : "text-blue-100 hover:bg-blue-700"
+              }`}
           >
             Python
           </button>
@@ -3034,58 +3097,54 @@ export default function BlocklyEditorClient() {
         </div>
       </div>
 
-      <div className="grid h-[calc(100vh-3.5rem)] grid-cols-1 lg:grid-cols-[340px_1fr_420px]">
+      <div className="grid h-[calc(100vh-3.5rem)] grid-cols-1 lg:grid-cols-[340px_1fr]">
         <PxtSimulatorPane code={activeCode} />
 
-        <section className="min-h-0 border-r border-slate-300 bg-white">
-          <div ref={blocklyHostRef} className="h-full w-full" />
-        </section>
-
-        <aside className="flex min-h-0 flex-col bg-slate-950">
-          <div className="border-b border-slate-800 px-4 py-3 text-xs text-slate-300">
-            <p>Status: {status}</p>
-            <p>Blocks: {blockCount}</p>
-          </div>
-          <textarea
-            value={activeCode}
-            onChange={(event) => {
-              if (editorMode !== "python") return;
-              setCodeEditorValue(event.target.value);
-              setIsManualCodeEdit(true);
-              manualCodeEditRef.current = true;
-            }}
-            readOnly={editorMode !== "python"}
-            spellCheck={false}
-            className="min-h-0 flex-1 resize-none overflow-auto border-0 bg-slate-950 p-4 font-mono text-sm text-emerald-300 outline-none"
-          />
-          <section className="border-t border-slate-800 bg-slate-900 p-3 text-xs text-slate-200">
-            <div className="mb-2 flex items-center justify-between">
-              <p className="font-semibold">Problems ({codeProblems.length})</p>
-              {editorMode === "python" && isManualCodeEdit ? (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setCodeEditorValue(generatedCode);
-                    setIsManualCodeEdit(false);
-                    manualCodeEditRef.current = false;
-                  }}
-                  className="rounded bg-slate-700 px-2 py-1 text-[11px] hover:bg-slate-600"
-                >
-                  Reset To Generated
-                </button>
-              ) : null}
-            </div>
-            {codeProblems.length === 0 ? (
-              <p className="text-slate-400">No issues detected.</p>
-            ) : (
-              <div className="max-h-28 space-y-1 overflow-auto text-rose-300">
-                {codeProblems.map((problem, index) => (
-                  <p key={`${problem}-${index}`}>{problem}</p>
-                ))}
+        <section className="relative flex min-h-0 flex-col overflow-hidden border-r border-slate-300 bg-white">
+          {editorMode === "python" && (
+            <div
+              className="absolute top-0 left-0 z-20 flex flex-col border-b border-r border-slate-200 bg-white"
+              style={{ width: sidebarWidth }}
+            >
+              <div className="flex h-10 items-center px-3 text-slate-400">
+                <Search size={14} className="mr-2" />
+                <input
+                  type="text"
+                  placeholder="Search..."
+                  className="bg-transparent text-xs outline-none"
+                  readOnly
+                />
               </div>
-            )}
-          </section>
-        </aside>
+            </div>
+          )}
+          <div ref={blocklyHostRef} className="h-full w-full" />
+          {editorMode === "python" ? (
+            <div
+              className="absolute inset-y-0 right-0 z-10 flex flex-col border-l border-slate-200 bg-white shadow-[-4px_0_12px_rgba(0,0,0,0.02)] transition-[left] duration-200"
+              style={{ left: toolboxWidth }}
+            >
+
+              <div className="flex min-h-0 flex-1 overflow-hidden">
+                <div className="select-none bg-slate-50/50 px-3 py-4 text-right font-mono text-[11px] leading-6 text-slate-300">
+                  {lineNumbers.map((line) => (
+                    <div key={line} className="h-6">
+                      {line}
+                    </div>
+                  ))}
+                </div>
+                <textarea
+                  value={activeCode}
+                  onChange={(event) => {
+                    setCodeEditorValue(event.target.value);
+                    manualCodeEditRef.current = true;
+                  }}
+                  spellCheck={false}
+                  className="min-h-0 w-full flex-1 resize-none overflow-auto border-0 bg-white p-4 font-mono text-sm leading-6 text-slate-800 outline-none"
+                />
+              </div>
+            </div>
+          ) : null}
+        </section>
       </div>
 
       <input
@@ -3097,6 +3156,19 @@ export default function BlocklyEditorClient() {
       />
 
       <style jsx global>{`
+        [data-editor="python"] .blocklyMainBackground,
+        [data-editor="python"] .blocklyBlockCanvas,
+        [data-editor="python"] .blocklyBubbleCanvas,
+        [data-editor="python"] .blocklyGrid,
+        [data-editor="python"] .blocklyScrollbarHorizontal,
+        [data-editor="python"] .blocklyScrollbarVertical,
+        [data-editor="python"] .blocklyScrollbar {
+          display: none !important;
+        }
+        /* Restore visibility for blocks inside the flyout */
+        [data-editor="python"] .blocklyFlyout .blocklyBlockCanvas {
+          display: block !important;
+        }
         .blocklyFlyout .blocklyFlyoutBackground {
           fill: #4a4a4e !important;
           fill-opacity: 1 !important;
@@ -3106,11 +3178,29 @@ export default function BlocklyEditorClient() {
           fill: #f8fafc !important;
         }
         .blocklyTreeRow {
+          height: 34px !important;
+          line-height: 34px !important;
           border-left: 4px solid transparent;
+          margin-bottom: 2px !important;
+          border-radius: 0 4px 4px 0 !important;
+        }
+        .blocklyTreeLabel {
+          font-family: 'Inter', sans-serif !important;
+          font-size: 13px !important;
+          font-weight: 500 !important;
         }
         .blocklyTreeSelected {
-          background: #2b91ea !important;
-          color: #ffffff !important;
+          background: rgba(43, 145, 234, 0.15) !important;
+          color: #2b91ea !important;
+          border-left-color: #2b91ea !important;
+        }
+        .blocklyTreeSelected .blocklyTreeLabel {
+          font-weight: 600 !important;
+        }
+        .blocklyToolboxDiv {
+          background-color: #f8fafc !important;
+          border-right: 1px solid #e2e8f0 !important;
+          padding-top: 40px !important;
         }
       `}</style>
     </main>
