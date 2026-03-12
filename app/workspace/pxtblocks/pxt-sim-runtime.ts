@@ -21,9 +21,9 @@ export function getPxtSimulatorHost() {
 export function getPxtSimulatorUrl() {
   const host = getPxtSimulatorHost();
   if (host.startsWith("http://") || host.startsWith("https://")) {
-    return `${host}/run.html?server=1&fullscreen=1&single=1&simTop=-150`;
+    return `${host}/run.html?server=1&fullscreen=1&single=1&simTop=-220`;
   }
-  return `${host}/run.html?server=1&fullscreen=1&single=1&simTop=-150`;
+  return `${host}/run.html?server=1&fullscreen=1&single=1&simTop=-220`;
 }
 
 export function buildPxtProjectFiles(code: string) {
