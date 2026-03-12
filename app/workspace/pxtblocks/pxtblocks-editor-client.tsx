@@ -157,14 +157,78 @@ const toolbox = {
     },
     {
       kind: "category",
-      name: "\u2211 Math",
+      name: "Math",
       colour: "#5c68a6",
       contents: [
-        { kind: "block", type: "math_number" },
-        { kind: "block", type: "math_arithmetic" },
-        { kind: "block", type: "math_single" },
-        { kind: "block", type: "math_random_int" },
-        { kind: "block", type: "math_modulo" }
+        { kind: "block", type: "math_number", fields: { NUM: 0 } },
+        {
+          kind: "block",
+          type: "math_arithmetic",
+          inputs: {
+            A: { shadow: { type: "math_number", fields: { NUM: 0 } } },
+            B: { shadow: { type: "math_number", fields: { NUM: 0 } } }
+          }
+        },
+        {
+          kind: "block",
+          type: "math_single",
+          inputs: {
+            NUM: { shadow: { type: "math_number", fields: { NUM: 9 } } }
+          }
+        },
+        {
+          kind: "block",
+          type: "math_random_int",
+          inputs: {
+            FROM: { shadow: { type: "math_number", fields: { NUM: 0 } } },
+            TO: { shadow: { type: "math_number", fields: { NUM: 10 } } }
+          }
+        },
+        {
+          kind: "block",
+          type: "math_modulo",
+          inputs: {
+            DIVIDEND: { shadow: { type: "math_number", fields: { NUM: 0 } } },
+            DIVISOR: { shadow: { type: "math_number", fields: { NUM: 1 } } }
+          }
+        },
+        {
+          kind: "block",
+          type: "math_constrain",
+          inputs: {
+            VALUE: { shadow: { type: "math_number", fields: { NUM: 0 } } },
+            LOW: { shadow: { type: "math_number", fields: { NUM: 1 } } },
+            HIGH: { shadow: { type: "math_number", fields: { NUM: 100 } } }
+          }
+        },
+        { kind: "block", type: "math_random_bool" },
+        { kind: "sep", gap: "8" },
+        {
+          kind: "category",
+          name: "more",
+          colour: "#5c68a6",
+          contents: [
+            { kind: "block", type: "math_max2" },
+            { kind: "block", type: "math_min2" },
+            { kind: "block", type: "math_trunc" },
+            {
+              kind: "block",
+              type: "math_js_op",
+              fields: { OP: "ABS" },
+              inputs: {
+                ARG0: { shadow: { type: "math_number", fields: { NUM: 0 } } }
+              }
+            },
+            {
+              kind: "block",
+              type: "math_js_round",
+              fields: { OP: "ROUND" },
+              inputs: {
+                ARG0: { shadow: { type: "math_number", fields: { NUM: 0 } } }
+              }
+            }
+          ]
+        }
       ]
     },
     {
@@ -190,37 +254,107 @@ const toolbox = {
               kind: "block",
               type: "variables_set",
               inputs: {
-                VALUE: {
-                  shadow: {
-                    type: "lists_create_with",
-                    extraState: { itemCount: 1 }
-                  }
-                }
+                VALUE: { shadow: { type: "lists_create_with", extraState: { itemCount: 1 } } }
               }
             },
-            { kind: "block", type: "lists_create_with" },
+            { kind: "block", type: "lists_create_with", extraState: { itemCount: 3 } },
             { kind: "block", type: "lists_create_empty" },
             { kind: "sep", gap: "8" },
             { kind: "label", text: "Read" },
             { kind: "block", type: "lists_length" },
-            { kind: "block", type: "lists_getIndex", fields: { MODE: "GET", WHERE: "FROM_START" } },
-            { kind: "block", type: "lists_getIndex", fields: { MODE: "GET_REMOVE", WHERE: "FROM_START" } },
-            { kind: "block", type: "lists_getIndex", fields: { MODE: "GET_REMOVE", WHERE: "LAST" } },
-            { kind: "block", type: "lists_getIndex", fields: { MODE: "GET_REMOVE", WHERE: "FIRST" } },
-            { kind: "block", type: "lists_getIndex", fields: { MODE: "GET", WHERE: "RANDOM" } },
+            {
+              kind: "block",
+              type: "lists_getIndex",
+              fields: { MODE: "GET", WHERE: "FROM_START" },
+              inputs: {
+                LIST: { shadow: { type: "variables_get", fields: { VAR: "list" } } },
+                AT: { shadow: { type: "math_number", fields: { NUM: 0 } } }
+              }
+            },
+            {
+              kind: "block",
+              type: "lists_getIndex",
+              fields: { MODE: "GET_REMOVE", WHERE: "LAST" },
+              inputs: {
+                LIST: { shadow: { type: "variables_get", fields: { VAR: "list" } } }
+              }
+            },
+            {
+              kind: "block",
+              type: "lists_getIndex",
+              fields: { MODE: "GET_REMOVE", WHERE: "FIRST" },
+              inputs: {
+                LIST: { shadow: { type: "variables_get", fields: { VAR: "list" } } }
+              }
+            },
+            {
+              kind: "block",
+              type: "lists_getIndex",
+              fields: { MODE: "GET", WHERE: "RANDOM" },
+              inputs: {
+                LIST: { shadow: { type: "variables_get", fields: { VAR: "list" } } }
+              }
+            },
             { kind: "sep", gap: "8" },
             { kind: "label", text: "Modify" },
-            { kind: "block", type: "lists_setIndex", fields: { MODE: "SET", WHERE: "FROM_START" } },
-            { kind: "block", type: "lists_setIndex", fields: { MODE: "INSERT", WHERE: "LAST" } },
-            { kind: "block", type: "lists_getIndex", fields: { MODE: "REMOVE", WHERE: "LAST" } },
-            { kind: "block", type: "lists_getIndex", fields: { MODE: "REMOVE", WHERE: "FIRST" } },
-            { kind: "block", type: "lists_setIndex", fields: { MODE: "INSERT", WHERE: "FIRST" } },
-            { kind: "block", type: "lists_setIndex", fields: { MODE: "INSERT", WHERE: "FROM_START" } },
-            { kind: "block", type: "lists_getIndex", fields: { MODE: "REMOVE", WHERE: "FROM_START" } },
+            {
+              kind: "block",
+              type: "lists_setIndex",
+              fields: { MODE: "SET", WHERE: "FROM_START" },
+              inputs: {
+                LIST: { shadow: { type: "variables_get", fields: { VAR: "list" } } },
+                AT: { shadow: { type: "math_number", fields: { NUM: 0 } } }
+              }
+            },
+            {
+              kind: "block",
+              type: "lists_setIndex",
+              fields: { MODE: "INSERT", WHERE: "LAST" },
+              inputs: {
+                LIST: { shadow: { type: "variables_get", fields: { VAR: "list" } } }
+              }
+            },
+            {
+              kind: "block",
+              type: "lists_getIndex",
+              fields: { MODE: "REMOVE", WHERE: "LAST" },
+              inputs: {
+                LIST: { shadow: { type: "variables_get", fields: { VAR: "list" } } }
+              }
+            },
+            {
+              kind: "block",
+              type: "lists_getIndex",
+              fields: { MODE: "REMOVE", WHERE: "FIRST" },
+              inputs: {
+                LIST: { shadow: { type: "variables_get", fields: { VAR: "list" } } }
+              }
+            },
+            {
+              kind: "block",
+              type: "lists_setIndex",
+              fields: { MODE: "INSERT", WHERE: "FROM_START" },
+              inputs: {
+                LIST: { shadow: { type: "variables_get", fields: { VAR: "list" } } },
+                AT: { shadow: { type: "math_number", fields: { NUM: 0 } } }
+              }
+            },
             { kind: "sep", gap: "8" },
             { kind: "label", text: "Operations" },
-            { kind: "block", type: "lists_indexOf" },
-            { kind: "block", type: "lists_reverse" }
+            {
+              kind: "block",
+              type: "lists_indexOf",
+              inputs: {
+                LIST: { shadow: { type: "variables_get", fields: { VAR: "list" } } }
+              }
+            },
+            {
+              kind: "block",
+              type: "lists_reverse",
+              inputs: {
+                LIST: { shadow: { type: "variables_get", fields: { VAR: "list" } } }
+              }
+            }
           ]
         },
         {
@@ -229,16 +363,38 @@ const toolbox = {
           colour: "#ca8a04",
           contents: [
             { kind: "block", type: "text" },
-            { kind: "block", type: "text_length" },
-            { kind: "block", type: "text_join" },
+            {
+              kind: "block",
+              type: "text_length",
+              inputs: {
+                VALUE: { shadow: { type: "text", fields: { TEXT: "abc" } } }
+              }
+            },
+            { kind: "block", type: "text_join", extraState: { itemCount: 2 } },
+            {
+              kind: "block",
+              type: "text_charAt",
+              inputs: {
+                VALUE: { shadow: { type: "text", fields: { TEXT: "abc" } } },
+                INDEX: { shadow: { type: "math_number", fields: { NUM: 0 } } }
+              }
+            },
+            {
+              kind: "block",
+              type: "text_substring_length",
+              inputs: {
+                TEXT: { shadow: { type: "text", fields: { TEXT: "abc" } } },
+                FROM: { shadow: { type: "math_number", fields: { NUM: 0 } } },
+                LEN: { shadow: { type: "math_number", fields: { NUM: 1 } } }
+              }
+            },
+            { kind: "sep", gap: "8" },
             { kind: "block", type: "text_parse_to_number" },
-            { kind: "block", type: "text_split_with" },
             { kind: "block", type: "text_includes" },
+            { kind: "block", type: "text_split_with" },
             { kind: "block", type: "text_indexOf" },
             { kind: "block", type: "text_isEmpty" },
-            { kind: "block", type: "text_substring_length" },
             { kind: "block", type: "text_compare_to" },
-            { kind: "block", type: "text_charAt" },
             { kind: "block", type: "text_char_code_at" },
             { kind: "block", type: "text_convert_number_to_text" },
             { kind: "block", type: "text_from_char_code" }
@@ -270,16 +426,16 @@ const toolbox = {
             { kind: "block", type: "game_over" },
             { kind: "block", type: "game_is_over" },
             { kind: "block", type: "game_is_paused" },
-            { kind: "block", type: "game_is_running" }
-          ]
-        },
-        {
-          kind: "category",
-          name: "more",
-          colour: "#059669",
-          contents: [
-            { kind: "block", type: "game_resume" },
-            { kind: "block", type: "game_pause" }
+            { kind: "block", type: "game_is_running" },
+            {
+              kind: "category",
+              name: "more",
+              colour: "#059669",
+              contents: [
+                { kind: "block", type: "game_resume" },
+                { kind: "block", type: "game_pause" }
+              ]
+            }
           ]
         },
         {
@@ -394,7 +550,7 @@ const toolbox = {
       ]
     }
   ]
-} as const;
+} ;
 
 const pythonBasicContents = [
   {
@@ -447,7 +603,7 @@ const pythonBasicContents = [
   { kind: "sep", gap: "8" },
   { kind: "block", type: "device_show_arrow" },
   { kind: "label", text: "Draws an arrow on the LED screen." }
-] as const;
+] ;
 
 const pythonInputContents = [
   { kind: "block", type: "input_on_button_pressed" },
@@ -493,7 +649,7 @@ const pythonInputContents = [
   { kind: "sep", gap: "8" },
   { kind: "block", type: "input_sound_level" },
   { kind: "label", text: "Reads microphone loudness from 0 to 255." }
-] as const;
+] ;
 
 const pythonMusicContents = [
   { kind: "label", text: "Melody" },
@@ -537,7 +693,7 @@ const pythonMusicContents = [
   { kind: "sep", gap: "8" },
   { kind: "label", text: "Simple" },
   { kind: "block", type: "music_play_tone" }
-] as const;
+] ;
 
 const pythonLedContents = [
   { kind: "block", type: "led_plot" },
@@ -566,7 +722,7 @@ const pythonLedContents = [
     kind: "label",
     text: "Displays a vertical bar graph based on the 'value' and 'high' value. If 'high' is 0, the chart gets adjusted automatically."
   }
-] as const;
+] ;
 
 const pythonRadioContents = [
   { kind: "label", text: "Group" },
@@ -604,7 +760,7 @@ const pythonRadioContents = [
   { kind: "sep", gap: "8" },
   { kind: "block", type: "radio_received_packet" },
   { kind: "label", text: "Returns properties of the last radio packet received." }
-] as const;
+] ;
 
 const pythonLoopsContents = [
   {
@@ -622,7 +778,7 @@ const pythonLoopsContents = [
     kind: "label",
     text: "Repeats the code forever in the background. After each iteration, allows other codes to run for a set duration so that it runs on a timer"
   }
-] as const;
+] ;
 
 const pythonLogicContents = [
   { kind: "block", type: "logic_if_simple" },
@@ -636,7 +792,7 @@ const pythonLogicContents = [
   { kind: "sep", gap: "8" },
   { kind: "block", type: "logic_operation", fields: { OP: "OR" } },
   { kind: "label", text: "Runs code if either of two specified conditions is true" }
-] as const;
+] ;
 
 const pythonVariablesContents = [
   { kind: "block", type: "math_change" },
@@ -647,22 +803,61 @@ const pythonVariablesContents = [
   { kind: "sep", gap: "8" },
   { kind: "block", type: "variables_item_equals_number" },
   { kind: "label", text: "Declares a variable named 'item'" }
-] as const;
+] ;
 
 const pythonMathContents = [
-  { kind: "block", type: "math_arithmetic", fields: { OP: "ADD" } },
+  {
+    kind: "block",
+    type: "math_arithmetic",
+    fields: { OP: "ADD" },
+    inputs: {
+      A: { shadow: { type: "math_number", fields: { NUM: 0 } } },
+      B: { shadow: { type: "math_number", fields: { NUM: 0 } } }
+    }
+  },
   { kind: "label", text: "Adds two numbers together" },
   { kind: "sep", gap: "8" },
-  { kind: "block", type: "math_arithmetic", fields: { OP: "MINUS" } },
+  {
+    kind: "block",
+    type: "math_arithmetic",
+    fields: { OP: "MINUS" },
+    inputs: {
+      A: { shadow: { type: "math_number", fields: { NUM: 0 } } },
+      B: { shadow: { type: "math_number", fields: { NUM: 0 } } }
+    }
+  },
   { kind: "label", text: "Subtracts one number from another" },
   { kind: "sep", gap: "8" },
-  { kind: "block", type: "math_arithmetic", fields: { OP: "MULTIPLY" } },
+  {
+    kind: "block",
+    type: "math_arithmetic",
+    fields: { OP: "MULTIPLY" },
+    inputs: {
+      A: { shadow: { type: "math_number", fields: { NUM: 0 } } },
+      B: { shadow: { type: "math_number", fields: { NUM: 0 } } }
+    }
+  },
   { kind: "label", text: "Multiplies two numbers together" },
   { kind: "sep", gap: "8" },
-  { kind: "block", type: "math_arithmetic", fields: { OP: "DIVIDE" } },
+  {
+    kind: "block",
+    type: "math_arithmetic",
+    fields: { OP: "DIVIDE" },
+    inputs: {
+      A: { shadow: { type: "math_number", fields: { NUM: 0 } } },
+      B: { shadow: { type: "math_number", fields: { NUM: 0 } } }
+    }
+  },
   { kind: "label", text: "Returns the quotient of one number divided by another" },
   { kind: "sep", gap: "8" },
-  { kind: "block", type: "math_modulo" },
+  {
+    kind: "block",
+    type: "math_modulo",
+    inputs: {
+      DIVIDEND: { shadow: { type: "math_number", fields: { NUM: 0 } } },
+      DIVISOR: { shadow: { type: "math_number", fields: { NUM: 1 } } }
+    }
+  },
   { kind: "label", text: "Returns the remainder of one number divided by another" },
   { kind: "sep", gap: "8" },
   { kind: "block", type: "math_max2" },
@@ -686,39 +881,30 @@ const pythonMathContents = [
   { kind: "block", type: "math_single", fields: { OP: "TAN" } },
   { kind: "label", text: "Returns the tangent of the number" },
   { kind: "sep", gap: "8" },
-  { kind: "block", type: "math_single", fields: { OP: "ASIN" } },
-  { kind: "label", text: "Returns the arcsine of the number" },
-  { kind: "sep", gap: "8" },
-  { kind: "block", type: "math_single", fields: { OP: "ACOS" } },
-  { kind: "label", text: "Returns the arccosine of the number" },
-  { kind: "sep", gap: "8" },
-  { kind: "block", type: "math_atan2" },
-  { kind: "label", text: "Returns the angle in radians from point (0,0) to point (x,y)." },
-  { kind: "sep", gap: "8" },
-  { kind: "block", type: "math_single", fields: { OP: "ROUND" } },
-  { kind: "label", text: "Returns the integer closest to the number" },
-  { kind: "sep", gap: "8" },
-  { kind: "block", type: "math_single", fields: { OP: "ROUNDUP" } },
-  { kind: "label", text: "Returns the integer closest to the number, but always rounds positive" },
-  { kind: "sep", gap: "8" },
-  { kind: "block", type: "math_single", fields: { OP: "ROUNDDOWN" } },
-  { kind: "label", text: "Returns the integer closest to the number, but always rounds negative" },
-  { kind: "sep", gap: "8" },
-  { kind: "block", type: "math_trunc" },
-  { kind: "label", text: "Removes the decimal component of a number and returns an integer" },
-  { kind: "sep", gap: "8" },
-  { kind: "block", type: "math_random_bool" },
-  { kind: "label", text: "Generates a random true or false value" },
-  { kind: "sep", gap: "8" },
-  { kind: "block", type: "math_random_int" },
+  {
+    kind: "block",
+    type: "math_random_int",
+    inputs: {
+      FROM: { shadow: { type: "math_number", fields: { NUM: 0 } } },
+      TO: { shadow: { type: "math_number", fields: { NUM: 10 } } }
+    }
+  },
   { kind: "label", text: "Returns a random number between min and max" },
   { kind: "sep", gap: "8" },
-  { kind: "block", type: "math_constrain" },
+  {
+    kind: "block",
+    type: "math_constrain",
+    inputs: {
+      VALUE: { shadow: { type: "math_number", fields: { NUM: 0 } } },
+      LOW: { shadow: { type: "math_number", fields: { NUM: 1 } } },
+      HIGH: { shadow: { type: "math_number", fields: { NUM: 100 } } }
+    }
+  },
   { kind: "label", text: "Constrains a number to be within a range" },
   { kind: "sep", gap: "8" },
-  { kind: "block", type: "math_map_value" },
-  { kind: "label", text: "Re-maps a number from one range to another." }
-] as const;
+  { kind: "block", type: "math_random_bool" },
+  { kind: "label", text: "Generates a random true or false value" }
+] ;
 
 const pythonAdvancedContents = [
   {
@@ -726,11 +912,8 @@ const pythonAdvancedContents = [
     name: "Functions",
     colour: "#3b82f6",
     contents: [
-      { kind: "block", type: "procedures_callnoreturn", extraState: { name: "do_something", params: [] } },
-      { kind: "label", text: "Call a function" },
-      { kind: "sep", gap: "8" },
-      { kind: "block", type: "procedures_defnoreturn", fields: { NAME: "do_something" } },
-      { kind: "label", text: "Define a function" }
+      { kind: "button", text: "Make a Function...", callbackKey: "MAKE_FUNCTION" },
+      { kind: "label", text: "Adds a Python function definition in the editor." }
     ]
   },
   {
@@ -738,23 +921,54 @@ const pythonAdvancedContents = [
     name: "Arrays",
     colour: "#f97316",
     contents: [
-      { kind: "block", type: "lists_create_with" },
-      { kind: "label", text: "Creates a new Array" },
+      { kind: "label", text: "Create" },
+      {
+        kind: "block",
+        type: "variables_set",
+        inputs: {
+          VALUE: { shadow: { type: "lists_create_with", extraState: { itemCount: 1 } } }
+        }
+      },
+      { kind: "block", type: "lists_create_with", extraState: { itemCount: 3 } },
+      { kind: "block", type: "lists_create_empty" },
       { kind: "sep", gap: "8" },
+      { kind: "label", text: "Read" },
       { kind: "block", type: "lists_length" },
-      { kind: "label", text: "Returns the number of values in an Array" },
-      { kind: "sep", gap: "8" },
-      { kind: "block", type: "lists_getIndex", fields: { MODE: "GET", WHERE: "FROM_START" } },
-      { kind: "label", text: "Returns the value in the Array at the given index" },
-      { kind: "sep", gap: "8" },
-      { kind: "block", type: "lists_setIndex", fields: { MODE: "SET", WHERE: "FROM_START" } },
-      { kind: "label", text: "Overwrites the value in an Array at the given index" },
-      { kind: "sep", gap: "8" },
-      { kind: "block", type: "lists_setIndex", fields: { MODE: "INSERT", WHERE: "LAST" } },
-      { kind: "label", text: "Adds a value to the end of an Array" },
-      { kind: "sep", gap: "8" },
+      {
+        kind: "block",
+        type: "lists_getIndex",
+        fields: { MODE: "GET", WHERE: "FROM_START" },
+        inputs: {
+          LIST: { shadow: { type: "variables_get", fields: { VAR: "list" } } },
+          AT: { shadow: { type: "math_number", fields: { NUM: 0 } } }
+        }
+      },
       { kind: "block", type: "lists_getIndex", fields: { MODE: "GET_REMOVE", WHERE: "LAST" } },
-      { kind: "label", text: "Removes and returns the value at the end of an Array" }
+      { kind: "block", type: "lists_getIndex", fields: { MODE: "GET", WHERE: "RANDOM" } },
+      { kind: "sep", gap: "8" },
+      { kind: "label", text: "Modify" },
+      {
+        kind: "block",
+        type: "lists_setIndex",
+        fields: { MODE: "SET", WHERE: "FROM_START" },
+        inputs: {
+          LIST: { shadow: { type: "variables_get", fields: { VAR: "list" } } },
+          AT: { shadow: { type: "math_number", fields: { NUM: 0 } } }
+        }
+      },
+      {
+        kind: "block",
+        type: "lists_setIndex",
+        fields: { MODE: "INSERT", WHERE: "LAST" },
+        inputs: {
+          LIST: { shadow: { type: "variables_get", fields: { VAR: "list" } } }
+        }
+      },
+      { kind: "block", type: "lists_getIndex", fields: { MODE: "REMOVE", WHERE: "LAST" } },
+      { kind: "sep", gap: "8" },
+      { kind: "label", text: "Operations" },
+      { kind: "block", type: "lists_indexOf" },
+      { kind: "block", type: "lists_reverse" }
     ]
   },
   {
@@ -762,23 +976,42 @@ const pythonAdvancedContents = [
     name: "Text",
     colour: "#ca8a04",
     contents: [
-      { kind: "block", type: "text_charAt" },
-      { kind: "label", text: "Returns the character at the given index" },
-      { kind: "sep", gap: "8" },
-      { kind: "block", type: "text_substring_length" },
-      { kind: "label", text: "Returns the part of a string starting at a given index with the given length" },
+      { kind: "block", type: "text" },
+      {
+        kind: "block",
+        type: "text_length",
+        inputs: {
+          VALUE: { shadow: { type: "text", fields: { TEXT: "abc" } } }
+        }
+      },
+      { kind: "block", type: "text_join", extraState: { itemCount: 2 } },
+      {
+        kind: "block",
+        type: "text_charAt",
+        inputs: {
+          VALUE: { shadow: { type: "text", fields: { TEXT: "abc" } } },
+          INDEX: { shadow: { type: "math_number", fields: { NUM: 0 } } }
+        }
+      },
+      {
+        kind: "block",
+        type: "text_substring_length",
+        inputs: {
+          TEXT: { shadow: { type: "text", fields: { TEXT: "abc" } } },
+          FROM: { shadow: { type: "math_number", fields: { NUM: 0 } } },
+          LEN: { shadow: { type: "math_number", fields: { NUM: 1 } } }
+        }
+      },
       { kind: "sep", gap: "8" },
       { kind: "block", type: "text_parse_to_number" },
-      { kind: "label", text: "Converts a number written as text into a number" },
-      { kind: "sep", gap: "8" },
+      { kind: "block", type: "text_includes" },
+      { kind: "block", type: "text_split_with" },
+      { kind: "block", type: "text_indexOf" },
+      { kind: "block", type: "text_isEmpty" },
       { kind: "block", type: "text_compare_to" },
-      { kind: "label", text: "Compares one string against another alphabetically and returns a number" },
-      { kind: "sep", gap: "8" },
-      { kind: "block", type: "text_join" },
-      { kind: "label", text: "Combines values into one string" },
-      { kind: "sep", gap: "8" },
-      { kind: "block", type: "text_length" },
-      { kind: "label", text: "Returns the number of characters in a string" }
+      { kind: "block", type: "text_char_code_at" },
+      { kind: "block", type: "text_convert_number_to_text" },
+      { kind: "block", type: "text_from_char_code" }
     ]
   },
   {
@@ -954,7 +1187,7 @@ const pythonAdvancedContents = [
       { kind: "block", type: "control_event_value" }
     ]
   }
-] as const;
+] ;
 
 const pythonToolbox = {
   ...toolbox,
@@ -1020,71 +1253,346 @@ function registerPxtLikeBlocks() {
     Blockly.Msg.CONTROLS_REPEAT_TITLE = "repeat %1";
   }
 
+  // Consolidate all blocks with correct input names and labels
+  // Define missing messages to fix rendering errors like ATE_EMPTY_TITLE
+  Blockly.Msg['LISTS_CREATE_EMPTY_TITLE'] = "create empty array";
+  Blockly.Msg['LISTS_CREATE_WITH_INPUT_WITH'] = "create array with";
+  Blockly.Msg['TEXT_APPEND_APPENDTEXT'] = "append text";
+  if (!Blockly.Msg.PROCEDURE_ALREADY_EXISTS) {
+    Blockly.Msg.PROCEDURE_ALREADY_EXISTS = "A function named %1 already exists.";
+  }
+  if (!Blockly.Msg.VARIABLE_ALREADY_EXISTS) {
+    Blockly.Msg.VARIABLE_ALREADY_EXISTS = "A variable named %1 already exists.";
+  }
+  if (!Blockly.Msg.PROCEDURES_DEFNORETURN_PROCEDURE) {
+    Blockly.Msg.PROCEDURES_DEFNORETURN_PROCEDURE = "do something";
+  }
+  if (!Blockly.Msg.PROCEDURES_DEFRETURN_PROCEDURE) {
+    Blockly.Msg.PROCEDURES_DEFRETURN_PROCEDURE = "do something";
+  }
+
+  // Manual block registration for critical blocks to bypass mutator issues
+  const defineBlock = (type: string, spec: any) => {
+    delete (Blockly.Blocks as any)[type];
+    if (spec.init) {
+      (Blockly.Blocks as any)[type] = {
+        init: spec.init,
+        mutationToDom: () => null,
+        domToMutation: () => {}
+      };
+    } else {
+      Blockly.common.defineBlocksWithJsonArray([spec]);
+    }
+  };
+
+  // Redefine lists_getIndex manually to fix "Missing LIST connection"
+  defineBlock('lists_getIndex', {
+    init: function(this: any) {
+      this.appendDummyInput()
+        .appendField(new Blockly.FieldDropdown([
+          ["get", "GET"],
+          ["get and remove", "GET_REMOVE"],
+          ["remove", "REMOVE"]
+        ]), "MODE")
+        .appendField(new Blockly.FieldDropdown([
+          ["from start", "FROM_START"],
+          ["from end", "FROM_END"],
+          ["first", "FIRST"],
+          ["last", "LAST"],
+          ["random", "RANDOM"]
+        ]), "WHERE");
+      this.appendValueInput('LIST').setCheck('Array').appendField('list');
+      this.appendValueInput('AT').setCheck('Number').appendField('from');
+      this.setOutput(true);
+      this.setColour(260);
+      this.setInputsInline(true);
+    }
+  });
+
+  defineBlock('lists_setIndex', {
+    init: function(this: any) {
+      this.appendDummyInput()
+        .appendField(new Blockly.FieldDropdown([
+          ["set", "SET"],
+          ["insert", "INSERT"]
+        ]), "MODE")
+        .appendField(new Blockly.FieldDropdown([
+          ["from start", "FROM_START"],
+          ["from end", "FROM_END"],
+          ["first", "FIRST"],
+          ["last", "LAST"],
+          ["random", "RANDOM"]
+        ]), "WHERE");
+      this.appendValueInput('LIST').setCheck('Array').appendField('list');
+      this.appendValueInput('AT').setCheck('Number').appendField('in');
+      this.appendValueInput('VALUE').appendField('to');
+      this.setPreviousStatement(true);
+      this.setNextStatement(true);
+      this.setColour(260);
+      this.setInputsInline(true);
+    }
+  });
+
+  defineBlock('controls_for', {
+    init: function(this: any) {
+      this.appendValueInput('FROM')
+        .setCheck('Number')
+        .appendField('for')
+        .appendField(new Blockly.FieldVariable('i'), 'VAR')
+        .appendField('from');
+      this.appendValueInput('TO').setCheck('Number').appendField('to');
+      this.appendValueInput('BY').setCheck('Number').appendField('by');
+      this.appendStatementInput('DO').appendField('do');
+      this.setPreviousStatement(true);
+      this.setNextStatement(true);
+      this.setColour(120);
+      this.setTooltip('Count with a variable from start to end');
+      this.setHelpUrl('');
+    }
+  });
+
+  defineBlock('controls_forEach', {
+    init: function(this: any) {
+      this.appendValueInput('LIST')
+        .setCheck('Array')
+        .appendField('for each')
+        .appendField(new Blockly.FieldVariable('item'), 'VAR')
+        .appendField('in');
+      this.appendStatementInput('DO').appendField('do');
+      this.setPreviousStatement(true);
+      this.setNextStatement(true);
+      this.setColour(120);
+      this.setTooltip('Iterate over each item in a list');
+      this.setHelpUrl('');
+    }
+  });
+
+  defineBlock('logic_negate', {
+    init: function(this: any) {
+      this.appendValueInput('BOOL').setCheck('Boolean').appendField('not');
+      this.setOutput(true, 'Boolean');
+      this.setColour(210);
+      this.setTooltip('Returns true if input is false');
+      this.setHelpUrl('');
+    }
+  });
+
+  defineBlock('math_constrain', {
+    init: function(this: any) {
+      this.appendValueInput('VALUE').setCheck('Number').appendField('constrain');
+      this.appendValueInput('LOW').setCheck('Number').appendField('between');
+      this.appendValueInput('HIGH').setCheck('Number').appendField('and');
+      this.setOutput(true, 'Number');
+      this.setColour(230);
+      this.setTooltip('Constrain a number between limits');
+      this.setHelpUrl('');
+    }
+  });
+
+  // Json definitions for others
   Blockly.common.defineBlocksWithJsonArray([
+    // Math Blocks
     {
-      type: "on_start",
-      message0: "on start %1 %2",
+      type: "math_arithmetic",
+      message0: "%1 %2 %3",
       args0: [
-        { type: "input_dummy" },
-        { type: "input_statement", name: "DO" }
+        { type: "input_value", name: "A", check: "Number" },
+        {
+          type: "field_dropdown",
+          name: "OP",
+          options: [["+", "ADD"], ["-", "MINUS"], ["*", "MULTIPLY"], ["/", "DIVIDE"], ["**", "POWER"]]
+        },
+        { type: "input_value", name: "B", check: "Number" }
       ],
-      colour: 210,
-      tooltip: "Runs once when program starts",
-      helpUrl: ""
+      output: "Number", colour: 230, inputsInline: true
     },
     {
-      type: "basic_forever",
-      message0: "forever %1 %2",
+      type: "math_modulo",
+      message0: "remainder of %1 ÷ %2",
       args0: [
-        { type: "input_dummy" },
-        { type: "input_statement", name: "DO" }
+        { type: "input_value", name: "DIVIDEND", check: "Number" },
+        { type: "input_value", name: "DIVISOR", check: "Number" }
       ],
-      colour: 210,
-      tooltip: "Runs repeatedly forever",
-      helpUrl: ""
+      output: "Number", colour: 230, inputsInline: true
     },
     {
-      type: "device_on_start",
-      message0: "on start %1 %2",
+      type: "math_random_int",
+      message0: "pick random %1 to %2",
       args0: [
-        { type: "input_dummy" },
-        { type: "input_statement", name: "DO" }
+        { type: "input_value", name: "FROM", check: "Number" },
+        { type: "input_value", name: "TO", check: "Number" }
       ],
-      colour: 120,
-      tooltip: "Runs once when program starts",
-      helpUrl: ""
+      output: "Number", colour: 230, inputsInline: true
     },
     {
-      type: "device_forever",
-      message0: "forever %1 %2",
+      type: "math_single",
+      message0: "%1 %2",
       args0: [
-        { type: "input_dummy" },
-        { type: "input_statement", name: "DO" }
+        {
+          type: "field_dropdown",
+          name: "OP",
+          options: [
+            ["square root", "ROOT"],
+            ["absolute", "ABS"],
+            ["-", "NEG"],
+            ["ln", "LN"],
+            ["log10", "LOG10"],
+            ["e^", "EXP"],
+            ["10^", "POW10"],
+            ["sin", "SIN"],
+            ["cos", "COS"],
+            ["tan", "TAN"]
+          ]
+        },
+        { type: "input_value", name: "NUM", check: "Number" }
       ],
-      colour: 120,
-      tooltip: "Runs repeatedly forever",
-      helpUrl: ""
+      output: "Number", colour: 230
+    },
+
+    // Variables Blocks
+    {
+      type: "variables_set",
+      message0: "set %1 to %2",
+      args0: [
+        { type: "field_variable", name: "VAR", variable: "item" },
+        { type: "input_value", name: "VALUE" }
+      ],
+      previousStatement: null, nextStatement: null, colour: 350
+    },
+
+    // Arrays Blocks
+    {
+      type: "lists_length",
+      message0: "length of array %1",
+      args0: [{ type: "input_value", name: "VALUE", check: "Array" }],
+      output: "Number", colour: 260
     },
     {
-      type: "device_pause",
-      message0: "pause (ms) %1",
-      args0: [{ type: "input_value", name: "time", check: "Number" }],
-      previousStatement: null,
-      nextStatement: null,
-      colour: 230,
-      tooltip: "Pause for some milliseconds",
-      helpUrl: ""
+      type: "lists_create_empty",
+      message0: "empty array",
+      output: "Array", colour: 260
     },
     {
-      type: "basic_pause",
-      message0: "pause (ms) %1",
-      args0: [{ type: "input_value", name: "TIME", check: "Number" }],
-      previousStatement: null,
-      nextStatement: null,
-      colour: 210,
-      tooltip: "Pause for some milliseconds",
-      helpUrl: ""
+      type: "lists_indexOf",
+      message0: "index of %2 in array %1",
+      args0: [
+        { type: "input_value", name: "LIST", check: "Array" },
+        { type: "input_value", name: "VALUE" }
+      ],
+      output: "Number", colour: 260, inputsInline: true
     },
+    {
+      type: "lists_reverse",
+      message0: "reverse array %1",
+      args0: [{ type: "input_value", name: "LIST", check: "Array" }],
+      previousStatement: null, nextStatement: null, colour: 260
+    },
+
+    // Text Blocks
+    {
+      type: "text_length",
+      message0: "length of string %1",
+      args0: [{ type: "input_value", name: "VALUE", check: "String" }],
+      output: "Number", colour: 160
+    },
+    {
+      type: "text_charAt",
+      message0: "char at %2 from %1",
+      args0: [
+        { type: "input_value", name: "VALUE", check: "String" },
+        { type: "input_value", name: "INDEX", check: "Number" }
+      ],
+      output: "String", colour: 160, inputsInline: true
+    },
+    {
+      type: "text_join",
+      message0: "join %1 %2",
+      args0: [
+        { type: "input_value", name: "ADD0", check: "String" },
+        { type: "input_value", name: "ADD1", check: "String" }
+      ],
+      output: "String", colour: 160, inputsInline: true
+    },
+    {
+      type: "text_substring_length",
+      message0: "substring of %1 from %2 with length %3",
+      args0: [
+        { type: "input_value", name: "TEXT", check: "String" },
+        { type: "input_value", name: "FROM", check: "Number" },
+        { type: "input_value", name: "LEN", check: "Number" }
+      ],
+      output: "String", colour: 160, inputsInline: true
+    },
+    {
+      type: "text_parse_to_number",
+      message0: "parse to number %1",
+      args0: [{ type: "input_value", name: "TEXT", check: "String" }],
+      output: "Number", colour: 160
+    },
+    {
+      type: "text_includes",
+      message0: "%1 includes %2",
+      args0: [
+        { type: "input_value", name: "TEXT", check: "String" },
+        { type: "input_value", name: "SEARCH", check: "String" }
+      ],
+      output: "Boolean", colour: 160, inputsInline: true
+    },
+    {
+      type: "text_split_with",
+      message0: "split %1 with delimiter %2",
+      args0: [
+        { type: "input_value", name: "TEXT", check: "String" },
+        { type: "input_value", name: "DELIM", check: "String" }
+      ],
+      output: "Array", colour: 160, inputsInline: true
+    },
+    {
+      type: "text_indexOf",
+      message0: "index of %2 in string %1",
+      args0: [
+        { type: "input_value", name: "TEXT", check: "String" },
+        { type: "input_value", name: "SEARCH", check: "String" }
+      ],
+      output: "Number", colour: 160, inputsInline: true
+    },
+    {
+      type: "text_isEmpty",
+      message0: "is string %1 empty",
+      args0: [{ type: "input_value", name: "TEXT", check: "String" }],
+      output: "Boolean", colour: 160
+    },
+    {
+      type: "text_compare_to",
+      message0: "compare string %1 to %2",
+      args0: [
+        { type: "input_value", name: "TEXT", check: "String" },
+        { type: "input_value", name: "OTHER", check: "String" }
+      ],
+      output: "Number", colour: 160, inputsInline: true
+    },
+    {
+      type: "text_char_code_at",
+      message0: "char code at %2 from string %1",
+      args0: [
+        { type: "input_value", name: "TEXT", check: "String" },
+        { type: "input_value", name: "INDEX", check: "Number" }
+      ],
+      output: "Number", colour: 160, inputsInline: true
+    },
+    {
+      type: "text_convert_number_to_text",
+      message0: "convert number %1 to text",
+      args0: [{ type: "input_value", name: "NUM", check: "Number" }],
+      output: "String", colour: 160
+    },
+    {
+      type: "text_from_char_code",
+      message0: "char from code %1",
+      args0: [{ type: "input_value", name: "CODE", check: "Number" }],
+      output: "String", colour: 160
+    },
+
     {
       type: "device_show_number",
       message0: "show number %1",
@@ -1102,7 +1610,7 @@ function registerPxtLikeBlocks() {
       previousStatement: null,
       nextStatement: null,
       colour: 210,
-      tooltip: "Scroll text on LED display",
+      tooltip: "Show text on LED display",
       helpUrl: ""
     },
     {
@@ -1113,20 +1621,23 @@ function registerPxtLikeBlocks() {
           type: "field_dropdown",
           name: "ICON",
           options: [
-            ["heart", "Heart"],
-            ["small heart", "SmallHeart"],
-            ["happy", "Happy"],
-            ["sad", "Sad"],
-            ["confused", "Confused"],
-            ["yes", "Yes"],
-            ["no", "No"]
+            ["Heart", "Heart"],
+            ["SmallHeart", "SmallHeart"],
+            ["Yes", "Yes"],
+            ["No", "No"],
+            ["Happy", "Happy"],
+            ["Sad", "Sad"],
+            ["Confused", "Confused"],
+            ["Angry", "Angry"],
+            ["Asleep", "Asleep"],
+            ["Surprised", "Surprised"]
           ]
         }
       ],
       previousStatement: null,
       nextStatement: null,
       colour: 210,
-      tooltip: "Show a built-in icon on LED display",
+      tooltip: "Show built-in icon",
       helpUrl: ""
     },
     {
@@ -1137,21 +1648,21 @@ function registerPxtLikeBlocks() {
           type: "field_dropdown",
           name: "ARROW",
           options: [
-            ["north", "North"],
-            ["north east", "NorthEast"],
-            ["east", "East"],
-            ["south east", "SouthEast"],
-            ["south", "South"],
-            ["south west", "SouthWest"],
-            ["west", "West"],
-            ["north west", "NorthWest"]
+            ["North", "North"],
+            ["NorthEast", "NorthEast"],
+            ["East", "East"],
+            ["SouthEast", "SouthEast"],
+            ["South", "South"],
+            ["SouthWest", "SouthWest"],
+            ["West", "West"],
+            ["NorthWest", "NorthWest"]
           ]
         }
       ],
       previousStatement: null,
       nextStatement: null,
       colour: 210,
-      tooltip: "Show an arrow on LED display",
+      tooltip: "Show built-in arrow",
       helpUrl: ""
     },
     {
@@ -1159,7 +1670,7 @@ function registerPxtLikeBlocks() {
       message0: "show leds %1",
       args0: [
         {
-          type: "field_multilinetext",
+          type: "field_input",
           name: "MATRIX",
           text: "# # # # #\n# . . . #\n# . # . #\n# . . . #\n# # # # #"
         }
@@ -1167,7 +1678,43 @@ function registerPxtLikeBlocks() {
       previousStatement: null,
       nextStatement: null,
       colour: 210,
-      tooltip: "Show custom LED pattern",
+      tooltip: "Show 5x5 LED pattern",
+      helpUrl: ""
+    },
+    {
+      type: "device_on_start",
+      message0: "on start %1 %2",
+      args0: [
+        { type: "input_dummy" },
+        { type: "input_statement", name: "DO" }
+      ],
+      previousStatement: null,
+      nextStatement: null,
+      colour: 210,
+      tooltip: "Run once on start",
+      helpUrl: ""
+    },
+    {
+      type: "device_forever",
+      message0: "forever %1 %2",
+      args0: [
+        { type: "input_dummy" },
+        { type: "input_statement", name: "DO" }
+      ],
+      previousStatement: null,
+      nextStatement: null,
+      colour: 210,
+      tooltip: "Repeat the code forever",
+      helpUrl: ""
+    },
+    {
+      type: "device_pause",
+      message0: "pause (ms) %1",
+      args0: [{ type: "input_value", name: "time", check: "Number" }],
+      previousStatement: null,
+      nextStatement: null,
+      colour: 210,
+      tooltip: "Pause for the specified time",
       helpUrl: ""
     },
     {
@@ -2212,8 +2759,8 @@ function registerPxtLikeBlocks() {
     { type: "game_pause", message0: "pause", previousStatement: null, nextStatement: null, colour: 160 },
     { type: "images_show_image_offset", message0: "show image %1 at offset %2", args0: [{ type: "input_value", name: "IMG" }, { type: "input_value", name: "OFFSET", check: "Number" }], previousStatement: null, nextStatement: null, colour: 280 },
     { type: "images_scroll_image", message0: "scroll image %1 with offset %2 and interval (ms) %3", args0: [{ type: "input_value", name: "IMG" }, { type: "input_value", name: "OFFSET", check: "Number" }, { type: "input_value", name: "INTERVAL", check: "Number" }], previousStatement: null, nextStatement: null, colour: 280 },
-    { type: "images_create_image", message0: "create image %1", args0: [{ type: "field_multilinetext", name: "MATRIX", text: "# # # # #\n# . . . #\n# . # . #\n# . . . #\n# # # # #" }], output: "String", colour: 280 },
-    { type: "images_create_big_image", message0: "create big image %1", args0: [{ type: "field_multilinetext", name: "MATRIX", text: "# # # # # # # # # #\n# . . . # # . . . #\n# . # . # # . # . #\n# . . . # # . . . #\n# # # # # # # # # #" }], output: "String", colour: 280 },
+    { type: "images_create_image", message0: "create image %1", args0: [{ type: "field_input", name: "MATRIX", text: "# # # # #\n# . . . #\n# . # . #\n# . . . #\n# # # # #" }], output: "String", colour: 280 },
+    { type: "images_create_big_image", message0: "create big image %1", args0: [{ type: "field_input", name: "MATRIX", text: "# # # # # # # # # #\n# . . . # # . . . #\n# . # . # # . # . #\n# . . . # # . . . #\n# # # # # # # # # #" }], output: "String", colour: 280 },
     { type: "images_direction", message0: "%1", args0: [{ type: "field_dropdown", name: "DIR", options: [["North", "North"], ["East", "East"], ["South", "South"], ["West", "West"]] }], output: "String", colour: 280 },
     { type: "images_icon_image", message0: "icon image %1", args0: [{ type: "field_dropdown", name: "ICON", options: [["heart", "Heart"], ["small heart", "SmallHeart"], ["yes", "Yes"], ["no", "No"]] }], output: "String", colour: 280 },
     { type: "images_arrow_image", message0: "arrow image %1", args0: [{ type: "field_dropdown", name: "ARROW", options: [["North", "North"], ["East", "East"], ["South", "South"], ["West", "West"]] }], output: "String", colour: 280 },
@@ -2754,13 +3301,18 @@ function downloadTextFile(fileName: string, content: string) {
   URL.revokeObjectURL(url);
 }
 
-function registerWorkspaceCallbacks(workspace: Blockly.WorkspaceSvg) {
+function registerWorkspaceCallbacks(
+  workspace: Blockly.WorkspaceSvg,
+  onMakeFunction?: (name: string) => boolean
+) {
   workspace.registerButtonCallback("MAKE_FUNCTION", () => {
     const defaultName = "do something";
     const rawName = window.prompt("Function name", defaultName);
     if (rawName === null) return;
     const trimmed = rawName.trim();
     if (!trimmed) return;
+
+    if (onMakeFunction && onMakeFunction(trimmed)) return;
 
     const definition = workspace.newBlock("procedures_defnoreturn");
     definition.setFieldValue(trimmed, "NAME");
@@ -2887,7 +3439,15 @@ export default function BlocklyEditorClient() {
       }
     });
 
-    registerWorkspaceCallbacks(workspace);
+    registerWorkspaceCallbacks(workspace, (name) => {
+      if (editorModeRef.current !== "python") return false;
+      const safeName = name
+        .replace(/\s+/g, "_")
+        .replace(/[^a-zA-Z0-9_]/g, "_")
+        .replace(/^(\d)/, "fn_$1");
+      appendPythonSnippet(`def ${safeName}():\n    pass`);
+      return true;
+    });
 
     workspaceRef.current = workspace;
     syncCode(workspace);
