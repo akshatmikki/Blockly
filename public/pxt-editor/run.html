@@ -150,6 +150,7 @@
         var light = !!/light(?:[:=])1/i.exec(window.location.href);
         var fullScreen = !!/fullscreen(?:[:=])1/i.exec(window.location.href);
         var autofocus = !!/autofocus(?:[:=])1/i.exec(window.location.href);
+        var simTop = /simTop(?:[:=])(-?\d+)/i.exec(window.location.href);
         var deps = /deps(?:[:=])([^&?]+)/i.exec(window.location.href);
         var prebuiltSimJs = /prebuilt(?:[:=])1/i.test(window.location.href);
         var single = !!/single(?:[:=])1/i.test(window.location.href);
@@ -190,15 +191,30 @@
             return;
         }
 
+        function appendInjectedStyle(css) {
+            var styleEl = document.getElementById("injected-style");
+            if (!styleEl) return;
+            styleEl.textContent = (styleEl.textContent || "") + css;
+        }
+
         if (fullScreen) {
-            document.getElementById("injected-style").textContent =
+            appendInjectedStyle(
                 "#simulators {\n"
                 + "    height: 100%;\n"
                 + "}\n"
                 + "div.simframe {\n"
                 + "    height: calc(100% - 1rem);\n"
                 + "    padding-bottom: 0 !important;\n"
-                + "}\n";
+                + "}\n"
+            );
+        }
+
+        if (simTop && simTop[1]) {
+            appendInjectedStyle(
+                "#simulators {\n"
+                + "    transform: translateY(" + simTop[1] + "px);\n"
+                + "}\n"
+            );
         }
 
         function initAppCache() {
