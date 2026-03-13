@@ -1,5 +1,6 @@
 "use client";
 
+import * as React from "react";
 import { useEffect, useMemo, useRef, useState, type ChangeEvent } from "react";
 import { createPortal } from "react-dom";
 import * as Blockly from "blockly/core";
@@ -10,12 +11,11 @@ import { Search, Code, Info } from "lucide-react";
 import PxtSimulatorPane from "./pxt-simulator-pane";
 
 const toolbox = {
-  kind: 'categoryToolbox',
+  kind: "categoryToolbox",
   contents: [
     {
       kind: "category",
-      name: "Basic",
-      "web-icon": "th",
+      name: "\uD83D\uDFE6 Basic",
       colour: "#1f88e5",
       contents: [
         {
@@ -55,8 +55,7 @@ const toolbox = {
     },
     {
       kind: "category",
-      name: "Input",
-      "web-icon": "dot circle",
+      name: "\uD83D\uDD18 Input",
       colour: "#b400d6",
       contents: [
         { kind: "block", type: "input_on_button_pressed" },
@@ -66,8 +65,7 @@ const toolbox = {
     },
     {
       kind: "category",
-      name: "Music",
-      "web-icon": "headphones",
+      name: "\uD83C\uDFB5 Music",
       colour: "#d83b01",
       contents: [
         { kind: "label", text: "Melody" },
@@ -107,8 +105,7 @@ const toolbox = {
     },
     {
       kind: "category",
-      name: "Led",
-      "web-icon": "toggle on",
+      name: "\u25A4 LED",
       colour: "#5e35b1",
       contents: [
         { kind: "block", type: "led_plot" },
@@ -119,8 +116,7 @@ const toolbox = {
     },
     {
       kind: "category",
-      name: "Radio",
-      "web-icon": "signal",
+      name: "\uD83D\uDCE1 Radio",
       colour: "#e91e63",
       contents: [
         { kind: "block", type: "radio_set_group" },
@@ -133,8 +129,7 @@ const toolbox = {
     { kind: "sep" },
     {
       kind: "category",
-      name: "Loops",
-      "web-icon": "repeat",
+      name: "\uD83D\uDD04 Loops",
       colour: "#5ca65c",
       contents: [
         { kind: "block", type: "controls_repeat_ext" },
@@ -146,8 +141,7 @@ const toolbox = {
     },
     {
       kind: "category",
-      name: "Logic",
-      "web-icon": "random",
+      name: "\u2B28 Logic",
       colour: "#5c81a6",
       contents: [
         { kind: "block", type: "controls_if" },
@@ -159,15 +153,13 @@ const toolbox = {
     },
     {
       kind: "category",
-      name: "Variables",
-      "web-icon": "bars",
+      name: "\uD835\uDCE7 Variables",
       custom: "VARIABLE",
       colour: "#a65c81"
     },
     {
       kind: "category",
       name: "Math",
-      "web-icon": "calculator",
       colour: "#5c68a6",
       contents: [
         { kind: "block", type: "math_number", fields: { NUM: 0 } },
@@ -243,14 +235,12 @@ const toolbox = {
     },
     {
       kind: "category",
-      name: "Advanced",
-      "web-icon": "chevron up",
+      name: "\u23F5 Advanced",
       colour: "#0f766e",
       contents: [
         {
           kind: "category",
           name: "Functions",
-          "web-icon": "function",
           colour: "#3b82f6",
           contents: [
             { kind: "button", text: "Make a Function...", callbackKey: "MAKE_FUNCTION" }
@@ -259,7 +249,6 @@ const toolbox = {
         {
           kind: "category",
           name: "Arrays",
-          "web-icon": "list ul",
           colour: "#f97316",
           contents: [
             { kind: "label", text: "Create" },
@@ -373,7 +362,6 @@ const toolbox = {
         {
           kind: "category",
           name: "Text",
-          "web-icon": "font",
           colour: "#ca8a04",
           contents: [
             { kind: "block", type: "text" },
@@ -417,7 +405,6 @@ const toolbox = {
         {
           kind: "category",
           name: "Game",
-          "web-icon": "gamepad",
           colour: "#059669",
           contents: [
             { kind: "block", type: "game_create_sprite" },
@@ -456,7 +443,6 @@ const toolbox = {
         {
           kind: "category",
           name: "Images",
-          "web-icon": "image",
           colour: "#7e22ce",
           contents: [
             { kind: "block", type: "images_show_image_offset" },
@@ -484,7 +470,6 @@ const toolbox = {
         {
           kind: "category",
           name: "Pins",
-          "web-icon": "bullseye",
           colour: "#b91c1c",
           contents: [
             { kind: "block", type: "pins_digital_read_pin" },
@@ -511,7 +496,6 @@ const toolbox = {
         {
           kind: "category",
           name: "Serial",
-          "web-icon": "usb",
           colour: "#1d4ed8",
           contents: [
             { kind: "block", type: "serial_write_line" },
@@ -544,7 +528,6 @@ const toolbox = {
         {
           kind: "category",
           name: "Control",
-          "web-icon": "server",
           colour: "#374151",
           contents: [
             { kind: "block", type: "control_wait_for_event" },
@@ -569,7 +552,7 @@ const toolbox = {
       ]
     }
   ]
-} ;
+};
 
 const pythonBasicContents = [
   {
@@ -622,7 +605,7 @@ const pythonBasicContents = [
   { kind: "sep", gap: "8" },
   { kind: "block", type: "device_show_arrow" },
   { kind: "label", text: "Draws an arrow on the LED screen." }
-] ;
+];
 
 const pythonInputContents = [
   { kind: "block", type: "input_on_button_pressed" },
@@ -668,7 +651,7 @@ const pythonInputContents = [
   { kind: "sep", gap: "8" },
   { kind: "block", type: "input_sound_level" },
   { kind: "label", text: "Reads microphone loudness from 0 to 255." }
-] ;
+];
 
 const pythonMusicContents = [
   { kind: "label", text: "Melody" },
@@ -712,7 +695,7 @@ const pythonMusicContents = [
   { kind: "sep", gap: "8" },
   { kind: "label", text: "Simple" },
   { kind: "block", type: "music_play_tone" }
-] ;
+];
 
 const pythonLedContents = [
   { kind: "block", type: "led_plot" },
@@ -741,7 +724,7 @@ const pythonLedContents = [
     kind: "label",
     text: "Displays a vertical bar graph based on the 'value' and 'high' value. If 'high' is 0, the chart gets adjusted automatically."
   }
-] ;
+];
 
 const pythonRadioContents = [
   { kind: "label", text: "Group" },
@@ -779,7 +762,7 @@ const pythonRadioContents = [
   { kind: "sep", gap: "8" },
   { kind: "block", type: "radio_received_packet" },
   { kind: "label", text: "Returns properties of the last radio packet received." }
-] ;
+];
 
 const pythonLoopsContents = [
   {
@@ -797,7 +780,7 @@ const pythonLoopsContents = [
     kind: "label",
     text: "Repeats the code forever in the background. After each iteration, allows other codes to run for a set duration so that it runs on a timer"
   }
-] ;
+];
 
 const pythonLogicContents = [
   { kind: "block", type: "logic_if_simple" },
@@ -811,7 +794,7 @@ const pythonLogicContents = [
   { kind: "sep", gap: "8" },
   { kind: "block", type: "logic_operation", fields: { OP: "OR" } },
   { kind: "label", text: "Runs code if either of two specified conditions is true" }
-] ;
+];
 
 const pythonVariablesContents = [
   {
@@ -836,7 +819,7 @@ const pythonVariablesContents = [
   { kind: "sep", gap: "8" },
   { kind: "block", type: "variables_item_equals_number" },
   { kind: "label", text: "Declares a variable named 'item'" }
-] ;
+];
 
 const pythonMathContents = [
   {
@@ -937,13 +920,12 @@ const pythonMathContents = [
   { kind: "sep", gap: "8" },
   { kind: "block", type: "math_random_bool" },
   { kind: "label", text: "Generates a random true or false value" }
-] ;
+];
 
 const pythonAdvancedContents = [
   {
     kind: "category",
-      name: "Functions",
-      "web-icon": "function",
+    name: "Functions",
     colour: "#3b82f6",
     contents: [
       { kind: "button", text: "Make a Function...", callbackKey: "MAKE_FUNCTION" },
@@ -1221,7 +1203,7 @@ const pythonAdvancedContents = [
       { kind: "block", type: "control_event_value" }
     ]
   }
-] ;
+];
 
 const pythonToolbox = {
   ...toolbox,
@@ -1312,7 +1294,7 @@ function registerPxtLikeBlocks() {
       (Blockly.Blocks as any)[type] = {
         init: spec.init,
         mutationToDom: () => null,
-        domToMutation: () => {}
+        domToMutation: () => { }
       };
     } else {
       Blockly.common.defineBlocksWithJsonArray([spec]);
@@ -1321,7 +1303,7 @@ function registerPxtLikeBlocks() {
 
   // Redefine lists_getIndex manually to fix "Missing LIST connection"
   defineBlock('lists_getIndex', {
-    init: function(this: any) {
+    init: function (this: any) {
       this.appendDummyInput()
         .appendField(new Blockly.FieldDropdown([
           ["get", "GET"],
@@ -1344,7 +1326,7 @@ function registerPxtLikeBlocks() {
   });
 
   defineBlock('lists_setIndex', {
-    init: function(this: any) {
+    init: function (this: any) {
       this.appendDummyInput()
         .appendField(new Blockly.FieldDropdown([
           ["set", "SET"],
@@ -1368,7 +1350,7 @@ function registerPxtLikeBlocks() {
   });
 
   defineBlock('controls_for', {
-    init: function(this: any) {
+    init: function (this: any) {
       this.appendValueInput('FROM')
         .setCheck('Number')
         .appendField('for')
@@ -1386,7 +1368,7 @@ function registerPxtLikeBlocks() {
   });
 
   defineBlock('controls_forEach', {
-    init: function(this: any) {
+    init: function (this: any) {
       this.appendValueInput('LIST')
         .setCheck('Array')
         .appendField('for each')
@@ -1402,7 +1384,7 @@ function registerPxtLikeBlocks() {
   });
 
   defineBlock('logic_negate', {
-    init: function(this: any) {
+    init: function (this: any) {
       this.appendValueInput('BOOL').setCheck('Boolean').appendField('not');
       this.setOutput(true, 'Boolean');
       this.setColour(210);
@@ -1412,7 +1394,7 @@ function registerPxtLikeBlocks() {
   });
 
   defineBlock('math_constrain', {
-    init: function(this: any) {
+    init: function (this: any) {
       this.appendValueInput('VALUE').setCheck('Number').appendField('constrain');
       this.appendValueInput('LOW').setCheck('Number').appendField('between');
       this.appendValueInput('HIGH').setCheck('Number').appendField('and');
@@ -3495,7 +3477,7 @@ export default function BlocklyEditorClient() {
 
   const translateToPython = (jsCode: string) => {
     if (!jsCode) return jsCode;
-    
+
     // Convert the default "No code" message
     if (jsCode.includes("No code generated yet")) {
       return "# No code generated yet";
@@ -3509,7 +3491,7 @@ export default function BlocklyEditorClient() {
         if (l.startsWith("//")) return "#" + l.substring(2);
         return l;
       }
-      
+
       l = l.replace(/basic\.showNumber\(/g, "basic.show_number(");
       l = l.replace(/basic\.showString\(/g, "basic.show_string(");
       l = l.replace(/basic\.showIcon\(IconNames\.(\w+)\);/g, "basic.show_icon(IconNames.$1)");
@@ -3521,7 +3503,7 @@ export default function BlocklyEditorClient() {
       l = l.replace(/function \(\)/g, "lambda:");
       return l;
     });
-    
+
     let py = lines.join("\n");
     // Handle complex multiline blocks on the joined result
     py = py.replace(/input\.onButtonPressed\(Button\.(\w+), lambda: \{([\s\S]*?)\}\)/g, (_, btn, body) => {
@@ -3688,7 +3670,7 @@ export default function BlocklyEditorClient() {
       // Flyout is the popup that shows blocks
       const flyout = host.querySelector(".blocklyFlyout") as SVGElement | null;
       const flyoutHidden = host.classList.contains("flyout-hidden");
-      
+
       const hostRect = host.getBoundingClientRect();
       let currentSidebarWidth = 180;
       let currentTotalWidth = 0;
@@ -3732,7 +3714,7 @@ export default function BlocklyEditorClient() {
     tick();
     const observer = new ResizeObserver(updateWidth);
     observer.observe(host); // Observe host for layout changes
-    
+
     // Also observe the workspace for category clicks which change flyout visibility
     const workspace = workspaceRef.current;
     const listener = () => {
@@ -3837,10 +3819,12 @@ export default function BlocklyEditorClient() {
         </div>
       </div>
 
-      <div className="grid h-[calc(100vh-3.5rem)] grid-cols-1 lg:grid-cols-[340px_1fr]">
-        <PxtSimulatorPane code={activeCode} />
+      <div className="flex h-[calc(100vh-3.5rem)] flex-row overflow-hidden">
+        <aside className="w-[340px] shrink-0 border-r border-slate-300 bg-white">
+          <PxtSimulatorPane code={activeCode} />
+        </aside>
 
-        <section className="relative flex min-h-0 flex-col overflow-hidden border-r border-slate-300 bg-white">
+        <section className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-white">
           {toolboxSearchHost
             ? createPortal(
               <div className="toolbox-search flex h-10 items-center px-3 text-slate-400">

@@ -9,7 +9,7 @@ import {
   type PxtSimulatorControl,
   type PxtSimulatorStatus
 } from "./pxt-sim-runtime";
-import React = require("react");
+import * as React from "react";
 
 type Props = {
   code: string;
@@ -210,8 +210,8 @@ export default function PxtSimulatorPane({ code }: Props) {
   }, [sendProject, simulatorOrigin, sendWithRetry, stopRetry]);
 
   return (
-    <section className="flex min-h-0 flex-col border-r border-slate-300 bg-white">
-      <div className="flex items-center justify-between border-b px-3 py-2">
+    <section className="flex h-full min-h-0 flex-col bg-white">
+      <div className="flex shrink-0 items-center justify-between border-b px-3 py-1.5">
         <h2 className="text-sm font-semibold">PXT Simulator</h2>
 
         <div className="flex gap-2">
@@ -238,7 +238,7 @@ export default function PxtSimulatorPane({ code }: Props) {
         </div>
       </div>
 
-      <div className="flex justify-between border-b px-3 py-1 text-xs">
+      <div className="flex justify-between border-b px-3 py-0.5 text-xs">
         <span>Status: {status}</span>
 
         <label className="flex items-center gap-1">
@@ -260,19 +260,19 @@ export default function PxtSimulatorPane({ code }: Props) {
               ? buildUrlModeSrc(code)
               : `${simulatorUrl}?v=${frameKey}`
           }
-        onLoad={() => {
-          setFrameLoaded(true);
-          setSimReady(true);
-          setStatus("ready");
+          onLoad={() => {
+            setFrameLoaded(true);
+            setSimReady(true);
+            setStatus("ready");
 
-          if (pendingCodeRef.current) {
-            const pending = pendingCodeRef.current;
-            pendingCodeRef.current = null;
-            sendWithRetry(pending);
-          } else if (autoRun) {
-            sendWithRetry(latestCodeRef.current);
-          }
-        }}
+            if (pendingCodeRef.current) {
+              const pending = pendingCodeRef.current;
+              pendingCodeRef.current = null;
+              sendWithRetry(pending);
+            } else if (autoRun) {
+              sendWithRetry(latestCodeRef.current);
+            }
+          }}
           className="w-full h-full border-0"
           title="PXT Simulator"
         />
