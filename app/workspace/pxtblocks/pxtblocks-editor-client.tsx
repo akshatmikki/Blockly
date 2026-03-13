@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState, type ChangeEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type ChangeEvent } from "react";
+import { createPortal } from "react-dom";
 import * as Blockly from "blockly/core";
 import "blockly/blocks";
 import "blockly/msg/en";
@@ -9,11 +10,12 @@ import { Search, Code, Info } from "lucide-react";
 import PxtSimulatorPane from "./pxt-simulator-pane";
 
 const toolbox = {
-  kind: "categoryToolbox",
+  kind: 'categoryToolbox',
   contents: [
     {
       kind: "category",
-      name: "\uD83D\uDFE6 Basic",
+      name: "Basic",
+      "web-icon": "th",
       colour: "#1f88e5",
       contents: [
         {
@@ -53,7 +55,8 @@ const toolbox = {
     },
     {
       kind: "category",
-      name: "\uD83D\uDD18 Input",
+      name: "Input",
+      "web-icon": "dot circle",
       colour: "#b400d6",
       contents: [
         { kind: "block", type: "input_on_button_pressed" },
@@ -63,7 +66,8 @@ const toolbox = {
     },
     {
       kind: "category",
-      name: "\uD83C\uDFB5 Music",
+      name: "Music",
+      "web-icon": "headphones",
       colour: "#d83b01",
       contents: [
         { kind: "label", text: "Melody" },
@@ -103,7 +107,8 @@ const toolbox = {
     },
     {
       kind: "category",
-      name: "\u25A4 LED",
+      name: "Led",
+      "web-icon": "toggle on",
       colour: "#5e35b1",
       contents: [
         { kind: "block", type: "led_plot" },
@@ -114,7 +119,8 @@ const toolbox = {
     },
     {
       kind: "category",
-      name: "\uD83D\uDCE1 Radio",
+      name: "Radio",
+      "web-icon": "signal",
       colour: "#e91e63",
       contents: [
         { kind: "block", type: "radio_set_group" },
@@ -127,7 +133,8 @@ const toolbox = {
     { kind: "sep" },
     {
       kind: "category",
-      name: "\uD83D\uDD04 Loops",
+      name: "Loops",
+      "web-icon": "repeat",
       colour: "#5ca65c",
       contents: [
         { kind: "block", type: "controls_repeat_ext" },
@@ -139,7 +146,8 @@ const toolbox = {
     },
     {
       kind: "category",
-      name: "\u2B28 Logic",
+      name: "Logic",
+      "web-icon": "random",
       colour: "#5c81a6",
       contents: [
         { kind: "block", type: "controls_if" },
@@ -151,13 +159,15 @@ const toolbox = {
     },
     {
       kind: "category",
-      name: "\uD835\uDCE7 Variables",
+      name: "Variables",
+      "web-icon": "bars",
       custom: "VARIABLE",
       colour: "#a65c81"
     },
     {
       kind: "category",
       name: "Math",
+      "web-icon": "calculator",
       colour: "#5c68a6",
       contents: [
         { kind: "block", type: "math_number", fields: { NUM: 0 } },
@@ -233,12 +243,14 @@ const toolbox = {
     },
     {
       kind: "category",
-      name: "\u23F5 Advanced",
+      name: "Advanced",
+      "web-icon": "chevron up",
       colour: "#0f766e",
       contents: [
         {
           kind: "category",
           name: "Functions",
+          "web-icon": "function",
           colour: "#3b82f6",
           contents: [
             { kind: "button", text: "Make a Function...", callbackKey: "MAKE_FUNCTION" }
@@ -247,6 +259,7 @@ const toolbox = {
         {
           kind: "category",
           name: "Arrays",
+          "web-icon": "list ul",
           colour: "#f97316",
           contents: [
             { kind: "label", text: "Create" },
@@ -360,6 +373,7 @@ const toolbox = {
         {
           kind: "category",
           name: "Text",
+          "web-icon": "font",
           colour: "#ca8a04",
           contents: [
             { kind: "block", type: "text" },
@@ -403,6 +417,7 @@ const toolbox = {
         {
           kind: "category",
           name: "Game",
+          "web-icon": "gamepad",
           colour: "#059669",
           contents: [
             { kind: "block", type: "game_create_sprite" },
@@ -441,6 +456,7 @@ const toolbox = {
         {
           kind: "category",
           name: "Images",
+          "web-icon": "image",
           colour: "#7e22ce",
           contents: [
             { kind: "block", type: "images_show_image_offset" },
@@ -468,6 +484,7 @@ const toolbox = {
         {
           kind: "category",
           name: "Pins",
+          "web-icon": "bullseye",
           colour: "#b91c1c",
           contents: [
             { kind: "block", type: "pins_digital_read_pin" },
@@ -494,6 +511,7 @@ const toolbox = {
         {
           kind: "category",
           name: "Serial",
+          "web-icon": "usb",
           colour: "#1d4ed8",
           contents: [
             { kind: "block", type: "serial_write_line" },
@@ -526,6 +544,7 @@ const toolbox = {
         {
           kind: "category",
           name: "Control",
+          "web-icon": "server",
           colour: "#374151",
           contents: [
             { kind: "block", type: "control_wait_for_event" },
@@ -795,10 +814,24 @@ const pythonLogicContents = [
 ] ;
 
 const pythonVariablesContents = [
-  { kind: "block", type: "math_change" },
+  {
+    kind: "block",
+    type: "math_change",
+    fields: { VAR: "item" },
+    inputs: {
+      DELTA: { shadow: { type: "math_number", fields: { NUM: 1 } } }
+    }
+  },
   { kind: "label", text: "Changes the value of item by 1" },
   { kind: "sep", gap: "8" },
-  { kind: "block", type: "variables_set" },
+  {
+    kind: "block",
+    type: "variables_set",
+    fields: { VAR: "item" },
+    inputs: {
+      VALUE: { shadow: { type: "math_number", fields: { NUM: 0 } } }
+    }
+  },
   { kind: "label", text: "Assigns a value to a variable" },
   { kind: "sep", gap: "8" },
   { kind: "block", type: "variables_item_equals_number" },
@@ -909,7 +942,8 @@ const pythonMathContents = [
 const pythonAdvancedContents = [
   {
     kind: "category",
-    name: "Functions",
+      name: "Functions",
+      "web-icon": "function",
     colour: "#3b82f6",
     contents: [
       { kind: "button", text: "Make a Function...", callbackKey: "MAKE_FUNCTION" },
@@ -1447,6 +1481,33 @@ function registerPxtLikeBlocks() {
         { type: "input_value", name: "NUM", check: "Number" }
       ],
       output: "Number", colour: 230
+    },
+    {
+      type: "math_js_op",
+      message0: "%1 of %2",
+      args0: [
+        {
+          type: "field_dropdown",
+          name: "OP",
+          options: [
+            ["abs", "ABS"],
+            ["round up", "ROUNDUP"],
+            ["round down", "ROUNDDOWN"]
+          ]
+        },
+        { type: "input_value", name: "ARG0", check: "Number" }
+      ],
+      output: "Number",
+      colour: 230,
+      inputsInline: true
+    },
+    {
+      type: "math_js_round",
+      message0: "round %1",
+      args0: [{ type: "input_value", name: "ARG0", check: "Number" }],
+      output: "Number",
+      colour: 230,
+      inputsInline: true
     },
 
     // Variables Blocks
@@ -3154,6 +3215,19 @@ function registerPxtLikeBlocks() {
     return [`Math.trunc(${num})`, Order.FUNCTION_CALL];
   };
 
+  asAny.forBlock["math_js_op"] = (block: Blockly.Block, generator: Blockly.CodeGenerator) => {
+    const op = block.getFieldValue("OP") || "ABS";
+    const arg = generator.valueToCode(block, "ARG0", Order.NONE) || "0";
+    if (op === "ROUNDUP") return [`Math.ceil(${arg})`, Order.FUNCTION_CALL];
+    if (op === "ROUNDDOWN") return [`Math.floor(${arg})`, Order.FUNCTION_CALL];
+    return [`Math.abs(${arg})`, Order.FUNCTION_CALL];
+  };
+
+  asAny.forBlock["math_js_round"] = (block: Blockly.Block, generator: Blockly.CodeGenerator) => {
+    const arg = generator.valueToCode(block, "ARG0", Order.NONE) || "0";
+    return [`Math.round(${arg})`, Order.FUNCTION_CALL];
+  };
+
   asAny.forBlock["math_random_bool"] = () => ["Math.random() < 0.5", Order.RELATIONAL];
 
   asAny.forBlock["math_map_value"] = (block: Blockly.Block, generator: Blockly.CodeGenerator) => {
@@ -3336,10 +3410,63 @@ export default function BlocklyEditorClient() {
   const blocksXmlRef = useRef<string | null>(null);
 
   const [editorMode, setEditorMode] = useState<"blocks" | "python">("blocks");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [toolboxSearchHost, setToolboxSearchHost] = useState<HTMLElement | null>(null);
   const [generatedCode, setGeneratedCode] = useState("// Drag blocks to generate MakeCode-like TypeScript");
   const [codeEditorValue, setCodeEditorValue] = useState("// Drag blocks to generate MakeCode-like TypeScript");
   const [toolboxWidth, setToolboxWidth] = useState(180); // Total offset including flyout
   const [sidebarWidth, setSidebarWidth] = useState(180); // Just the category bar
+
+  const normalizeSearch = (value: string) => value.trim().toLowerCase();
+  const getEntryText = (entry: any) => {
+    if (!entry) return "";
+    if (entry.kind === "category") return String(entry.name || "");
+    if (entry.kind === "label") return String(entry.text || "");
+    if (entry.kind === "button") return String(entry.text || "");
+    if (entry.kind === "block") {
+      const fieldValues = entry.fields
+        ? Object.values(entry.fields).map((v) => String(v)).join(" ")
+        : "";
+      return `${entry.type || ""} ${fieldValues}`.trim();
+    }
+    return "";
+  };
+
+  const filterContents = (contents: any[], query: string): any[] => {
+    if (!query) return contents;
+    const q = normalizeSearch(query);
+    const result: any[] = [];
+    for (const entry of contents) {
+      if (entry?.kind === "category") {
+        const name = String(entry.name || "");
+        const nameMatches = normalizeSearch(name).includes(q);
+        if (nameMatches) {
+          result.push(entry);
+          continue;
+        }
+        const childContents = Array.isArray(entry.contents) ? entry.contents : [];
+        const filteredChildren = filterContents(childContents, query);
+        if (filteredChildren.length) {
+          result.push({ ...entry, contents: filteredChildren });
+        }
+        continue;
+      }
+      const text = getEntryText(entry);
+      if (normalizeSearch(text).includes(q)) {
+        result.push(entry);
+      }
+    }
+    return result;
+  };
+
+  const currentToolbox = editorMode === "blocks" ? toolbox : pythonToolbox;
+  const filteredToolbox = useMemo(
+    () =>
+      searchQuery
+        ? { ...currentToolbox, contents: filterContents(currentToolbox.contents, searchQuery) }
+        : currentToolbox,
+    [currentToolbox, searchQuery]
+  );
 
   const syncCode = (workspace: Blockly.Workspace) => {
     if (editorModeRef.current === "python") return;
@@ -3421,7 +3548,7 @@ export default function BlocklyEditorClient() {
     registerPxtLikeBlocks();
 
     const workspace = Blockly.inject(blocklyHostRef.current, {
-      toolbox: editorMode === "blocks" ? toolbox : pythonToolbox,
+      toolbox: filteredToolbox,
       trashcan: true,
       media: "/blockly/media/",
       grid: {
@@ -3452,6 +3579,26 @@ export default function BlocklyEditorClient() {
     workspaceRef.current = workspace;
     syncCode(workspace);
 
+    const host = blocklyHostRef.current;
+    const ensureSearchHost = () => {
+      const toolboxDiv = host?.querySelector(".blocklyToolboxDiv") as HTMLDivElement | null;
+      if (!toolboxDiv) return;
+      let searchHost = toolboxDiv.querySelector(".toolbox-search-host") as HTMLDivElement | null;
+      if (!searchHost) {
+        searchHost = document.createElement("div");
+        searchHost.className = "toolbox-search-host";
+        toolboxDiv.prepend(searchHost);
+      }
+      setToolboxSearchHost(searchHost);
+    };
+
+    ensureSearchHost();
+    const updateFlyoutVisibility = () => {
+      const flyout = (workspace as any).getFlyout?.();
+      const visible = flyout?.isVisible?.() ?? true;
+      host?.classList.toggle("flyout-hidden", !visible);
+    };
+
     const listener = (event: Blockly.Events.Abstract) => {
       if (event.isUiEvent) return;
       if (editorModeRef.current === "python") {
@@ -3477,9 +3624,18 @@ export default function BlocklyEditorClient() {
       syncCode(workspace);
     };
     workspace.addChangeListener(listener);
+    workspace.addChangeListener(updateFlyoutVisibility as any);
+    workspace.addChangeListener(ensureSearchHost as any);
+    updateFlyoutVisibility();
 
     return () => {
       workspace.removeChangeListener(listener);
+      workspace.removeChangeListener(updateFlyoutVisibility as any);
+      workspace.removeChangeListener(ensureSearchHost as any);
+      if (toolboxSearchHost?.parentElement) {
+        toolboxSearchHost.parentElement.removeChild(toolboxSearchHost);
+      }
+      setToolboxSearchHost(null);
       workspace.dispose();
       workspaceRef.current = null;
     };
@@ -3488,7 +3644,7 @@ export default function BlocklyEditorClient() {
   useEffect(() => {
     const workspace = workspaceRef.current;
     if (!workspace) return;
-    workspace.updateToolbox(editorMode === "blocks" ? toolbox : pythonToolbox);
+    workspace.updateToolbox(filteredToolbox);
     if (editorMode === "python") {
       blocksXmlRef.current = Blockly.Xml.domToText(Blockly.Xml.workspaceToDom(workspace));
       workspace.clear();
@@ -3504,23 +3660,44 @@ export default function BlocklyEditorClient() {
 
     setCodeEditorValue(generatedCode);
     manualCodeEditRef.current = false;
-  }, [editorMode, generatedCode]);
+  }, [editorMode, generatedCode, filteredToolbox]);
 
   useEffect(() => {
-    if (editorMode !== "python") return;
+    const host = blocklyHostRef.current;
+    if (!host) return;
+    const toolboxDiv = host.querySelector(".blocklyToolboxDiv") as HTMLDivElement | null;
+    if (!toolboxDiv) return;
+    let searchHost = toolboxDiv.querySelector(".toolbox-search-host") as HTMLDivElement | null;
+    if (!searchHost) {
+      searchHost = document.createElement("div");
+      searchHost.className = "toolbox-search-host";
+      toolboxDiv.prepend(searchHost);
+      setToolboxSearchHost(searchHost);
+    } else if (searchHost !== toolboxSearchHost) {
+      setToolboxSearchHost(searchHost);
+    }
+  }, [filteredToolbox, toolboxSearchHost]);
+
+  useEffect(() => {
     const host = blocklyHostRef.current;
     if (!host) return;
 
     const updateWidth = () => {
       const toolboxDiv = host.querySelector(".blocklyToolboxDiv") as HTMLDivElement | null;
+      const treeRoot = host.querySelector(".blocklyToolboxDiv .blocklyTreeRoot") as SVGGElement | null;
       // Flyout is the popup that shows blocks
       const flyout = host.querySelector(".blocklyFlyout") as SVGElement | null;
+      const flyoutHidden = host.classList.contains("flyout-hidden");
       
       const hostRect = host.getBoundingClientRect();
       let currentSidebarWidth = 180;
       let currentTotalWidth = 0;
 
-      if (toolboxDiv) {
+      if (treeRoot) {
+        const treeRect = treeRoot.getBoundingClientRect();
+        currentSidebarWidth = Math.round(treeRect.right - hostRect.left);
+        currentTotalWidth = currentSidebarWidth;
+      } else if (toolboxDiv) {
         const toolboxRect = toolboxDiv.getBoundingClientRect();
         currentSidebarWidth = Math.round(toolboxRect.right - hostRect.left);
         currentTotalWidth = currentSidebarWidth;
@@ -3529,9 +3706,12 @@ export default function BlocklyEditorClient() {
       }
 
       // Check if flyout is visible and add its width
-      if (flyout && flyout.getAttribute("display") !== "none" && flyout.style.display !== "none") {
+      if (!flyoutHidden && flyout && flyout.getAttribute("display") !== "none" && flyout.style.display !== "none") {
         const flyoutRect = flyout.getBoundingClientRect();
         currentTotalWidth = Math.max(currentTotalWidth, Math.round(flyoutRect.right - hostRect.left));
+      }
+      if (flyoutHidden) {
+        currentTotalWidth = currentSidebarWidth;
       }
 
       setSidebarWidth(currentSidebarWidth);
@@ -3570,7 +3750,7 @@ export default function BlocklyEditorClient() {
         workspace.removeChangeListener(listener);
       }
     };
-  }, [editorMode]);
+  }, [editorMode, searchQuery]);
 
   const handleReset = () => {
     const workspace = workspaceRef.current;
@@ -3661,22 +3841,21 @@ export default function BlocklyEditorClient() {
         <PxtSimulatorPane code={activeCode} />
 
         <section className="relative flex min-h-0 flex-col overflow-hidden border-r border-slate-300 bg-white">
-          {editorMode === "python" && (
-            <div
-              className="absolute top-0 left-0 z-20 flex flex-col border-b border-r border-slate-200 bg-white"
-              style={{ width: sidebarWidth }}
-            >
-              <div className="flex h-10 items-center px-3 text-slate-400">
+          {toolboxSearchHost
+            ? createPortal(
+              <div className="toolbox-search flex h-10 items-center px-3 text-slate-400">
                 <Search size={14} className="mr-2" />
                 <input
                   type="text"
                   placeholder="Search..."
+                  value={searchQuery}
+                  onChange={(event) => setSearchQuery(event.target.value)}
                   className="bg-transparent text-xs outline-none"
-                  readOnly
                 />
-              </div>
-            </div>
-          )}
+              </div>,
+              toolboxSearchHost
+            )
+            : null}
           <div ref={blocklyHostRef} className="h-full w-full" />
           {editorMode === "python" ? (
             <div
@@ -3760,7 +3939,28 @@ export default function BlocklyEditorClient() {
         .blocklyToolboxDiv {
           background-color: #f8fafc !important;
           border-right: 1px solid #e2e8f0 !important;
-          padding-top: 40px !important;
+          padding-top: 0 !important;
+          position: relative !important;
+        }
+        .toolbox-search-host {
+          position: sticky;
+          top: 0;
+          z-index: 2;
+          background: #fff;
+          border-bottom: 1px solid #e2e8f0;
+        }
+        .toolbox-search {
+          pointer-events: auto;
+        }
+        .toolbox-search input {
+          width: 100%;
+        }
+        .flyout-hidden .blocklyFlyout,
+        .flyout-hidden .blocklyFlyoutBackground,
+        .flyout-hidden .blocklyFlyoutScrollbar,
+        .flyout-hidden .blocklyFlyoutScrollbarHorizontal,
+        .flyout-hidden .blocklyFlyoutScrollbarVertical {
+          display: none !important;
         }
       `}</style>
     </main>
