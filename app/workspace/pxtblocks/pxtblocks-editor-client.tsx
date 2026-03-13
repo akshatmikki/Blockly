@@ -6,6 +6,18 @@ import { createPortal } from "react-dom";
 import * as Blockly from "blockly/core";
 import "blockly/blocks";
 import "blockly/msg/en";
+
+// Set explicit translations for builtin blocks to avoid raw message keys in toolbox
+const msg = (Blockly as any).Msg;
+msg.CONTROLS_IF_MSG_IF = "if";
+msg.CONTROLS_IF_MSG_THEN = "then";
+msg.CONTROLS_IF_MSG_ELSE = "else";
+msg.CONTROLS_IF_MSG_ELSEIF = "else if";
+msg.LOGIC_BOOLEAN_TRUE = "true";
+msg.LOGIC_BOOLEAN_FALSE = "false";
+msg.LOGIC_NEGATE_TITLE = "not %1";
+msg.LOGIC_OPERATION_AND = "and";
+msg.LOGIC_OPERATION_OR = "or";
 import { javascriptGenerator, Order } from "blockly/javascript";
 import { Search, Code, Info } from "lucide-react";
 import PxtSimulatorPane from "./pxt-simulator-pane";
@@ -60,7 +72,28 @@ const toolbox = {
       contents: [
         { kind: "block", type: "input_on_button_pressed" },
         { kind: "block", type: "input_on_gesture" },
-        { kind: "block", type: "input_button_is_pressed" }
+        { kind: "block", type: "input_on_pin_pressed" },
+        { kind: "block", type: "input_button_is_pressed" },
+        { kind: "block", type: "input_acceleration" },
+        { kind: "block", type: "input_pin_is_pressed" },
+        { kind: "block", type: "input_light_level" },
+        { kind: "block", type: "input_compass_heading" },
+        { kind: "block", type: "input_temperature" },
+        {
+          kind: "category",
+          name: "more",
+          colour: "#b400d6",
+          contents: [
+            { kind: "block", type: "input_is_gesture" }
+          ]
+        },
+        { kind: "sep", gap: "12" },
+        { kind: "label", text: "micro:bit (V2)" },
+        { kind: "sep", gap: "8" },
+        { kind: "block", type: "input_on_sound" },
+        { kind: "block", type: "input_on_logo_event" },
+        { kind: "block", type: "input_logo_is_pressed" },
+        { kind: "block", type: "input_sound_level" }
       ]
     },
     {
@@ -108,10 +141,85 @@ const toolbox = {
       name: "\u25A4 LED",
       colour: "#5e35b1",
       contents: [
-        { kind: "block", type: "led_plot" },
-        { kind: "block", type: "led_unplot" },
-        { kind: "block", type: "led_toggle" },
-        { kind: "block", type: "led_point" }
+        {
+          kind: "block",
+          type: "led_plot",
+          inputs: {
+            X: { shadow: { type: "math_number", fields: { NUM: 0 } } },
+            Y: { shadow: { type: "math_number", fields: { NUM: 0 } } }
+          }
+        },
+        {
+          kind: "block",
+          type: "led_unplot",
+          inputs: {
+            X: { shadow: { type: "math_number", fields: { NUM: 0 } } },
+            Y: { shadow: { type: "math_number", fields: { NUM: 0 } } }
+          }
+        },
+        {
+          kind: "block",
+          type: "led_toggle",
+          inputs: {
+            X: { shadow: { type: "math_number", fields: { NUM: 0 } } },
+            Y: { shadow: { type: "math_number", fields: { NUM: 0 } } }
+          }
+        },
+        {
+          kind: "block",
+          type: "led_point",
+          inputs: {
+            X: { shadow: { type: "math_number", fields: { NUM: 0 } } },
+            Y: { shadow: { type: "math_number", fields: { NUM: 0 } } }
+          }
+        },
+        {
+          kind: "block",
+          type: "led_plot_bar_graph",
+          inputs: {
+            VALUE: { shadow: { type: "math_number", fields: { NUM: 0 } } },
+            HIGH: { shadow: { type: "math_number", fields: { NUM: 1023 } } }
+          }
+        },
+        {
+          kind: "category",
+          name: "more",
+          colour: "#5e35b1",
+          contents: [
+            {
+              kind: "block",
+              type: "led_plot_brightness",
+              inputs: {
+                X: { shadow: { type: "math_number", fields: { NUM: 0 } } },
+                Y: { shadow: { type: "math_number", fields: { NUM: 0 } } },
+                BRIGHTNESS: { shadow: { type: "math_number", fields: { NUM: 255 } } }
+              }
+            },
+            {
+              kind: "block",
+              type: "led_point_brightness",
+              inputs: {
+                X: { shadow: { type: "math_number", fields: { NUM: 0 } } },
+                Y: { shadow: { type: "math_number", fields: { NUM: 0 } } }
+              }
+            },
+            { kind: "block", type: "led_brightness" },
+            {
+              kind: "block",
+              type: "led_set_brightness",
+              inputs: {
+                VALUE: { shadow: { type: "math_number", fields: { NUM: 255 } } }
+              }
+            },
+            {
+              kind: "block",
+              type: "led_enable",
+              fields: { ON: "false" }
+            },
+            { kind: "block", type: "led_stop_animation" },
+            { kind: "block", type: "led_set_display_mode" }
+          ]
+        }
       ]
     },
     {
@@ -119,11 +227,79 @@ const toolbox = {
       name: "\uD83D\uDCE1 Radio",
       colour: "#e91e63",
       contents: [
-        { kind: "block", type: "radio_set_group" },
-        { kind: "block", type: "radio_send_number" },
-        { kind: "block", type: "radio_send_string" },
+        { kind: "label", text: "Group" },
+        { kind: "sep", gap: "8" },
+        {
+          kind: "block",
+          type: "radio_set_group",
+          inputs: {
+            GROUP: { shadow: { type: "math_number", fields: { NUM: 1 } } }
+          }
+        },
+        { kind: "label", text: "Send" },
+        { kind: "sep", gap: "8" },
+        {
+          kind: "block",
+          type: "radio_send_number",
+          inputs: {
+            NUM: { shadow: { type: "math_number", fields: { NUM: 0 } } }
+          }
+        },
+        {
+          kind: "block",
+          type: "radio_send_value",
+          inputs: {
+            NAME: { shadow: { type: "text", fields: { TEXT: "name" } } },
+            VALUE: { shadow: { type: "math_number", fields: { NUM: 0 } } }
+          }
+        },
+        {
+          kind: "block",
+          type: "radio_send_string",
+          inputs: {
+            TEXT: { shadow: { type: "text", fields: { TEXT: "" } } }
+          }
+        },
+        { kind: "label", text: "Receive" },
+        { kind: "sep", gap: "8" },
         { kind: "block", type: "radio_on_received_number" },
-        { kind: "block", type: "radio_on_received_string" }
+        { kind: "block", type: "radio_on_received_value" },
+        { kind: "block", type: "radio_on_received_string" },
+        { kind: "block", type: "radio_received_packet" },
+        {
+          kind: "category",
+          name: "more",
+          colour: "#d81b60",
+          contents: [
+            {
+              kind: "block",
+              type: "radio_set_transmit_power",
+              inputs: {
+                POWER: { shadow: { type: "math_number", fields: { NUM: 7 } } }
+              }
+            },
+            {
+              kind: "block",
+              type: "radio_set_transmit_serial_number",
+              fields: { TRANSMIT: "true" }
+            },
+            {
+              kind: "block",
+              type: "radio_set_frequency_band",
+              inputs: {
+                BAND: { shadow: { type: "math_number", fields: { NUM: 0 } } }
+              }
+            },
+            {
+              kind: "block",
+              type: "radio_raise_event",
+              fields: {
+                SRC: "1",
+                VALUE: "0"
+              }
+            }
+          ]
+        }
       ]
     },
     { kind: "sep" },
@@ -132,11 +308,46 @@ const toolbox = {
       name: "\uD83D\uDD04 Loops",
       colour: "#5ca65c",
       contents: [
-        { kind: "block", type: "controls_repeat_ext" },
-        { kind: "block", type: "controls_whileUntil" },
-        { kind: "block", type: "controls_for" },
-        { kind: "block", type: "controls_forEach" },
-        { kind: "block", type: "controls_flow_statements" }
+        {
+          kind: "block",
+          type: "controls_repeat_ext",
+          inputs: {
+            TIMES: { shadow: { type: "math_number", fields: { NUM: 4 } } }
+          }
+        },
+        {
+          kind: "block",
+          type: "controls_whileUntil",
+          fields: { MODE: "WHILE" },
+          inputs: {
+            BOOL: { shadow: { type: "logic_boolean", fields: { BOOL: "FALSE" } } }
+          }
+        },
+        {
+          kind: "block",
+          type: "controls_for",
+          inputs: {
+            FROM: { shadow: { type: "math_number", fields: { NUM: 0 } } },
+            TO: { shadow: { type: "math_number", fields: { NUM: 4 } } },
+            BY: { shadow: { type: "math_number", fields: { NUM: 1 } } }
+          }
+        },
+        {
+          kind: "block",
+          type: "controls_forEach",
+          inputs: {
+            LIST: { shadow: { type: "variables_get", fields: { VAR: "list" } } }
+          }
+        },
+        {
+          kind: "block",
+          type: "loops_every_interval",
+          inputs: {
+            TIME: { shadow: { type: "math_number", fields: { NUM: 500 } } }
+          }
+        },
+        { kind: "block", type: "loops_break" },
+        { kind: "block", type: "loops_continue" }
       ]
     },
     {
@@ -144,11 +355,55 @@ const toolbox = {
       name: "\u2B28 Logic",
       colour: "#5c81a6",
       contents: [
-        { kind: "block", type: "controls_if" },
-        { kind: "block", type: "logic_compare" },
-        { kind: "block", type: "logic_operation" },
-        { kind: "block", type: "logic_boolean" },
-        { kind: "block", type: "logic_negate" }
+        { kind: "label", text: "Conditionals" },
+        {
+          kind: "block",
+          type: "controls_if",
+          inputs: {
+            IF0: { shadow: { type: "logic_boolean", fields: { BOOL: "TRUE" } } }
+          }
+        },
+        {
+          kind: "block",
+          type: "controls_if",
+          extraState: { hasElse: true },
+          inputs: {
+            IF0: { shadow: { type: "logic_boolean", fields: { BOOL: "TRUE" } } }
+          }
+        },
+        { kind: "label", text: "Comparison" },
+        {
+          kind: "block",
+          type: "logic_compare",
+          inputs: {
+            A: { shadow: { type: "math_number", fields: { NUM: 0 } } },
+            B: { shadow: { type: "math_number", fields: { NUM: 0 } } }
+          }
+        },
+        {
+          kind: "block",
+          type: "logic_compare",
+          fields: { OP: "LT" },
+          inputs: {
+            A: { shadow: { type: "math_number", fields: { NUM: 0 } } },
+            B: { shadow: { type: "math_number", fields: { NUM: 0 } } }
+          }
+        },
+        {
+          kind: "block",
+          type: "logic_compare",
+          fields: { OP: "EQ" },
+          inputs: {
+            A: { shadow: { type: "text", fields: { TEXT: "" } } },
+            B: { shadow: { type: "text", fields: { TEXT: "" } } }
+          }
+        },
+        { kind: "label", text: "Boolean" },
+        { kind: "block", type: "logic_operation", fields: { OP: "AND" } },
+        { kind: "block", type: "logic_operation", fields: { OP: "OR" } },
+        { kind: "block", type: "logic_negate" },
+        { kind: "block", type: "logic_boolean", fields: { BOOL: "TRUE" } },
+        { kind: "block", type: "logic_boolean", fields: { BOOL: "FALSE" } },
       ]
     },
     {
@@ -162,10 +417,64 @@ const toolbox = {
       name: "Math",
       colour: "#5c68a6",
       contents: [
-        { kind: "block", type: "math_number", fields: { NUM: 0 } },
         {
           kind: "block",
           type: "math_arithmetic",
+          fields: { OP: "ADD" },
+          inputs: {
+            A: { shadow: { type: "math_number", fields: { NUM: 0 } } },
+            B: { shadow: { type: "math_number", fields: { NUM: 0 } } }
+          }
+        },
+        {
+          kind: "block",
+          type: "math_arithmetic",
+          fields: { OP: "MINUS" },
+          inputs: {
+            A: { shadow: { type: "math_number", fields: { NUM: 0 } } },
+            B: { shadow: { type: "math_number", fields: { NUM: 0 } } }
+          }
+        },
+        {
+          kind: "block",
+          type: "math_arithmetic",
+          fields: { OP: "MULTIPLY" },
+          inputs: {
+            A: { shadow: { type: "math_number", fields: { NUM: 0 } } },
+            B: { shadow: { type: "math_number", fields: { NUM: 0 } } }
+          }
+        },
+        {
+          kind: "block",
+          type: "math_arithmetic",
+          fields: { OP: "DIVIDE" },
+          inputs: {
+            A: { shadow: { type: "math_number", fields: { NUM: 0 } } },
+            B: { shadow: { type: "math_number", fields: { NUM: 0 } } }
+          }
+        },
+        { kind: "block", type: "math_number", fields: { NUM: 0 } },
+        {
+          kind: "block",
+          type: "math_modulo",
+          inputs: {
+            DIVIDEND: { shadow: { type: "math_number", fields: { NUM: 0 } } },
+            DIVISOR: { shadow: { type: "math_number", fields: { NUM: 1 } } }
+          }
+        },
+        {
+          kind: "block",
+          type: "math_op2",
+          fields: { OP: "min" },
+          inputs: {
+            A: { shadow: { type: "math_number", fields: { NUM: 0 } } },
+            B: { shadow: { type: "math_number", fields: { NUM: 0 } } }
+          }
+        },
+        {
+          kind: "block",
+          type: "math_op2",
+          fields: { OP: "max" },
           inputs: {
             A: { shadow: { type: "math_number", fields: { NUM: 0 } } },
             B: { shadow: { type: "math_number", fields: { NUM: 0 } } }
@@ -174,8 +483,24 @@ const toolbox = {
         {
           kind: "block",
           type: "math_single",
+          fields: { OP: "ABS" },
           inputs: {
-            NUM: { shadow: { type: "math_number", fields: { NUM: 9 } } }
+            NUM: { shadow: { type: "math_number", fields: { NUM: 0 } } }
+          }
+        },
+        {
+          kind: "block",
+          type: "math_single",
+          fields: { OP: "ROOT" },
+          inputs: {
+            NUM: { shadow: { type: "math_number", fields: { NUM: 0 } } }
+          }
+        },
+        {
+          kind: "block",
+          type: "math_js_round",
+          inputs: {
+            ARG0: { shadow: { type: "math_number", fields: { NUM: 0 } } }
           }
         },
         {
@@ -188,49 +513,26 @@ const toolbox = {
         },
         {
           kind: "block",
-          type: "math_modulo",
+          type: "math_constrain",
           inputs: {
-            DIVIDEND: { shadow: { type: "math_number", fields: { NUM: 0 } } },
-            DIVISOR: { shadow: { type: "math_number", fields: { NUM: 1 } } }
+            VALUE: { shadow: { type: "math_number", fields: { NUM: 0 } } },
+            LOW: { shadow: { type: "math_number", fields: { NUM: 0 } } },
+            HIGH: { shadow: { type: "math_number", fields: { NUM: 0 } } }
           }
         },
         {
           kind: "block",
-          type: "math_constrain",
+          type: "math_map_value",
           inputs: {
             VALUE: { shadow: { type: "math_number", fields: { NUM: 0 } } },
-            LOW: { shadow: { type: "math_number", fields: { NUM: 1 } } },
-            HIGH: { shadow: { type: "math_number", fields: { NUM: 100 } } }
+            FROM_LOW: { shadow: { type: "math_number", fields: { NUM: 0 } } },
+            FROM_HIGH: { shadow: { type: "math_number", fields: { NUM: 1023 } } },
+            TO_LOW: { shadow: { type: "math_number", fields: { NUM: 0 } } },
+            TO_HIGH: { shadow: { type: "math_number", fields: { NUM: 4 } } }
           }
         },
         { kind: "block", type: "math_random_bool" },
-        { kind: "sep", gap: "8" },
-        {
-          kind: "category",
-          name: "more",
-          colour: "#5c68a6",
-          contents: [
-            { kind: "block", type: "math_max2" },
-            { kind: "block", type: "math_min2" },
-            { kind: "block", type: "math_trunc" },
-            {
-              kind: "block",
-              type: "math_js_op",
-              fields: { OP: "ABS" },
-              inputs: {
-                ARG0: { shadow: { type: "math_number", fields: { NUM: 0 } } }
-              }
-            },
-            {
-              kind: "block",
-              type: "math_js_round",
-              fields: { OP: "ROUND" },
-              inputs: {
-                ARG0: { shadow: { type: "math_number", fields: { NUM: 0 } } }
-              }
-            }
-          ]
-        }
+        { kind: "block", type: "math_constant", fields: { CONSTANT: "PI" } }
       ]
     },
     {
@@ -723,7 +1025,20 @@ const pythonLedContents = [
   {
     kind: "label",
     text: "Displays a vertical bar graph based on the 'value' and 'high' value. If 'high' is 0, the chart gets adjusted automatically."
-  }
+  },
+  { kind: "sep", gap: "8" },
+  { kind: "label", text: "Brightness" },
+  { kind: "block", type: "led_plot_brightness" },
+  { kind: "block", type: "led_point_brightness" },
+  { kind: "block", type: "led_brightness" },
+  { kind: "block", type: "led_set_brightness" },
+  { kind: "sep", gap: "8" },
+  { kind: "label", text: "Animation" },
+  { kind: "block", type: "led_stop_animation" },
+  { kind: "sep", gap: "8" },
+  { kind: "label", text: "Advanced" },
+  { kind: "block", type: "led_set_display_mode" },
+  { kind: "block", type: "led_enable" }
 ];
 
 const pythonRadioContents = [
@@ -761,34 +1076,94 @@ const pythonRadioContents = [
   { kind: "label", text: "Registers code to run when the radio receives a string." },
   { kind: "sep", gap: "8" },
   { kind: "block", type: "radio_received_packet" },
-  { kind: "label", text: "Returns properties of the last radio packet received." }
+  { kind: "label", text: "Returns properties of the last radio packet received." },
+  { kind: "sep", gap: "8" },
+  { kind: "label", text: "Advanced" },
+  { kind: "block", type: "radio_set_transmit_power" },
+  { kind: "block", type: "radio_set_transmit_serial_number" },
+  { kind: "block", type: "radio_set_frequency_band" },
+  { kind: "block", type: "radio_raise_event" }
 ];
 
 const pythonLoopsContents = [
   {
     kind: "block",
+    type: "controls_repeat_ext",
+    inputs: {
+      TIMES: { shadow: { type: "math_number", fields: { NUM: 4 } } }
+    }
+  },
+  { kind: "label", text: "Repeat code a number of times in a loop" },
+  { kind: "sep", gap: "8" },
+  {
+    kind: "block",
     type: "controls_whileUntil",
-    fields: { MODE: "WHILE" }
+    fields: { MODE: "WHILE" },
+    inputs: {
+      BOOL: { shadow: { type: "logic_boolean", fields: { BOOL: "FALSE" } } }
+    }
   },
   { kind: "label", text: "Repeat code while condition is true" },
   { kind: "sep", gap: "8" },
-  { kind: "block", type: "controls_repeat_ext" },
-  { kind: "label", text: "Repeat code a number of times in a loop" },
+  {
+    kind: "block",
+    type: "controls_for",
+    inputs: {
+      FROM: { shadow: { type: "math_number", fields: { NUM: 0 } } },
+      TO: { shadow: { type: "math_number", fields: { NUM: 4 } } },
+      BY: { shadow: { type: "math_number", fields: { NUM: 1 } } }
+    }
+  },
+  { kind: "label", text: "For loop" },
   { kind: "sep", gap: "8" },
-  { kind: "block", type: "loops_every_interval" },
+  {
+    kind: "block",
+    type: "controls_forEach",
+    inputs: {
+      LIST: { shadow: { type: "variables_get", fields: { VAR: "list" } } }
+    }
+  },
+  { kind: "label", text: "For each element in a list" },
+  { kind: "sep", gap: "8" },
+  {
+    kind: "block",
+    type: "loops_every_interval",
+    inputs: {
+      TIME: { shadow: { type: "math_number", fields: { NUM: 500 } } }
+    }
+  },
   {
     kind: "label",
     text: "Repeats the code forever in the background. After each iteration, allows other codes to run for a set duration so that it runs on a timer"
-  }
+  },
+  { kind: "sep", gap: "8" },
+  { kind: "block", type: "loops_break" },
+  { kind: "label", text: "Break out of the loop" },
+  { kind: "sep", gap: "8" },
+  { kind: "block", type: "loops_continue" },
+  { kind: "label", text: "Continue with the next iteration of the loop" }
 ];
 
 const pythonLogicContents = [
+  { kind: "label", text: "Conditionals" },
   { kind: "block", type: "logic_if_simple" },
   { kind: "label", text: "Runs code if the condition is true" },
   { kind: "sep", gap: "8" },
   { kind: "block", type: "logic_if_else_simple" },
   { kind: "label", text: "Runs code if the condition is true; else run other code" },
   { kind: "sep", gap: "8" },
+  { kind: "label", text: "Comparison" },
+  {
+    kind: "block",
+    type: "logic_compare",
+    inputs: {
+      A: { shadow: { type: "math_number", fields: { NUM: 0 } } },
+      B: { shadow: { type: "math_number", fields: { NUM: 0 } } }
+    }
+  },
+  { kind: "label", text: "Compare two numbers" },
+  { kind: "sep", gap: "8" },
+  { kind: "label", text: "Boolean" },
   { kind: "block", type: "logic_operation", fields: { OP: "AND" } },
   { kind: "label", text: "Runs code if both specified conditions are true" },
   { kind: "sep", gap: "8" },
@@ -799,10 +1174,10 @@ const pythonLogicContents = [
 const pythonVariablesContents = [
   {
     kind: "block",
-    type: "math_change",
+    type: "variables_change",
     fields: { VAR: "item" },
     inputs: {
-      DELTA: { shadow: { type: "math_number", fields: { NUM: 1 } } }
+      VALUE: { shadow: { type: "math_number", fields: { NUM: 1 } } }
     }
   },
   { kind: "label", text: "Changes the value of item by 1" },
@@ -876,26 +1251,20 @@ const pythonMathContents = [
   },
   { kind: "label", text: "Returns the remainder of one number divided by another" },
   { kind: "sep", gap: "8" },
-  { kind: "block", type: "math_max2" },
+  { kind: "block", type: "math_op2", fields: { OP: "max" }, inputs: { A: { shadow: { type: "math_number", fields: { NUM: 0 } } }, B: { shadow: { type: "math_number", fields: { NUM: 10 } } } } },
   { kind: "label", text: "Returns the largest of two numbers" },
   { kind: "sep", gap: "8" },
-  { kind: "block", type: "math_min2" },
+  { kind: "block", type: "math_op2", fields: { OP: "min" }, inputs: { A: { shadow: { type: "math_number", fields: { NUM: 0 } } }, B: { shadow: { type: "math_number", fields: { NUM: 10 } } } } },
   { kind: "label", text: "Returns the smallest of two numbers" },
   { kind: "sep", gap: "8" },
-  { kind: "block", type: "math_single", fields: { OP: "ABS" } },
+  { kind: "block", type: "math_single", fields: { OP: "ABS" }, inputs: { NUM: { shadow: { type: "math_number", fields: { NUM: 0 } } } } },
   { kind: "label", text: "Returns the absolute value of a number" },
   { kind: "sep", gap: "8" },
-  { kind: "block", type: "math_single", fields: { OP: "ROOT" } },
+  { kind: "block", type: "math_single", fields: { OP: "ROOT" }, inputs: { NUM: { shadow: { type: "math_number", fields: { NUM: 0 } } } } },
   { kind: "label", text: "Returns the square root of the number" },
   { kind: "sep", gap: "8" },
-  { kind: "block", type: "math_single", fields: { OP: "SIN" } },
-  { kind: "label", text: "Returns the sine of the number" },
-  { kind: "sep", gap: "8" },
-  { kind: "block", type: "math_single", fields: { OP: "COS" } },
-  { kind: "label", text: "Returns the cosine of the number" },
-  { kind: "sep", gap: "8" },
-  { kind: "block", type: "math_single", fields: { OP: "TAN" } },
-  { kind: "label", text: "Returns the tangent of the number" },
+  { kind: "block", type: "math_js_round" },
+  { kind: "label", text: "Rounds the number to the nearest integer" },
   { kind: "sep", gap: "8" },
   {
     kind: "block",
@@ -912,14 +1281,30 @@ const pythonMathContents = [
     type: "math_constrain",
     inputs: {
       VALUE: { shadow: { type: "math_number", fields: { NUM: 0 } } },
-      LOW: { shadow: { type: "math_number", fields: { NUM: 1 } } },
-      HIGH: { shadow: { type: "math_number", fields: { NUM: 100 } } }
+      LOW: { shadow: { type: "math_number", fields: { NUM: 0 } } },
+      HIGH: { shadow: { type: "math_number", fields: { NUM: 0 } } }
     }
   },
   { kind: "label", text: "Constrains a number to be within a range" },
   { kind: "sep", gap: "8" },
+  {
+    kind: "block",
+    type: "math_map_value",
+    inputs: {
+      VALUE: { shadow: { type: "math_number", fields: { NUM: 0 } } },
+      FROM_LOW: { shadow: { type: "math_number", fields: { NUM: 0 } } },
+      FROM_HIGH: { shadow: { type: "math_number", fields: { NUM: 1023 } } },
+      TO_LOW: { shadow: { type: "math_number", fields: { NUM: 0 } } },
+      TO_HIGH: { shadow: { type: "math_number", fields: { NUM: 4 } } }
+    }
+  },
+  { kind: "label", text: "Maps a value from one range to another" },
+  { kind: "sep", gap: "8" },
   { kind: "block", type: "math_random_bool" },
-  { kind: "label", text: "Generates a random true or false value" }
+  { kind: "label", text: "Generates a random true or false value" },
+  { kind: "sep", gap: "8" },
+  { kind: "block", type: "math_constant", fields: { CONSTANT: "PI" } },
+  { kind: "label", text: "The PI constant" }
 ];
 
 const pythonAdvancedContents = [
@@ -1287,6 +1672,19 @@ function registerPxtLikeBlocks() {
     Blockly.Msg.PROCEDURES_DEFRETURN_PROCEDURE = "do something";
   }
 
+  // Fallback translations for builtin and variables blocks to prevent crash and raw keys
+  Blockly.Msg.MATH_CHANGE_TITLE = "change %1 by %2";
+  Blockly.Msg.VARIABLES_SET = "set %1 to %2";
+  Blockly.Msg.LOGIC_BOOLEAN_TRUE = "true";
+  Blockly.Msg.LOGIC_BOOLEAN_FALSE = "false";
+  Blockly.Msg.LOGIC_NEGATE_TITLE = "not %1";
+  Blockly.Msg.LOGIC_OPERATION_AND = "and";
+  Blockly.Msg.LOGIC_OPERATION_OR = "or";
+  Blockly.Msg.CONTROLS_IF_MSG_IF = "if";
+  Blockly.Msg.CONTROLS_IF_MSG_THEN = "then";
+  Blockly.Msg.CONTROLS_IF_MSG_ELSE = "else";
+  Blockly.Msg.CONTROLS_IF_MSG_ELSEIF = "else if";
+
   // Manual block registration for critical blocks to bypass mutator issues
   const defineBlock = (type: string, spec: any) => {
     delete (Blockly.Blocks as any)[type];
@@ -1484,12 +1882,75 @@ function registerPxtLikeBlocks() {
       inputsInline: true
     },
     {
+      type: "math_op2",
+      message0: "%1 of %2 and %3",
+      args0: [
+        {
+          type: "field_dropdown",
+          name: "OP",
+          options: [
+            ["min", "min"],
+            ["max", "max"]
+          ]
+        },
+        { type: "input_value", name: "A", check: "Number" },
+        { type: "input_value", name: "B", check: "Number" }
+      ],
+      output: "Number", colour: 230, inputsInline: true
+    },
+    {
       type: "math_js_round",
       message0: "round %1",
       args0: [{ type: "input_value", name: "ARG0", check: "Number" }],
       output: "Number",
       colour: 230,
       inputsInline: true
+    },
+    {
+      type: "math_constrain",
+      message0: "constrain %1 between %2 and %3",
+      args0: [
+        { type: "input_value", name: "VALUE", check: "Number" },
+        { type: "input_value", name: "LOW", check: "Number" },
+        { type: "input_value", name: "HIGH", check: "Number" }
+      ],
+      output: "Number", colour: 230, inputsInline: true
+    },
+    {
+      type: "math_random_bool",
+      message0: "pick random true or false",
+      output: "Boolean", colour: 230
+    },
+    {
+      type: "math_map_value",
+      message0: "map %1 from low %2 high %3 to low %4 high %5",
+      args0: [
+        { type: "input_value", name: "VALUE", check: "Number" },
+        { type: "input_value", name: "FROM_LOW", check: "Number" },
+        { type: "input_value", name: "FROM_HIGH", check: "Number" },
+        { type: "input_value", name: "TO_LOW", check: "Number" },
+        { type: "input_value", name: "TO_HIGH", check: "Number" }
+      ],
+      output: "Number", colour: 230, inputsInline: true
+    },
+    {
+      type: "math_constant",
+      message0: "%1",
+      args0: [
+        {
+          type: "field_dropdown",
+          name: "CONSTANT",
+          options: [
+            ["π", "PI"],
+            ["e", "E"],
+            ["φ", "GOLDEN_RATIO"],
+            ["sqrt(2)", "SQRT2"],
+            ["sqrt(½)", "SQRT1_2"],
+            ["∞", "INFINITY"]
+          ]
+        }
+      ],
+      output: "Number", colour: 230
     },
 
     // Variables Blocks
@@ -2463,6 +2924,97 @@ function registerPxtLikeBlocks() {
       helpUrl: ""
     },
     {
+      type: "led_set_brightness",
+      message0: "set brightness %1",
+      args0: [{ type: "input_value", name: "VALUE", check: "Number" }],
+      previousStatement: null,
+      nextStatement: null,
+      colour: 260,
+      tooltip: "Set the screen brightness",
+      helpUrl: ""
+    },
+    {
+      type: "led_brightness",
+      message0: "brightness",
+      output: "Number",
+      colour: 260,
+      tooltip: "Get the screen brightness",
+      helpUrl: ""
+    },
+    {
+      type: "led_stop_animation",
+      message0: "stop animation",
+      previousStatement: null,
+      nextStatement: null,
+      colour: 260,
+      tooltip: "Stop current animation",
+      helpUrl: ""
+    },
+    {
+      type: "led_set_display_mode",
+      message0: "set display mode %1",
+      args0: [
+        {
+          type: "field_dropdown",
+          name: "MODE",
+          options: [
+            ["black and white", "BlackAndWhite"],
+            ["greyscale", "Greyscale"]
+          ]
+        }
+      ],
+      previousStatement: null,
+      nextStatement: null,
+      colour: 260,
+      tooltip: "Set display mode",
+      helpUrl: ""
+    },
+    {
+      type: "led_enable",
+      message0: "led enable %1",
+      args0: [
+        {
+          type: "field_dropdown",
+          name: "ON",
+          options: [
+            ["true", "true"],
+            ["false", "false"]
+          ]
+        }
+      ],
+      previousStatement: null,
+      nextStatement: null,
+      colour: 260,
+      tooltip: "Enable or disable LED display",
+      helpUrl: ""
+    },
+    {
+      type: "led_plot_brightness",
+      message0: "plot x %1 y %2 brightness %3",
+      args0: [
+        { type: "input_value", name: "X", check: "Number" },
+        { type: "input_value", name: "Y", check: "Number" },
+        { type: "input_value", name: "BRIGHTNESS", check: "Number" }
+      ],
+      previousStatement: null,
+      nextStatement: null,
+      colour: 260,
+      tooltip: "Turn on single LED with brightness",
+      helpUrl: ""
+    },
+    {
+      type: "led_point_brightness",
+      message0: "point x %1 y %2 brightness",
+      args0: [
+        { type: "input_value", name: "X", check: "Number" },
+        { type: "input_value", name: "Y", check: "Number" }
+      ],
+      output: "Number",
+      colour: 260,
+      tooltip: "Read LED brightness",
+      helpUrl: ""
+    },
+    {
       type: "radio_set_group",
       message0: "radio set group %1",
       args0: [{ type: "input_value", name: "GROUP", check: "Number" }],
@@ -2507,11 +3059,12 @@ function registerPxtLikeBlocks() {
     },
     {
       type: "radio_on_received_number",
-      message0: "on radio received number %1 %2",
+      message0: "on radio received %1",
       args0: [
-        { type: "field_variable", name: "VAR", variable: "receivedNumber" },
-        { type: "input_statement", name: "DO" }
+        { type: "field_variable", name: "receivedNumber", variable: "receivedNumber" }
       ],
+      message1: "%1",
+      args1: [{ type: "input_statement", name: "DO" }],
       previousStatement: null,
       nextStatement: null,
       colour: 340,
@@ -2520,11 +3073,12 @@ function registerPxtLikeBlocks() {
     },
     {
       type: "radio_on_received_string",
-      message0: "on radio received string %1 %2",
+      message0: "on radio received %1",
       args0: [
-        { type: "field_variable", name: "VAR", variable: "receivedText" },
-        { type: "input_statement", name: "DO" }
+        { type: "field_variable", name: "receivedString", variable: "receivedString" }
       ],
+      message1: "%1",
+      args1: [{ type: "input_statement", name: "DO" }],
       previousStatement: null,
       nextStatement: null,
       colour: 340,
@@ -2533,12 +3087,13 @@ function registerPxtLikeBlocks() {
     },
     {
       type: "radio_on_received_value",
-      message0: "on radio received %1 %2 %3",
+      message0: "on radio received %1 %2",
       args0: [
-        { type: "field_variable", name: "NAME", variable: "name" },
-        { type: "field_variable", name: "VALUE", variable: "value" },
-        { type: "input_statement", name: "DO" }
+        { type: "field_variable", name: "name", variable: "name" },
+        { type: "field_variable", name: "value", variable: "value" }
       ],
+      message1: "%1",
+      args1: [{ type: "input_statement", name: "DO" }],
       previousStatement: null,
       nextStatement: null,
       colour: 340,
@@ -2552,7 +3107,11 @@ function registerPxtLikeBlocks() {
         {
           type: "field_dropdown",
           name: "TYPE",
-          options: [["type", "TYPE"], ["strength", "SIGNAL"], ["time", "TIME"], ["serial", "SERIAL"]]
+          options: [
+            ["signal strength", "SIGNAL"],
+            ["time", "TIME"],
+            ["serial number", "SERIAL"]
+          ]
         }
       ],
       output: "Number",
@@ -2561,8 +3120,90 @@ function registerPxtLikeBlocks() {
       helpUrl: ""
     },
     {
+      type: "radio_set_transmit_power",
+      message0: "radio set transmit power %1",
+      args0: [{ type: "input_value", name: "POWER", check: "Number" }],
+      previousStatement: null,
+      nextStatement: null,
+      colour: 340,
+      tooltip: "Set transmit power",
+      helpUrl: ""
+    },
+    {
+      type: "radio_set_transmit_serial_number",
+      message0: "radio set transmit serial number %1",
+      args0: [
+        {
+          type: "field_dropdown",
+          name: "TRANSMIT",
+          options: [
+            ["true", "true"],
+            ["false", "false"]
+          ]
+        }
+      ],
+      previousStatement: null,
+      nextStatement: null,
+      colour: 340,
+      tooltip: "Set transmit serial number",
+      helpUrl: ""
+    },
+    {
+      type: "radio_set_frequency_band",
+      message0: "radio set frequency band %1",
+      args0: [{ type: "input_value", name: "BAND", check: "Number" }],
+      previousStatement: null,
+      nextStatement: null,
+      colour: 340,
+      tooltip: "Set frequency band",
+      helpUrl: ""
+    },
+    {
+      type: "radio_raise_event",
+      message0: "radio raise event",
+      message1: "from source %1",
+      args1: [
+        {
+          type: "field_dropdown",
+          name: "SRC",
+          options: [
+            ["MICROBIT_ID_BUTTON_A", "1"],
+            ["MICROBIT_ID_BUTTON_B", "2"],
+            ["MICROBIT_ID_BUTTON_AB", "3"],
+            ["MICROBIT_ID_RADIO", "9"],
+            ["MICROBIT_ID_GESTURE", "13"],
+            ["MICROBIT_ID_ACCELEROMETER", "5"],
+            ["MICROBIT_ID_IO_P0", "100"],
+            ["MICROBIT_ID_IO_P1", "101"],
+            ["MICROBIT_ID_IO_P2", "102"]
+          ]
+        }
+      ],
+      message2: "with value %1",
+      args2: [
+        {
+          type: "field_dropdown",
+          name: "VALUE",
+          options: [
+            ["MICROBIT_EVT_ANY", "0"],
+            ["MICROBIT_BUTTON_EVT_DOWN", "1"],
+            ["MICROBIT_BUTTON_EVT_UP", "2"],
+            ["MICROBIT_BUTTON_EVT_CLICK", "3"],
+            ["MICROBIT_RADIO_EVT_DATAGRAM", "1"],
+            ["MICROBIT_PIN_EVT_RISE", "2"],
+            ["MICROBIT_PIN_EVT_FALL", "3"]
+          ]
+        }
+      ],
+      previousStatement: null,
+      nextStatement: null,
+      colour: 340,
+      tooltip: "Raise an event over radio",
+      helpUrl: ""
+    },
+    {
       type: "loops_every_interval",
-      message0: "run code every %1 ms %2 %3",
+      message0: "every %1 ms %2 %3",
       args0: [
         { type: "input_value", name: "TIME", check: "Number" },
         { type: "input_dummy" },
@@ -2572,6 +3213,22 @@ function registerPxtLikeBlocks() {
       nextStatement: null,
       colour: 120,
       tooltip: "Run code at fixed interval in milliseconds",
+      helpUrl: ""
+    },
+    {
+      type: "loops_break",
+      message0: "break",
+      previousStatement: null,
+      colour: 120,
+      tooltip: "Break out of the loop",
+      helpUrl: ""
+    },
+    {
+      type: "loops_continue",
+      message0: "continue",
+      previousStatement: null,
+      colour: 120,
+      tooltip: "Continue with the next iteration of the loop",
       helpUrl: ""
     },
     {
@@ -3108,6 +3765,38 @@ function registerPxtLikeBlocks() {
     return `led.plotBarGraph(${value}, ${high});\n`;
   };
 
+  asAny.forBlock["led_set_brightness"] = (block: Blockly.Block, generator: Blockly.CodeGenerator) => {
+    const value = generator.valueToCode(block, "VALUE", Order.NONE) || "255";
+    return `led.setBrightness(${value});\n`;
+  };
+
+  asAny.forBlock["led_brightness"] = () => ["led.brightness()", Order.FUNCTION_CALL];
+
+  asAny.forBlock["led_stop_animation"] = () => "led.stopAnimation();\n";
+
+  asAny.forBlock["led_set_display_mode"] = (block: Blockly.Block) => {
+    const mode = block.getFieldValue("MODE") || "BlackAndWhite";
+    return `led.setDisplayMode(DisplayMode.${mode});\n`;
+  };
+
+  asAny.forBlock["led_enable"] = (block: Blockly.Block) => {
+    const on = block.getFieldValue("ON") || "true";
+    return `led.enable(${on});\n`;
+  };
+
+  asAny.forBlock["led_plot_brightness"] = (block: Blockly.Block, generator: Blockly.CodeGenerator) => {
+    const x = generator.valueToCode(block, "X", Order.NONE) || "0";
+    const y = generator.valueToCode(block, "Y", Order.NONE) || "0";
+    const brightness = generator.valueToCode(block, "BRIGHTNESS", Order.NONE) || "255";
+    return `led.plotBrightness(${x}, ${y}, ${brightness});\n`;
+  };
+
+  asAny.forBlock["led_point_brightness"] = (block: Blockly.Block, generator: Blockly.CodeGenerator) => {
+    const x = generator.valueToCode(block, "X", Order.NONE) || "0";
+    const y = generator.valueToCode(block, "Y", Order.NONE) || "0";
+    return [`led.pointBrightness(${x}, ${y})`, Order.FUNCTION_CALL];
+  };
+
   asAny.forBlock["radio_set_group"] = (block: Blockly.Block, generator: Blockly.CodeGenerator) => {
     const group = generator.valueToCode(block, "GROUP", Order.NONE) || "1";
     return `radio.setGroup(${group});\n`;
@@ -3130,20 +3819,20 @@ function registerPxtLikeBlocks() {
   };
 
   asAny.forBlock["radio_on_received_number"] = (block: Blockly.Block, generator: Blockly.CodeGenerator) => {
-    const variable = (block.getFieldValue("VAR") || "receivedNumber").replace(/\s+/g, "_");
+    const variable = (block.getFieldValue("receivedNumber") || "receivedNumber").replace(/\s+/g, "_");
     const body = generator.statementToCode(block, "DO");
     return `radio.onReceivedNumber(function (${variable}) {\n${body}});\n`;
   };
 
   asAny.forBlock["radio_on_received_string"] = (block: Blockly.Block, generator: Blockly.CodeGenerator) => {
-    const variable = (block.getFieldValue("VAR") || "receivedText").replace(/\s+/g, "_");
+    const variable = (block.getFieldValue("receivedString") || "receivedString").replace(/\s+/g, "_");
     const body = generator.statementToCode(block, "DO");
     return `radio.onReceivedString(function (${variable}) {\n${body}});\n`;
   };
 
   asAny.forBlock["radio_on_received_value"] = (block: Blockly.Block, generator: Blockly.CodeGenerator) => {
-    const nameVar = (block.getFieldValue("NAME") || "name").replace(/\s+/g, "_");
-    const valueVar = (block.getFieldValue("VALUE") || "value").replace(/\s+/g, "_");
+    const nameVar = (block.getFieldValue("name") || "name").replace(/\s+/g, "_");
+    const valueVar = (block.getFieldValue("value") || "value").replace(/\s+/g, "_");
     const body = generator.statementToCode(block, "DO");
     return `radio.onReceivedValue(function (${nameVar}, ${valueVar}) {\n${body}});\n`;
   };
@@ -3156,10 +3845,39 @@ function registerPxtLikeBlocks() {
     return ["radio.receivedPacket(RadioPacketProperty.Time)", Order.FUNCTION_CALL];
   };
 
+  asAny.forBlock["radio_set_transmit_power"] = (block: Blockly.Block, generator: Blockly.CodeGenerator) => {
+    const power = generator.valueToCode(block, "POWER", Order.NONE) || "7";
+    return `radio.setTransmitPower(${power});\n`;
+  };
+
+  asAny.forBlock["radio_set_transmit_serial_number"] = (block: Blockly.Block) => {
+    const transmit = block.getFieldValue("TRANSMIT") || "true";
+    return `radio.setTransmitSerialNumber(${transmit});\n`;
+  };
+
+  asAny.forBlock["radio_set_frequency_band"] = (block: Blockly.Block, generator: Blockly.CodeGenerator) => {
+    const band = generator.valueToCode(block, "BAND", Order.NONE) || "0";
+    return `radio.setFrequencyBand(${band});\n`;
+  };
+
+  asAny.forBlock["radio_raise_event"] = (block: Blockly.Block) => {
+    const src = block.getFieldValue("SRC") || "1";
+    const value = block.getFieldValue("VALUE") || "0";
+    return `radio.raiseEvent(${src}, ${value});\n`;
+  };
+
   asAny.forBlock["loops_every_interval"] = (block: Blockly.Block, generator: Blockly.CodeGenerator) => {
     const time = generator.valueToCode(block, "TIME", Order.NONE) || "1000";
     const body = generator.statementToCode(block, "DO");
     return `loops.everyInterval(${time}, function () {\n${body}});\n`;
+  };
+
+  asAny.forBlock["loops_break"] = (block: Blockly.Block) => {
+    return "break;\n";
+  };
+
+  asAny.forBlock["loops_continue"] = (block: Blockly.Block) => {
+    return "continue;\n";
   };
 
   asAny.forBlock["logic_if_simple"] = (block: Blockly.Block, generator: Blockly.CodeGenerator) => {
@@ -3210,8 +3928,6 @@ function registerPxtLikeBlocks() {
     return [`Math.round(${arg})`, Order.FUNCTION_CALL];
   };
 
-  asAny.forBlock["math_random_bool"] = () => ["Math.random() < 0.5", Order.RELATIONAL];
-
   asAny.forBlock["math_map_value"] = (block: Blockly.Block, generator: Blockly.CodeGenerator) => {
     const value = generator.valueToCode(block, "VALUE", Order.NONE) || "0";
     const fromLow = generator.valueToCode(block, "FROM_LOW", Order.NONE) || "0";
@@ -3220,6 +3936,33 @@ function registerPxtLikeBlocks() {
     const toHigh = generator.valueToCode(block, "TO_HIGH", Order.NONE) || "4";
     return [`Math.map(${value}, ${fromLow}, ${fromHigh}, ${toLow}, ${toHigh})`, Order.FUNCTION_CALL];
   };
+
+  asAny.forBlock["math_op2"] = (block: Blockly.Block, generator: Blockly.CodeGenerator) => {
+    const op = block.getFieldValue("OP") || "min";
+    const a = generator.valueToCode(block, "A", Order.NONE) || "0";
+    const b = generator.valueToCode(block, "B", Order.NONE) || "0";
+    return [`Math.${op}(${a}, ${b})`, Order.FUNCTION_CALL];
+  };
+
+  asAny.forBlock["math_constrain"] = (block: Blockly.Block, generator: Blockly.CodeGenerator) => {
+    const value = generator.valueToCode(block, "VALUE", Order.NONE) || "0";
+    const low = generator.valueToCode(block, "LOW", Order.NONE) || "0";
+    const high = generator.valueToCode(block, "HIGH", Order.NONE) || "100";
+    return [`Math.constrain(${value}, ${low}, ${high})`, Order.FUNCTION_CALL];
+  };
+
+  asAny.forBlock["math_constant"] = (block: Blockly.Block) => {
+    const constant = block.getFieldValue("CONSTANT") || "PI";
+    if (constant === "PI") return ["Math.PI", Order.ATOMIC];
+    if (constant === "E") return ["Math.E", Order.ATOMIC];
+    if (constant === "GOLDEN_RATIO") return ["(1 + Math.sqrt(5)) / 2", Order.ATOMIC];
+    if (constant === "SQRT2") return ["Math.SQRT2", Order.ATOMIC];
+    if (constant === "SQRT1_2") return ["Math.SQRT1_2", Order.ATOMIC];
+    if (constant === "INFINITY") return ["Infinity", Order.ATOMIC];
+    return ["0", Order.ATOMIC];
+  };
+
+  asAny.forBlock["math_random_bool"] = () => ["Math.random() < 0.5", Order.RELATIONAL];
 
   asAny.forBlock["text_parse_to_number"] = (block: Blockly.Block, generator: Blockly.CodeGenerator) => {
     const text = generator.valueToCode(block, "TEXT", Order.NONE) || "\"0\"";
@@ -3938,6 +4681,20 @@ export default function BlocklyEditorClient() {
         }
         .toolbox-search input {
           width: 100%;
+        }
+        .blocklyFlyoutButton .blocklyFlyoutButtonBackground {
+          fill: transparent !important;
+          stroke: #6366f1 !important;
+          stroke-width: 2px !important;
+          rx: 8px !important;
+          ry: 8px !important;
+        }
+        .blocklyFlyoutButton:hover .blocklyFlyoutButtonBackground {
+          fill: rgba(99, 102, 241, 0.1) !important;
+        }
+        .blocklyFlyoutButton .blocklyText {
+          fill: #ffffff !important;
+          font-weight: 600 !important;
         }
         .flyout-hidden .blocklyFlyout,
         .flyout-hidden .blocklyFlyoutBackground,

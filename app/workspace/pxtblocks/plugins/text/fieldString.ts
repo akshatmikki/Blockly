@@ -92,4 +92,4 @@ Blockly.Css.register(`
 }
 `);
 
-Blockly.fieldRegistry.register('field_string', FieldString);
+Blockly.registry.register(Blockly.registry.Type.FIELD, 'field_string', FieldString);
