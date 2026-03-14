@@ -15,6 +15,7 @@ export class ConstantProvider extends Blockly.zelos.ConstantProvider {
 
     FIELD_TEXT_FONTFAMILY = '"Consolas", "Monaco", "Menlo", "Ubuntu Mono", "source-code-pro", monospace';
     FIELD_TEXT_FONTWEIGHT = '600';
+    ADD_START_HATS = false;
 
     /**
      * Color of the glow outline around highlighted blocks.

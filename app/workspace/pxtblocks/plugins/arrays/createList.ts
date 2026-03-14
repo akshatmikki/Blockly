@@ -40,6 +40,17 @@ const LIST_CREATE_MIXIN = {
         }
         this.updateShape_();
     },
+    saveExtraState: function (this: ListCreateBlock) {
+        return {
+            'itemCount': this.itemCount_,
+            'horizontalAfter': this.horizontalAfter_
+        };
+    },
+    loadExtraState: function (this: ListCreateBlock, state: any) {
+        this.itemCount_ = state['itemCount'];
+        this.horizontalAfter_ = state['horizontalAfter'];
+        this.updateShape_();
+    },
     storeConnections_: function (this: ListCreateBlock) {
         this.valueConnections_ = [];
         for (let i = 0; i < this.itemCount_; i++) {

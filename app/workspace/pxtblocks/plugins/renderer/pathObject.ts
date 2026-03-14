@@ -109,7 +109,9 @@ export class PathObject extends Blockly.zelos.PathObject {
                         const darkerBorder = Blockly.utils.colour.blend("#0000000", childColor, blendFactor);
                         const lighterBorder = Blockly.utils.colour.blend("#ffffff", childColor, blendFactor);
 
-                        if (pxt.contrastRatio(darkerBorder, parentColor) > pxt.contrastRatio(lighterBorder, parentColor)) {
+                        const pxtGlobal = (globalThis as any).pxt;
+                        if (pxtGlobal && pxtGlobal.contrastRatio &&
+                            pxtGlobal.contrastRatio(darkerBorder, parentColor) > pxtGlobal.contrastRatio(lighterBorder, parentColor)) {
                             this.svgPath.setAttribute('stroke', darkerBorder);
                         }
                         else {

@@ -2,7 +2,6 @@
 
 import * as Blockly from "blockly";
 
-import svg = pxt.svgUtil;
 import { FieldBase } from "./field_base";
 import { getTemporaryAssets, getTilesReferencedByTilesets, setMelodyEditorOpen, workspaceToScreenCoordinates, bitmapToImageURI, tilemapToImageURI, songToDataURI, setBlockDataForField, loadAssetFromSaveState, getAssetSaveState } from "./field_utils";
 
@@ -400,7 +399,7 @@ export abstract class FieldAssetEditor<U extends FieldAssetEditorOptions, V exte
             return;
         }
 
-        const bg = new svg.Rect()
+        const bg = new pxt.svgUtil.Rect()
             .at(X_PADDING, Y_PADDING)
             .size(BG_WIDTH, BG_WIDTH)
             .setClass("blocklyFieldRect blocklySpriteField")
@@ -428,7 +427,7 @@ export abstract class FieldAssetEditor<U extends FieldAssetEditorOptions, V exte
             }
 
             if (dataURI) {
-                const img = new svg.Image()
+                const img = new pxt.svgUtil.Image()
                     .src(dataURI)
                     .at(X_PADDING + BG_PADDING, Y_PADDING + BG_PADDING)
                     .size(PREVIEW_WIDTH, PREVIEW_WIDTH);

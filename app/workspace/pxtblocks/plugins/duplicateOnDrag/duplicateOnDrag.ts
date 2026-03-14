@@ -85,8 +85,8 @@ export function updateDuplicateOnDragState(block: Blockly.BlockSvg) {
     // in case this is called during block initialization
     setTimeout(() => {
         const shouldDuplicate = shouldDuplicateOnDrag(block);
-        if (block.pathObject) {
-            (block.pathObject as PathObject).setHasDottedOutlineOnHover(shouldDuplicate);
+        if (block.pathObject && (block.pathObject as any).setHasDottedOutlineOnHover) {
+            (block.pathObject as any).setHasDottedOutlineOnHover(shouldDuplicate);
         }
         block.setDeletable(!shouldDuplicate);
     });

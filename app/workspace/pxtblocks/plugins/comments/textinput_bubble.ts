@@ -1,4 +1,4 @@
-import { Bubble } from './bubble.js';
+import { Bubble } from './bubble';
 
 import * as Blockly from "blockly";
 

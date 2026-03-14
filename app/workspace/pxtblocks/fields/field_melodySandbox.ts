@@ -2,7 +2,6 @@
 
 import * as Blockly from "blockly";
 
-import svg = pxt.svgUtil;
 import { clearDropDownDiv, FieldCustom, FieldCustomOptions, setMelodyEditorOpen } from "./field_utils";
 import { FieldMatrix } from "./field_matrix";
 export const HEADER_HEIGHT = 50;
@@ -54,7 +53,7 @@ export class FieldCustomMelody<U extends FieldCustomOptions> extends FieldMatrix
 
     // Use toggle from sprite editor
     private toggle: Toggle;
-    private root: svg.SVG;
+    private root: pxt.svgUtil.SVG;
     private gallery: pxtmelody.MelodyGallery;
     protected clearSelectionOnBlur = false;
     private matrixFocusBind: Blockly.browserEvents.Data | null = null;
@@ -171,7 +170,7 @@ export class FieldCustomMelody<U extends FieldCustomOptions> extends FieldMatrix
         pxt.BrowserUtils.addClass(this.topDiv, "melody-top-bar-div")
 
         // Same toggle set up as sprite editor
-        this.root = new svg.SVG(this.topDiv).id("melody-editor-header-controls");
+        this.root = new pxt.svgUtil.SVG(this.topDiv).id("melody-editor-header-controls");
         this.toggle = new Toggle(this.root, { leftText: lf("Editor"), rightText: lf("Gallery"), baseColor: color });
         this.toggle.onStateChange(isLeft => {
             if (isLeft) {
@@ -377,7 +376,7 @@ export class FieldCustomMelody<U extends FieldCustomOptions> extends FieldMatrix
 
         for (let i = 0; i < notes.length; i++) {
             let className = pxtmelody.getColorClass(pxtmelody.noteToRow(notes[i]));
-            const cb = new svg.Rect()
+            const cb = new pxt.svgUtil.Rect()
                 .at((FieldCustomMelody.COLOR_BLOCK_WIDTH + FieldCustomMelody.COLOR_BLOCK_SPACING) * i + FieldCustomMelody.COLOR_BLOCK_X, FieldCustomMelody.COLOR_BLOCK_Y)
                 .size(FieldCustomMelody.COLOR_BLOCK_WIDTH, FieldCustomMelody.COLOR_BLOCK_HEIGHT)
                 .stroke("#898989", 1)
@@ -724,7 +723,7 @@ export class FieldCustomMelody<U extends FieldCustomOptions> extends FieldMatrix
 }
 
 export interface ButtonGroup {
-    root: svg.Group;
+    root: pxt.svgUtil.Group;
     cx: number;
     cy: number;
 }
@@ -751,19 +750,19 @@ interface ToggleProps {
 }
 
 class Toggle {
-    protected leftElement: svg.Group;
-    protected leftText: svg.Text;
-    protected rightElement: svg.Group;
-    protected rightText: svg.Text;
+    protected leftElement: pxt.svgUtil.Group;
+    protected leftText: pxt.svgUtil.Text;
+    protected rightElement: pxt.svgUtil.Group;
+    protected rightText: pxt.svgUtil.Text;
 
-    protected switch: svg.Rect;
-    protected root: svg.Group;
+    protected switch: pxt.svgUtil.Rect;
+    protected root: pxt.svgUtil.Group;
     protected props: ToggleProps;
 
     protected isLeft: boolean;
     protected changeHandler: (left: boolean) => void;
 
-    constructor(parent: svg.SVG, props: Partial<ToggleProps>) {
+    constructor(parent: pxt.svgUtil.SVG, props: Partial<ToggleProps>) {
         this.props = defaultColors(props);
         this.root = parent.group();
         this.buildDom();

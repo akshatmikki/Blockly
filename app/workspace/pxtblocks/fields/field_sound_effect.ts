@@ -2,7 +2,6 @@
 
 import * as Blockly from "blockly";
 
-import svg = pxt.svgUtil;
 import { FieldBase } from "./field_base";
 import { FieldCustomOptions, workspaceToScreenCoordinates } from "./field_utils";
 
@@ -82,7 +81,7 @@ export class FieldSoundEffect extends FieldBase<FieldSoundEffectParams> {
         }
 
         pxsim.U.clear(this.fieldGroup_);
-        const bg = new svg.Rect()
+        const bg = new pxt.svgUtil.Rect()
             .at(X_PADDING, Y_PADDING)
             .size(TOTAL_WIDTH, TOTAL_HEIGHT)
             .setClass("blocklyFieldRect blocklySpriteField")
@@ -92,11 +91,11 @@ export class FieldSoundEffect extends FieldBase<FieldSoundEffectParams> {
 
         const clipPathId = "preview-clip-" + pxt.U.guidGen();
 
-        const clip = new svg.ClipPath()
+        const clip = new pxt.svgUtil.ClipPath()
             .id(clipPathId)
             .clipPathUnits(false)
 
-        const clipRect = new svg.Rect()
+        const clipRect = new pxt.svgUtil.Rect()
             .size(PREVIEW_WIDTH, TOTAL_HEIGHT)
             .fill("#FFF")
             .at(0, 0);
@@ -104,20 +103,20 @@ export class FieldSoundEffect extends FieldBase<FieldSoundEffectParams> {
         clip.appendChild(clipRect);
 
         this.drawnSound = this.readCurrentSound();
-        const path = new svg.Path()
+        const path = new pxt.svgUtil.Path()
             .stroke("grey", 2)
             .fill("none")
             .setD(pxt.assets.renderSoundPath(this.drawnSound, TOTAL_WIDTH - X_PADDING * 4 - MUSIC_ICON_WIDTH, TOTAL_HEIGHT - Y_PADDING * 2))
             .clipPath("url('#" + clipPathId + "')")
 
 
-        const g = new svg.Group()
+        const g = new pxt.svgUtil.Group()
             .translate(MUSIC_ICON_WIDTH + X_PADDING * 3, Y_PADDING + 3);
 
         g.appendChild(clip);
         g.appendChild(path);
 
-        const musicIcon = new svg.Text("\uf001")
+        const musicIcon = new pxt.svgUtil.Text("\uf001")
             .appendClass("melody-editor-field-icon")
             .setAttribute("alignment-baseline", "middle")
             .anchor("middle")

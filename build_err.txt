@@ -1,0 +1,48 @@
+▲ Next.js 16.1.6 (Turbopack)
+- Environments: .env.local
+
+  Creating an optimized production build ...
+⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+
+> Build error occurred
+Error: Turbopack build failed with 1 errors:
+./app/workspace/pxtblocks/plugins/comments/textinput_bubble.ts:1:1
+Module not found: Can't resolve './bubble.js'
+[0m[31m[1m>[22m[39m[90m 1 |[39m [36mimport[39m { [33mBubble[39m } [36mfrom[39m [32m'./bubble.js'[39m[33m;[39m
+ [90m   |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 2 |[39m
+ [90m 3 |[39m [36mimport[39m [33m*[39m [36mas[39m [33mBlockly[39m [36mfrom[39m [32m"blockly"[39m[33m;[39m
+ [90m 4 |[39m[0m
+
+
+
+Import traces:
+  App Route:
+    ./app/workspace/pxtblocks/plugins/comments/textinput_bubble.ts
+    ./app/api/makecode/compile/route.ts
+
+  Client Component Browser:
+    ./app/workspace/pxtblocks/plugins/comments/textinput_bubble.ts [Client Component Browser]
+    ./app/workspace/pxtblocks/plugins/comments/blockComment.ts [Client Component Browser]
+    ./app/workspace/pxtblocks/plugins/comments/index.ts [Client Component Browser]
+    ./app/workspace/pxtblocks/index.ts [Client Component Browser]
+    ./app/workspace/pxtblocks/pxtblocks-editor-client.tsx [Client Component Browser]
+    ./app/workspace/blockly-editor/blockly-editor-client.tsx [Client Component Browser]
+    ./app/workspace/blockly-editor/blockly-editor-client.tsx [Server Component]
+    ./app/workspace/blockly-editor/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./app/workspace/pxtblocks/plugins/comments/textinput_bubble.ts [Client Component SSR]
+    ./app/workspace/pxtblocks/plugins/comments/blockComment.ts [Client Component SSR]
+    ./app/workspace/pxtblocks/plugins/comments/index.ts [Client Component SSR]
+    ./app/workspace/pxtblocks/index.ts [Client Component SSR]
+    ./app/workspace/pxtblocks/pxtblocks-editor-client.tsx [Client Component SSR]
+    ./app/workspace/blockly-editor/blockly-editor-client.tsx [Client Component SSR]
+    ./app/workspace/blockly-editor/blockly-editor-client.tsx [Server Component]
+    ./app/workspace/blockly-editor/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+    at <unknown> (./app/workspace/pxtblocks/plugins/comments/textinput_bubble.ts:1:1)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)

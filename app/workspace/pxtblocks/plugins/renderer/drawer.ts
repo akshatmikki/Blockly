@@ -5,6 +5,13 @@ import { isCollapsedInputRow } from "./collapsedInputRow";
 export class Drawer extends Blockly.zelos.Drawer {
     protected constants_: ConstantProvider;
 
+    constructor(block: Blockly.BlockSvg, info: Blockly.blockRendering.RenderInfo) {
+        super(block, info as any);
+        if (!this.constants_) {
+            this.constants_ = info.getRenderer().getConstants() as ConstantProvider;
+        }
+    }
+
     drawCollapsedStack_(row: Blockly.blockRendering.Row) {
         // Where to start drawing the notch, which is on the right side in LTR.
         const x = this.constants_.STATEMENT_INPUT_NOTCH_OFFSET
@@ -40,6 +47,9 @@ export class Drawer extends Blockly.zelos.Drawer {
     }
 
     drawOutline_(): void {
+        if (!this.constants_) {
+            this.constants_ = this.info_.getRenderer().getConstants() as ConstantProvider;
+        }
         if (this.info_.outputConnection &&
             this.info_.outputConnection.isDynamicShape &&
             !this.info_.hasStatementInput &&

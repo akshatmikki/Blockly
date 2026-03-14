@@ -33,6 +33,17 @@ const IF_ELSE_MIXIN = {
         }
         return container;
     },
+    saveExtraState: function (this: IfElseBlock) {
+        return {
+            'elseifCount': this.elseifCount_,
+            'elseCount': this.elseCount_,
+        };
+    },
+    loadExtraState: function (this: IfElseBlock, state: any) {
+        this.elseifCount_ = state['elseifCount'] || 0;
+        this.elseCount_ = state['elseCount'] || 0;
+        this.updateShape_();
+    },
     /**
      * Parse XML to restore the else-if and else inputs.
      * @param {!Element} xmlElement XML storage element.

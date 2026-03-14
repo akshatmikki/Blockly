@@ -2,7 +2,6 @@
 
 import * as Blockly from "blockly";
 
-import svg = pxt.svgUtil;
 import { FieldAssetEditor } from "./field_asset";
 import { bitmapToImageURI } from "./field_utils";
 
@@ -132,7 +131,7 @@ export class FieldAnimationEditor extends FieldAssetEditor<FieldAnimationOptions
         if (!this.fieldGroup_) return;
         pxsim.U.clear(this.fieldGroup_);
 
-        const bg = new svg.Rect()
+        const bg = new pxt.svgUtil.Rect()
             .at(X_PADDING + ICON_WIDTH, Y_PADDING)
             .size(BG_WIDTH, BG_WIDTH)
             .corner(4)
@@ -140,7 +139,7 @@ export class FieldAnimationEditor extends FieldAssetEditor<FieldAnimationOptions
 
         this.fieldGroup_.appendChild(bg.el);
 
-        const icon = new svg.Text("\uf008")
+        const icon = new pxt.svgUtil.Text("\uf008")
             .at(X_PADDING, 5 + (TOTAL_HEIGHT >> 1))
             .setClass("semanticIcon");
 
@@ -148,7 +147,7 @@ export class FieldAnimationEditor extends FieldAssetEditor<FieldAnimationOptions
 
         if (this.asset) {
             this.frames = this.asset.frames.map(frame => bitmapToImageURI(pxt.sprite.Bitmap.fromData(frame), PREVIEW_WIDTH, this.lightMode));
-            this.preview = new svg.Image()
+            this.preview = new pxt.svgUtil.Image()
                 .src(this.frames[0])
                 .at(X_PADDING + BG_PADDING + ICON_WIDTH, Y_PADDING + BG_PADDING)
                 .size(PREVIEW_WIDTH, PREVIEW_WIDTH);

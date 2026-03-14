@@ -10,6 +10,11 @@ import { ConstantProvider } from "./constants";
 export class RenderInfo extends Blockly.zelos.RenderInfo {
     constants_: ConstantProvider;
 
+    constructor(renderer: Blockly.blockRendering.Renderer, block: Blockly.BlockSvg) {
+        super(renderer as any, block);
+        this.constants_ = renderer.getConstants() as ConstantProvider;
+    }
+
     override measure(): void {
         if (this.block_) {
             for (const input of this.block_.inputList) {
@@ -20,6 +25,9 @@ export class RenderInfo extends Blockly.zelos.RenderInfo {
     }
 
     protected createRows_() {
+        if (!this.constants_) {
+            this.constants_ = (this as any).renderer_.getConstants();
+        }
         this.populateTopRow_();
         this.rows.push(this.topRow);
         let activeRow = new Blockly.blockRendering.InputRow(this.constants_);

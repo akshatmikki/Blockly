@@ -2,7 +2,6 @@
 
 import * as Blockly from "blockly";
 
-import svg = pxt.svgUtil;
 import { FieldAssetEditor } from "./field_asset";
 import { songToDataURI } from "./field_utils";
 
@@ -102,7 +101,7 @@ export class FieldMusicEditor extends FieldAssetEditor<FieldMusicEditorOptions, 
 
         const totalWidth = X_PADDING * 2 + BG_PADDING * 2 + this.previewWidth();
 
-        const bg = new svg.Rect()
+        const bg = new pxt.svgUtil.Rect()
             .at(X_PADDING, Y_PADDING)
             .size(BG_PADDING * 2 + this.previewWidth(), BG_HEIGHT)
             .setClass("blocklyFieldRect blocklySpriteField")
@@ -115,7 +114,7 @@ export class FieldMusicEditor extends FieldAssetEditor<FieldMusicEditorOptions, 
             const dataURI = songToDataURI((this.asset as pxt.Song).song, this.previewWidth(), PREVIEW_HEIGHT, this.lightMode);
 
             if (dataURI) {
-                const img = new svg.Image()
+                const img = new pxt.svgUtil.Image()
                     .src(dataURI)
                     .at(X_PADDING + BG_PADDING, Y_PADDING + BG_PADDING)
                     .size(this.previewWidth(), PREVIEW_HEIGHT);

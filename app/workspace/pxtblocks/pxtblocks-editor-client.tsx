@@ -20,7 +20,12 @@ msg.LOGIC_OPERATION_AND = "and";
 msg.LOGIC_OPERATION_OR = "or";
 import { javascriptGenerator, Order } from "blockly/javascript";
 import { Search, Code, Info } from "lucide-react";
+
+import "./index"; // Force block evaluation in the correct PXT order to avoid circular dependencies
+
 import PxtSimulatorPane from "./pxt-simulator-pane";
+import { FunctionEditor } from "./components/FunctionEditor";
+import { FunctionManager } from "./plugins/functions/functionManager";
 
 const toolbox = {
   kind: "categoryToolbox",
@@ -84,7 +89,23 @@ const toolbox = {
           name: "more",
           colour: "#b400d6",
           contents: [
-            { kind: "block", type: "input_is_gesture" }
+            { kind: "block", type: "input_is_gesture" },
+            { kind: "block", type: "input_compass_calibrate" },
+            { kind: "block", type: "device_get_magnetic_force" },
+            { kind: "block", type: "device_get_rotation" },
+            { kind: "block", type: "device_get_running_time" },
+            { kind: "block", type: "device_get_running_time_micros" },
+            { kind: "block", type: "input_on_pin_released" },
+            { kind: "block", type: "device_set_accelerometer_range" },
+            {
+              kind: "block",
+              type: "input_set_sound_threshold",
+              inputs: {
+                value: {
+                  shadow: { type: "math_number", fields: { NUM: 128 } }
+                }
+              }
+            }
           ]
         },
         { kind: "sep", gap: "12" },
@@ -236,6 +257,22 @@ const toolbox = {
             GROUP: { shadow: { type: "math_number", fields: { NUM: 1 } } }
           }
         },
+        { kind: "label", text: "Broadcast" },
+        { kind: "sep", gap: "8" },
+        {
+          kind: "block",
+          type: "radio_broadcast_message",
+          inputs: {
+            msg: { shadow: { type: "radio_message_code", fields: { message: "message1" } } }
+          }
+        },
+        {
+          kind: "block",
+          type: "radio_on_message_received",
+          inputs: {
+            msg: { shadow: { type: "radio_message_code", fields: { message: "message1" } } }
+          }
+        },
         { kind: "label", text: "Send" },
         { kind: "sep", gap: "8" },
         {
@@ -265,7 +302,11 @@ const toolbox = {
         { kind: "block", type: "radio_on_received_number" },
         { kind: "block", type: "radio_on_received_value" },
         { kind: "block", type: "radio_on_received_string" },
-        { kind: "block", type: "radio_received_packet" },
+        {
+          kind: "block",
+          type: "radio_received_packet",
+          fields: { TYPE: "SignalStrength" }
+        },
         {
           kind: "category",
           name: "more",
@@ -557,11 +598,19 @@ const toolbox = {
             {
               kind: "block",
               type: "variables_set",
+              fields: { VAR: "list" },
               inputs: {
-                VALUE: { shadow: { type: "lists_create_with", extraState: { itemCount: 1 } } }
+                VALUE: { shadow: { type: "lists_create_with", extraState: { itemCount: 2 } } }
               }
             },
-            { kind: "block", type: "lists_create_with", extraState: { itemCount: 3 } },
+            {
+              kind: "block",
+              type: "variables_set",
+              fields: { VAR: "text list" },
+              inputs: {
+                VALUE: { shadow: { type: "lists_create_with", extraState: { itemCount: 3 } } }
+              }
+            },
             { kind: "block", type: "lists_create_empty" },
             { kind: "sep", gap: "8" },
             { kind: "label", text: "Read" },
@@ -570,6 +619,15 @@ const toolbox = {
               kind: "block",
               type: "lists_getIndex",
               fields: { MODE: "GET", WHERE: "FROM_START" },
+              inputs: {
+                LIST: { shadow: { type: "variables_get", fields: { VAR: "list" } } },
+                AT: { shadow: { type: "math_number", fields: { NUM: 0 } } }
+              }
+            },
+            {
+              kind: "block",
+              type: "lists_getIndex",
+              fields: { MODE: "GET_REMOVE", WHERE: "FROM_START" },
               inputs: {
                 LIST: { shadow: { type: "variables_get", fields: { VAR: "list" } } },
                 AT: { shadow: { type: "math_number", fields: { NUM: 0 } } }
@@ -637,7 +695,24 @@ const toolbox = {
             {
               kind: "block",
               type: "lists_setIndex",
+              fields: { MODE: "INSERT", WHERE: "FIRST" },
+              inputs: {
+                LIST: { shadow: { type: "variables_get", fields: { VAR: "list" } } }
+              }
+            },
+            {
+              kind: "block",
+              type: "lists_setIndex",
               fields: { MODE: "INSERT", WHERE: "FROM_START" },
+              inputs: {
+                LIST: { shadow: { type: "variables_get", fields: { VAR: "list" } } },
+                AT: { shadow: { type: "math_number", fields: { NUM: 0 } } }
+              }
+            },
+            {
+              kind: "block",
+              type: "lists_getIndex",
+              fields: { MODE: "REMOVE", WHERE: "FROM_START" },
               inputs: {
                 LIST: { shadow: { type: "variables_get", fields: { VAR: "list" } } },
                 AT: { shadow: { type: "math_number", fields: { NUM: 0 } } }
@@ -666,42 +741,108 @@ const toolbox = {
           name: "Text",
           colour: "#ca8a04",
           contents: [
-            { kind: "block", type: "text" },
+            { kind: "block", type: "text", fields: { TEXT: "" } },
             {
               kind: "block",
               type: "text_length",
               inputs: {
-                VALUE: { shadow: { type: "text", fields: { TEXT: "abc" } } }
+                VALUE: { shadow: { type: "text", fields: { TEXT: "Hello" } } }
               }
             },
-            { kind: "block", type: "text_join", extraState: { itemCount: 2 } },
             {
               kind: "block",
-              type: "text_charAt",
+              type: "text_join",
+              extraState: { itemCount: 2 },
               inputs: {
-                VALUE: { shadow: { type: "text", fields: { TEXT: "abc" } } },
-                INDEX: { shadow: { type: "math_number", fields: { NUM: 0 } } }
+                ADD0: { shadow: { type: "text", fields: { TEXT: "Hello" } } },
+                ADD1: { shadow: { type: "text", fields: { TEXT: "World" } } }
+              }
+            },
+            {
+              kind: "block",
+              type: "text_parse_to_number",
+              inputs: {
+                TEXT: { shadow: { type: "text", fields: { TEXT: "123" } } }
+              }
+            },
+            {
+              kind: "block",
+              type: "text_split_with",
+              inputs: {
+                TEXT: { shadow: { type: "text", fields: { TEXT: "this" } } },
+                SEP: { shadow: { type: "text", fields: { TEXT: " " } } }
+              }
+            },
+            {
+              kind: "block",
+              type: "text_includes",
+              inputs: {
+                TEXT: { shadow: { type: "text", fields: { TEXT: "this" } } },
+                FIND: { shadow: { type: "text", fields: { TEXT: " " } } }
+              }
+            },
+            {
+              kind: "block",
+              type: "text_indexOf",
+              inputs: {
+                TEXT: { shadow: { type: "text", fields: { TEXT: "this" } } },
+                SEARCH: { shadow: { type: "text", fields: { TEXT: " " } } }
+              }
+            },
+            {
+              kind: "block",
+              type: "text_isEmpty",
+              inputs: {
+                TEXT: { shadow: { type: "text", fields: { TEXT: "this" } } }
               }
             },
             {
               kind: "block",
               type: "text_substring_length",
               inputs: {
-                TEXT: { shadow: { type: "text", fields: { TEXT: "abc" } } },
+                TEXT: { shadow: { type: "text", fields: { TEXT: "this" } } },
                 FROM: { shadow: { type: "math_number", fields: { NUM: 0 } } },
-                LEN: { shadow: { type: "math_number", fields: { NUM: 1 } } }
+                LEN: { shadow: { type: "math_number", fields: { NUM: 10 } } }
               }
             },
-            { kind: "sep", gap: "8" },
-            { kind: "block", type: "text_parse_to_number" },
-            { kind: "block", type: "text_includes" },
-            { kind: "block", type: "text_split_with" },
-            { kind: "block", type: "text_indexOf" },
-            { kind: "block", type: "text_isEmpty" },
-            { kind: "block", type: "text_compare_to" },
-            { kind: "block", type: "text_char_code_at" },
-            { kind: "block", type: "text_convert_number_to_text" },
-            { kind: "block", type: "text_from_char_code" }
+            {
+              kind: "block",
+              type: "text_compare_to",
+              inputs: {
+                A: { shadow: { type: "text", fields: { TEXT: "this" } } },
+                B: { shadow: { type: "text", fields: { TEXT: "" } } }
+              }
+            },
+            {
+              kind: "block",
+              type: "text_charAt",
+              inputs: {
+                VALUE: { shadow: { type: "text", fields: { TEXT: "this" } } },
+                INDEX: { shadow: { type: "math_number", fields: { NUM: 0 } } }
+              }
+            },
+            {
+              kind: "block",
+              type: "text_char_code_at",
+              inputs: {
+                TEXT: { shadow: { type: "text", fields: { TEXT: "this" } } },
+                INDEX: { shadow: { type: "math_number", fields: { NUM: 0 } } }
+              }
+            },
+            {
+              kind: "block",
+              type: "text_convert_number_to_text",
+              inputs: {
+                NUM: { shadow: { type: "math_number", fields: { NUM: 0 } } }
+              }
+            },
+            {
+              kind: "block",
+              type: "text_from_char_code",
+              inputs: {
+                CODE: { shadow: { type: "math_number", fields: { NUM: 0 } } }
+              }
+            }
           ]
         },
         {
@@ -747,26 +888,28 @@ const toolbox = {
           name: "Images",
           colour: "#7e22ce",
           contents: [
-            { kind: "block", type: "images_show_image_offset" },
-            { kind: "label", text: "Shows an image at a given offset on the LED display." },
-            { kind: "sep", gap: "8" },
-            { kind: "block", type: "images_scroll_image" },
-            { kind: "label", text: "Scrolls an image with offset and interval." },
-            { kind: "sep", gap: "8" },
+            {
+              kind: "block",
+              type: "images_show_image_offset",
+              inputs: {
+                IMG: { shadow: { type: "variables_get", fields: { VAR: "myImage" } } },
+                OFFSET: { shadow: { type: "math_number", fields: { NUM: 0 } } }
+              }
+            },
+            {
+              kind: "block",
+              type: "images_scroll_image",
+              inputs: {
+                IMG: { shadow: { type: "variables_get", fields: { VAR: "myImage" } } },
+                OFFSET: { shadow: { type: "math_number", fields: { NUM: 1 } } },
+                INTERVAL: { shadow: { type: "math_number", fields: { NUM: 200 } } }
+              }
+            },
             { kind: "block", type: "images_create_image" },
-            { kind: "label", text: "Creates a 5x5 image from LED pattern." },
-            { kind: "sep", gap: "8" },
             { kind: "block", type: "images_create_big_image" },
-            { kind: "label", text: "Creates a 5x10 image for scrolling." },
-            { kind: "sep", gap: "8" },
             { kind: "block", type: "images_direction" },
-            { kind: "label", text: "Direction value used by image APIs." },
-            { kind: "sep", gap: "8" },
             { kind: "block", type: "images_icon_image" },
-            { kind: "label", text: "Creates a built-in icon image." },
-            { kind: "sep", gap: "8" },
-            { kind: "block", type: "images_arrow_image" },
-            { kind: "label", text: "Creates a built-in arrow image." }
+            { kind: "block", type: "images_arrow_image" }
           ]
         },
         {
@@ -792,7 +935,95 @@ const toolbox = {
           name: "more",
           colour: "#b91c1c",
           contents: [
-            { kind: "block", type: "pins_set_audio_pin_enabled" }
+            { kind: "block", type: "pins_digital_pin", fields: { PIN: "P0" } },
+            { kind: "block", type: "pins_analog_pin", fields: { PIN: "P0" } },
+            {
+              kind: "block",
+              type: "pins_set_pull",
+              fields: { PIN: "P0", PULL: "UP" }
+            },
+            {
+              kind: "block",
+              type: "pins_analog_pitch",
+              inputs: {
+                freq: { shadow: { type: "math_number", fields: { NUM: 440 } } },
+                ms: { shadow: { type: "math_number", fields: { NUM: 100 } } }
+              }
+            },
+            {
+              kind: "block",
+              type: "pins_set_pin_events",
+              fields: { PIN: "P0", EDGE: "Edge.None" }
+            },
+            { kind: "block", type: "pins_analog_set_pitch_pin", fields: { PIN: "P0" } },
+            {
+              kind: "block",
+              type: "pins_neopixel_matrix_width",
+              fields: { PIN: "P0" },
+              inputs: {
+                width: { shadow: { type: "math_number", fields: { NUM: 5 } } }
+              }
+            },
+            { kind: "label", text: "Pulse" },
+            { kind: "block", type: "pins_on_pulsed", fields: { PIN: "P0", PULSE: "PulseValue.High" } },
+            { kind: "block", type: "pins_pulse_duration" },
+            {
+              kind: "block",
+              type: "pins_pulse_in",
+              fields: { PIN: "P0", PULSE: "PulseValue.High" }
+            },
+            { kind: "label", text: "I2C" },
+            {
+              kind: "block",
+              type: "pins_i2c_read_number",
+              inputs: {
+                address: { shadow: { type: "math_number", fields: { NUM: 0 } } }
+              },
+              fields: { format: "NumberFormat.Int8LE", repeated: "false" }
+            },
+            {
+              kind: "block",
+              type: "pins_i2c_write_number",
+              inputs: {
+                address: { shadow: { type: "math_number", fields: { NUM: 0 } } },
+                value: { shadow: { type: "math_number", fields: { NUM: 0 } } }
+              },
+              fields: { format: "NumberFormat.Int8LE", repeated: "false" }
+            },
+            { kind: "label", text: "SPI" },
+            {
+              kind: "block",
+              type: "pins_spi_frequency",
+              inputs: {
+                frequency: { shadow: { type: "math_number", fields: { NUM: 1000000 } } }
+              }
+            },
+            {
+              kind: "block",
+              type: "pins_spi_format",
+              inputs: {
+                bits: { shadow: { type: "math_number", fields: { NUM: 8 } } },
+                mode: { shadow: { type: "math_number", fields: { NUM: 3 } } }
+              }
+            },
+            {
+              kind: "block",
+              type: "pins_spi_write",
+              inputs: {
+                value: { shadow: { type: "math_number", fields: { NUM: 0 } } }
+              }
+            },
+            {
+              kind: "block",
+              type: "pins_spi_set_pins",
+              fields: { MOSI: "P0", MISO: "P0", SCK: "P0" }
+            },
+            { kind: "label", text: "micro:bit (V2)" },
+            {
+              kind: "block",
+              type: "pins_set_touch_mode",
+              fields: { PIN: "P0", MODE: "TouchMode.Capacitive" }
+            }
           ]
         },
         {
@@ -848,7 +1079,11 @@ const toolbox = {
           name: "more",
           colour: "#374151",
           contents: [
-            { kind: "block", type: "control_run_in_background" }
+            { kind: "block", type: "control_run_in_background" },
+            { kind: "block", type: "control_event_value_id", fields: { VAL: "MICROBIT_EVT_ANY" } },
+            { kind: "block", type: "control_event_source_id", fields: { SRC: "MICROBIT_ID_BUTTON_A" } },
+            { kind: "block", type: "control_device_name" },
+            { kind: "block", type: "control_device_serial_number" }
           ]
         }
       ]
@@ -1690,9 +1925,9 @@ function registerPxtLikeBlocks() {
     delete (Blockly.Blocks as any)[type];
     if (spec.init) {
       (Blockly.Blocks as any)[type] = {
-        init: spec.init,
         mutationToDom: () => null,
-        domToMutation: () => { }
+        domToMutation: () => { },
+        ...spec
       };
     } else {
       Blockly.common.defineBlocksWithJsonArray([spec]);
@@ -1702,48 +1937,109 @@ function registerPxtLikeBlocks() {
   // Redefine lists_getIndex manually to fix "Missing LIST connection"
   defineBlock('lists_getIndex', {
     init: function (this: any) {
+      const modeField = new Blockly.FieldDropdown([
+        ["get", "GET"],
+        ["get and remove", "GET_REMOVE"],
+        ["remove", "REMOVE"]
+      ]);
+      const whereField = new Blockly.FieldDropdown([
+        ["from start", "FROM_START"],
+        ["from end", "FROM_END"],
+        ["first", "FIRST"],
+        ["last", "LAST"],
+        ["random", "RANDOM"]
+      ], (value: string) => {
+        this.updateShape_(value);
+        return value;
+      });
+
       this.appendDummyInput()
-        .appendField(new Blockly.FieldDropdown([
-          ["get", "GET"],
-          ["get and remove", "GET_REMOVE"],
-          ["remove", "REMOVE"]
-        ]), "MODE")
-        .appendField(new Blockly.FieldDropdown([
-          ["from start", "FROM_START"],
-          ["from end", "FROM_END"],
-          ["first", "FIRST"],
-          ["last", "LAST"],
-          ["random", "RANDOM"]
-        ]), "WHERE");
+        .appendField(modeField, "MODE")
+        .appendField(whereField, "WHERE");
       this.appendValueInput('LIST').setCheck('Array').appendField('list');
-      this.appendValueInput('AT').setCheck('Number').appendField('from');
       this.setOutput(true);
       this.setColour(260);
       this.setInputsInline(true);
+      this.updateShape_(whereField.getValue());
+    },
+    updateShape_: function (this: any, where: string) {
+      const atInput = this.getInput('AT');
+      const needsAt = where === 'FROM_START' || where === 'FROM_END';
+      if (needsAt) {
+        if (!atInput) {
+          this.appendValueInput('AT').setCheck('Number').appendField('at');
+        }
+      } else {
+        if (atInput) {
+          this.removeInput('AT');
+        }
+      }
+    },
+    saveExtraState: function (this: any) {
+      return { 'where': this.getFieldValue('WHERE') };
+    },
+    loadExtraState: function (this: any, state: any) {
+      this.updateShape_(state['where']);
     }
   });
 
   defineBlock('lists_setIndex', {
     init: function (this: any) {
+      const modeField = new Blockly.FieldDropdown([
+        ["set", "SET"],
+        ["insert", "INSERT"]
+      ]);
+      const whereField = new Blockly.FieldDropdown([
+        ["from start", "FROM_START"],
+        ["from end", "FROM_END"],
+        ["first", "FIRST"],
+        ["last", "LAST"],
+        ["random", "RANDOM"]
+      ], (value: string) => {
+        this.updateShape_(value);
+        return value;
+      });
+
       this.appendDummyInput()
-        .appendField(new Blockly.FieldDropdown([
-          ["set", "SET"],
-          ["insert", "INSERT"]
-        ]), "MODE")
-        .appendField(new Blockly.FieldDropdown([
-          ["from start", "FROM_START"],
-          ["from end", "FROM_END"],
-          ["first", "FIRST"],
-          ["last", "LAST"],
-          ["random", "RANDOM"]
-        ]), "WHERE");
+        .appendField(modeField, "MODE")
+        .appendField(whereField, "WHERE");
       this.appendValueInput('LIST').setCheck('Array').appendField('list');
-      this.appendValueInput('AT').setCheck('Number').appendField('in');
       this.appendValueInput('VALUE').appendField('to');
       this.setPreviousStatement(true);
       this.setNextStatement(true);
       this.setColour(260);
       this.setInputsInline(true);
+      this.updateShape_(whereField.getValue());
+    },
+    updateShape_: function (this: any, where: string) {
+      const atInput = this.getInput('AT');
+      const needsAt = where === 'FROM_START' || where === 'FROM_END';
+      if (needsAt) {
+        if (!atInput) {
+          // Find the index of the LIST input to insert AT after it
+          let inputIndex = -1;
+          for (let i = 0; i < this.inputList.length; i++) {
+            if (this.inputList[i].name === 'LIST') {
+              inputIndex = i;
+              break;
+            }
+          }
+          this.appendValueInput('AT')
+            .setCheck('Number')
+            .appendField(this.getFieldValue('MODE') === 'INSERT' ? 'at' : 'at');
+          // Move AT to the correct position if necessary (Blockly handles ordering based on append sequence usually)
+        }
+      } else {
+        if (atInput) {
+          this.removeInput('AT');
+        }
+      }
+    },
+    saveExtraState: function (this: any) {
+      return { 'where': this.getFieldValue('WHERE') };
+    },
+    loadExtraState: function (this: any, state: any) {
+      this.updateShape_(state['where']);
     }
   });
 
@@ -2385,7 +2681,7 @@ function registerPxtLikeBlocks() {
         {
           type: "field_dropdown",
           name: "SOUND",
-          options: [["sound", "Loud"], ["quiet", "Quiet"]]
+          options: [["DetectedSound.Loud", "Loud"], ["DetectedSound.Quiet", "Quiet"]]
         },
         { type: "input_dummy" },
         { type: "input_statement", name: "DO" }
@@ -2394,6 +2690,112 @@ function registerPxtLikeBlocks() {
       nextStatement: null,
       colour: 290,
       tooltip: "Run when a sound is detected (micro:bit V2)",
+      helpUrl: ""
+    },
+    {
+      type: "input_compass_calibrate",
+      message0: "calibrate compass",
+      previousStatement: null,
+      nextStatement: null,
+      colour: 290,
+      tooltip: "Calibrate the compass",
+      helpUrl: ""
+    },
+    {
+      type: "device_get_magnetic_force",
+      message0: "magnetic force (µT) %1",
+      args0: [
+        {
+          type: "field_dropdown",
+          name: "NAME",
+          options: [["x", "x"], ["y", "y"], ["z", "z"], ["strength", "strength"]]
+        }
+      ],
+      output: "Number",
+      colour: 290,
+      tooltip: "Get magnetic force in micro-tesla",
+      helpUrl: ""
+    },
+    {
+      type: "device_get_rotation",
+      message0: "rotation (°) %1",
+      args0: [
+        {
+          type: "field_dropdown",
+          name: "NAME",
+          options: [["pitch", "pitch"], ["roll", "roll"]]
+        }
+      ],
+      output: "Number",
+      colour: 290,
+      tooltip: "Get rotation in degrees",
+      helpUrl: ""
+    },
+    {
+      type: "device_get_running_time",
+      message0: "running time (ms)",
+      output: "Number",
+      colour: 290,
+      tooltip: "Get program running time in milliseconds",
+      helpUrl: ""
+    },
+    {
+      type: "device_get_running_time_micros",
+      message0: "running time (micros)",
+      output: "Number",
+      colour: 290,
+      tooltip: "Get program running time in microseconds",
+      helpUrl: ""
+    },
+    {
+      type: "input_on_pin_released",
+      message0: "on pin %1 released %2 %3",
+      args0: [
+        {
+          type: "field_dropdown",
+          name: "NAME",
+          options: [["P0", "P0"], ["P1", "P1"], ["P2", "P2"]]
+        },
+        { type: "input_dummy" },
+        { type: "input_statement", name: "DO" }
+      ],
+      previousStatement: null,
+      nextStatement: null,
+      colour: 290,
+      tooltip: "Run code when pin is released",
+      helpUrl: ""
+    },
+    {
+      type: "device_set_accelerometer_range",
+      message0: "set accelerometer range %1",
+      args0: [
+        {
+          type: "field_dropdown",
+          name: "NAME",
+          options: [["1g", "1g"], ["2g", "2g"], ["4g", "4g"], ["8g", "8g"]]
+        }
+      ],
+      previousStatement: null,
+      nextStatement: null,
+      colour: 290,
+      tooltip: "Set the accelerometer range",
+      helpUrl: ""
+    },
+    {
+      type: "input_set_sound_threshold",
+      message0: "set %1 sound threshold to %2",
+      args0: [
+        {
+          type: "field_dropdown",
+          name: "sound",
+          options: [["loud", "Loud"], ["quiet", "Quiet"]]
+        },
+        { type: "input_value", name: "value", check: "Number" }
+      ],
+      previousStatement: null,
+      nextStatement: null,
+      colour: 290,
+      tooltip: "Set the sound threshold",
       helpUrl: ""
     },
     {
@@ -2428,6 +2830,55 @@ function registerPxtLikeBlocks() {
       output: "Number",
       colour: 290,
       tooltip: "Microphone sound level (0-255)",
+      helpUrl: ""
+    },
+    {
+      type: "radio_broadcast_message",
+      message0: "radio send %1",
+      args0: [
+        {
+          type: "input_value",
+          name: "msg",
+          check: "Number"
+        }
+      ],
+      previousStatement: null,
+      nextStatement: null,
+      colour: "#e91e63",
+      tooltip: "Broadcasts a message over radio",
+      helpUrl: ""
+    },
+    {
+      type: "radio_on_message_received",
+      message0: "on radio %1 received %2 %3",
+      args0: [
+        {
+          type: "input_value",
+          name: "msg",
+          check: "Number"
+        },
+        { type: "input_dummy" },
+        { type: "input_statement", name: "DO" }
+      ],
+      previousStatement: null,
+      nextStatement: null,
+      colour: "#e91e63",
+      tooltip: "Registers code to run for a particular message",
+      helpUrl: ""
+    },
+    {
+      type: "radio_message_code",
+      message0: "%1",
+      args0: [
+        {
+          type: "field_dropdown",
+          name: "message",
+          options: [["message1", "message1"]]
+        }
+      ],
+      output: "Number",
+      colour: "#e91e63",
+      tooltip: "A radio message",
       helpUrl: ""
     },
     {
@@ -3499,7 +3950,28 @@ function registerPxtLikeBlocks() {
     { type: "control_raise_event", message0: "raise event from source %1 with value %2", args0: [{ type: "field_dropdown", name: "SRC", options: [["MICROBIT_ID_BUTTON_A", "MICROBIT_ID_BUTTON_A"], ["MICROBIT_ID_BUTTON_B", "MICROBIT_ID_BUTTON_B"]] }, { type: "field_dropdown", name: "VAL", options: [["MICROBIT_EVT_ANY", "MICROBIT_EVT_ANY"], ["MICROBIT_BUTTON_EVT_CLICK", "MICROBIT_BUTTON_EVT_CLICK"]] }], previousStatement: null, nextStatement: null, colour: 210 },
     { type: "control_on_event", message0: "on event from %1 with value %2 %3 %4", args0: [{ type: "field_dropdown", name: "SRC", options: [["MICROBIT_ID_BUTTON_A", "MICROBIT_ID_BUTTON_A"], ["MICROBIT_ID_BUTTON_B", "MICROBIT_ID_BUTTON_B"]] }, { type: "field_dropdown", name: "VAL", options: [["MICROBIT_EVT_ANY", "MICROBIT_EVT_ANY"], ["MICROBIT_BUTTON_EVT_CLICK", "MICROBIT_BUTTON_EVT_CLICK"]] }, { type: "input_dummy" }, { type: "input_statement", name: "DO" }], previousStatement: null, nextStatement: null, colour: 210 },
     { type: "control_event_timestamp", message0: "event timestamp", output: "Number", colour: 210 },
-    { type: "control_event_value", message0: "event value", output: "Number", colour: 210 }
+    { type: "control_event_value", message0: "event value", output: "Number", colour: 210 },
+    { type: "pins_digital_pin", message0: "digital pin %1", args0: [{ type: "field_dropdown", name: "PIN", options: [["P0", "P0"], ["P1", "P1"], ["P2", "P2"]] }], output: "String", colour: 0 },
+    { type: "pins_analog_pin", message0: "analog pin %1", args0: [{ type: "field_dropdown", name: "PIN", options: [["P0", "P0"], ["P1", "P1"], ["P2", "P2"]] }], output: "String", colour: 0 },
+    { type: "pins_set_pull", message0: "set pull pin %1 to %2", args0: [{ type: "field_dropdown", name: "PIN", options: [["P0", "P0"], ["P1", "P1"], ["P2", "P2"]] }, { type: "field_dropdown", name: "PULL", options: [["up", "UP"], ["down", "DOWN"], ["none", "NONE"]] }], previousStatement: null, nextStatement: null, colour: 0 },
+    { type: "pins_analog_pitch", message0: "analog pitch %1 for (ms) %2", args0: [{ type: "input_value", name: "freq", check: "Number" }, { type: "input_value", name: "ms", check: "Number" }], previousStatement: null, nextStatement: null, colour: 0 },
+    { type: "pins_set_pin_events", message0: "set pin %1 to emit %2 events", args0: [{ type: "field_dropdown", name: "PIN", options: [["P0", "P0"], ["P1", "P1"], ["P2", "P2"]] }, { type: "field_dropdown", name: "EDGE", options: [["edge", "Edge.None"], ["pulse", "Edge.Pulse"]] }], previousStatement: null, nextStatement: null, colour: 0 },
+    { type: "pins_analog_set_pitch_pin", message0: "analog set pitch pin %1", args0: [{ type: "field_dropdown", name: "PIN", options: [["P0", "P0"], ["P1", "P1"], ["P2", "P2"]] }], previousStatement: null, nextStatement: null, colour: 0 },
+    { type: "pins_neopixel_matrix_width", message0: "neopixel matrix width pin %1 %2", args0: [{ type: "field_dropdown", name: "PIN", options: [["P0", "P0"], ["P1", "P1"], ["P2", "P2"]] }, { type: "input_value", name: "width", check: "Number" }], previousStatement: null, nextStatement: null, colour: 0 },
+    { type: "pins_on_pulsed", message0: "on pin %1 pulsed %2", args0: [{ type: "field_dropdown", name: "PIN", options: [["P0", "P0"], ["P1", "P1"], ["P2", "P2"]] }, { type: "field_dropdown", name: "PULSE", options: [["high", "PulseValue.High"], ["low", "PulseValue.Low"]] }], previousStatement: null, nextStatement: null, colour: 0 },
+    { type: "pins_pulse_duration", message0: "pulse duration (µs)", output: "Number", colour: 0 },
+    { type: "pins_pulse_in", message0: "pulse in (µs) pin %1 pulsed %2", args0: [{ type: "field_dropdown", name: "PIN", options: [["P0", "P0"], ["P1", "P1"], ["P2", "P2"]] }, { type: "field_dropdown", name: "PULSE", options: [["high", "PulseValue.High"], ["low", "PulseValue.Low"]] }], output: "Number", colour: 0 },
+    { type: "pins_i2c_read_number", message0: "i2c read number at address %1 of format %2 repeated %3", args0: [{ type: "input_value", name: "address", check: "Number" }, { type: "field_dropdown", name: "format", options: [["Int8LE", "NumberFormat.Int8LE"], ["UInt8LE", "NumberFormat.UInt8LE"]] }, { type: "field_dropdown", name: "repeated", options: [["false", "false"], ["true", "true"]] }], output: "Number", colour: 0 },
+    { type: "pins_i2c_write_number", message0: "i2c write number at address %1 with value %2 of format %3 repeated %4", args0: [{ type: "input_value", name: "address", check: "Number" }, { type: "input_value", name: "value", check: "Number" }, { type: "field_dropdown", name: "format", options: [["Int8LE", "NumberFormat.Int8LE"], ["UInt8LE", "NumberFormat.UInt8LE"]] }, { type: "field_dropdown", name: "repeated", options: [["false", "false"], ["true", "true"]] }], previousStatement: null, nextStatement: null, colour: 0 },
+    { type: "pins_spi_frequency", message0: "spi frequency %1", args0: [{ type: "input_value", name: "frequency", check: "Number" }], previousStatement: null, nextStatement: null, colour: 0 },
+    { type: "pins_spi_format", message0: "spi format bits %1 mode %2", args0: [{ type: "input_value", name: "bits", check: "Number" }, { type: "input_value", name: "mode", check: "Number" }], previousStatement: null, nextStatement: null, colour: 0 },
+    { type: "pins_spi_write", message0: "spi write %1", args0: [{ type: "input_value", name: "value", check: "Number" }], output: "Number", colour: 0 },
+    { type: "pins_spi_set_pins", message0: "spi set pins MOSI %1 MISO %2 SCK %3", args0: [{ type: "field_dropdown", name: "MOSI", options: [["P0", "P0"], ["P1", "P1"], ["P2", "P2"]] }, { type: "field_dropdown", name: "MISO", options: [["P0", "P0"], ["P1", "P1"], ["P2", "P2"]] }, { type: "field_dropdown", name: "SCK", options: [["P0", "P0"], ["P1", "P1"], ["P2", "P2"]] }], previousStatement: null, nextStatement: null, colour: 0 },
+    { type: "pins_set_touch_mode", message0: "set %1 to touch mode %2", args0: [{ type: "field_dropdown", name: "PIN", options: [["P0", "P0"], ["P1", "P1"], ["P2", "P2"]] }, { type: "field_dropdown", name: "MODE", options: [["capacitive", "TouchMode.Capacitive"], ["resistive", "TouchMode.Resistive"]] }], previousStatement: null, nextStatement: null, colour: 0 },
+    { type: "control_event_value_id", message0: "%1", args0: [{ type: "field_dropdown", name: "VAL", options: [["MICROBIT_EVT_ANY", "MICROBIT_EVT_ANY"], ["MICROBIT_BUTTON_EVT_CLICK", "MICROBIT_BUTTON_EVT_CLICK"]] }], output: "Number", colour: 210 },
+    { type: "control_event_source_id", message0: "%1", args0: [{ type: "field_dropdown", name: "SRC", options: [["MICROBIT_ID_BUTTON_A", "MICROBIT_ID_BUTTON_A"], ["MICROBIT_ID_BUTTON_B", "MICROBIT_ID_BUTTON_B"]] }], output: "Number", colour: 210 },
+    { type: "control_device_name", message0: "device name", output: "String", colour: 210 },
+    { type: "control_device_serial_number", message0: "device serial number", output: "String", colour: 210 }
   ]);
 
   const asAny = javascriptGenerator as any;
@@ -3609,9 +4081,51 @@ function registerPxtLikeBlocks() {
   };
 
   asAny.forBlock["input_on_sound"] = (block: Blockly.Block, generator: Blockly.CodeGenerator) => {
-    const sound = block.getFieldValue("SOUND") || "Loud";
-    const body = generator.statementToCode(block, "DO");
-    return `input.onSound(DetectedSound.${sound}, function () {\n${body}});\n`;
+    const sound = block.getFieldValue('SOUND');
+    const branch = generator.statementToCode(block, 'DO');
+    return `input.onSound(${sound}, () => {\n${branch}});\n`;
+  };
+
+  asAny.forBlock["input_compass_calibrate"] = () => "input.calibrateCompass();\n";
+  asAny.forBlock["device_get_magnetic_force"] = (block: Blockly.Block) => {
+    const name = block.getFieldValue('NAME');
+    return [`input.magneticForce(${name})`, Order.FUNCTION_CALL];
+  };
+  asAny.forBlock["device_get_rotation"] = (block: Blockly.Block) => {
+    const name = block.getFieldValue('NAME');
+    return [`input.rotation(${name})`, Order.FUNCTION_CALL];
+  };
+  asAny.forBlock["device_get_running_time"] = () => ["input.runningTime()", Order.FUNCTION_CALL];
+  asAny.forBlock["device_get_running_time_micros"] = () => ["input.runningTimeMicros()", Order.FUNCTION_CALL];
+  asAny.forBlock["input_on_pin_released"] = (block: Blockly.Block, generator: Blockly.CodeGenerator) => {
+    const name = block.getFieldValue('NAME');
+    const branch = generator.statementToCode(block, 'DO');
+    return `input.onPinReleased(${name}, () => {\n${branch}});\n`;
+  };
+  asAny.forBlock["device_set_accelerometer_range"] = (block: Blockly.Block) => {
+    const name = block.getFieldValue('NAME');
+    return `input.setAccelerometerRange(${name});\n`;
+  };
+  asAny.forBlock["input_set_sound_threshold"] = (block: Blockly.Block, generator: Blockly.CodeGenerator) => {
+    const sound = block.getFieldValue('sound');
+    const value = generator.valueToCode(block, 'value', Order.ATOMIC) || "128";
+    return `input.setSoundThreshold(${sound}, ${value});\n`;
+  };
+
+  asAny.forBlock["radio_broadcast_message"] = (block: Blockly.Block, generator: Blockly.CodeGenerator) => {
+    const msg = generator.valueToCode(block, 'msg', Order.ATOMIC) || "0";
+    return `radio.sendMessage(${msg});\n`;
+  };
+
+  asAny.forBlock["radio_on_message_received"] = (block: Blockly.Block, generator: Blockly.CodeGenerator) => {
+    const msg = generator.valueToCode(block, 'msg', Order.ATOMIC) || "0";
+    const branch = generator.statementToCode(block, 'DO');
+    return `radio.onReceivedMessage(${msg}, () => {\n${branch}});\n`;
+  };
+
+  asAny.forBlock["radio_message_code"] = (block: Blockly.Block) => {
+    const message = block.getFieldValue('message');
+    return [`RadioMessage.${message}`, Order.MEMBER_ACCESS];
   };
 
   asAny.forBlock["input_on_logo_event"] = (block: Blockly.Block, generator: Blockly.CodeGenerator) => {
@@ -4085,7 +4599,73 @@ function registerPxtLikeBlocks() {
   asAny.forBlock["control_raise_event"] = (block: Blockly.Block) => `control.raiseEvent(${block.getFieldValue("SRC") || "MICROBIT_ID_BUTTON_A"}, ${block.getFieldValue("VAL") || "MICROBIT_EVT_ANY"});\n`;
   asAny.forBlock["control_on_event"] = (block: Blockly.Block, generator: Blockly.CodeGenerator) => `control.onEvent(${block.getFieldValue("SRC") || "MICROBIT_ID_BUTTON_A"}, ${block.getFieldValue("VAL") || "MICROBIT_EVT_ANY"}, function () {\n${generator.statementToCode(block, "DO")}});\n`;
   asAny.forBlock["control_event_timestamp"] = () => ["control.eventTimestamp()", Order.FUNCTION_CALL];
+
   asAny.forBlock["control_event_value"] = () => ["control.eventValue()", Order.FUNCTION_CALL];
+
+  asAny.forBlock["pins_digital_pin"] = (block: Blockly.Block) => [`DigitalPin.${block.getFieldValue("PIN") || "P0"}`, Order.ATOMIC];
+  asAny.forBlock["pins_analog_pin"] = (block: Blockly.Block) => [`AnalogPin.${block.getFieldValue("PIN") || "P0"}`, Order.ATOMIC];
+  asAny.forBlock["pins_set_pull"] = (block: Blockly.Block) => `pins.setPull(DigitalPin.${block.getFieldValue("PIN") || "P0"}, PinPullMode.${block.getFieldValue("PULL") || "UP"});\n`;
+  asAny.forBlock["pins_analog_pitch"] = (block: Blockly.Block, generator: Blockly.CodeGenerator) => `pins.analogPitch(${generator.valueToCode(block, "freq", Order.NONE) || "440"}, ${generator.valueToCode(block, "ms", Order.NONE) || "100"});\n`;
+  asAny.forBlock["pins_set_pin_events"] = (block: Blockly.Block) => `pins.setEvents(DigitalPin.${block.getFieldValue("PIN") || "P0"}, PinEventType.${block.getFieldValue("EDGE") || "Edge.None"});\n`;
+  asAny.forBlock["pins_analog_set_pitch_pin"] = (block: Blockly.Block) => `pins.analogSetPitchPin(AnalogPin.${block.getFieldValue("PIN") || "P0"});\n`;
+  asAny.forBlock["pins_neopixel_matrix_width"] = (block: Blockly.Block, generator: Blockly.CodeGenerator) => `pins.neopixelMatrixWidth(DigitalPin.${block.getFieldValue("PIN") || "P0"}, ${generator.valueToCode(block, "width", Order.NONE) || "5"});\n`;
+  asAny.forBlock["pins_on_pulsed"] = (block: Blockly.Block, generator: Blockly.CodeGenerator) => {
+    const pin = block.getFieldValue("PIN") || "P0";
+    const pulse = block.getFieldValue("PULSE") || "PulseValue.High";
+    const body = generator.statementToCode(block, "DO");
+    return `pins.onPulsed(DigitalPin.${pin}, ${pulse}, function () {\n${body}});\n`;
+  };
+  asAny.forBlock["pins_pulse_duration"] = () => ["pins.pulseDuration()", Order.FUNCTION_CALL];
+  asAny.forBlock["pins_pulse_in"] = (block: Blockly.Block) => {
+    const pin = block.getFieldValue("PIN") || "P0";
+    const pulse = block.getFieldValue("PULSE") || "PulseValue.High";
+    return [`pins.pulseIn(DigitalPin.${pin}, ${pulse})`, Order.FUNCTION_CALL];
+  };
+  asAny.forBlock["pins_i2c_read_number"] = (block: Blockly.Block, generator: Blockly.CodeGenerator) => {
+    const addr = generator.valueToCode(block, "address", Order.NONE) || "0";
+    const format = block.getFieldValue("format") || "NumberFormat.Int8LE";
+    const repeated = block.getFieldValue("repeated") || "false";
+    return [`pins.i2cReadNumber(${addr}, ${format}, ${repeated})`, Order.FUNCTION_CALL];
+  };
+  asAny.forBlock["pins_i2c_write_number"] = (block: Blockly.Block, generator: Blockly.CodeGenerator) => {
+    const addr = generator.valueToCode(block, "address", Order.NONE) || "0";
+    const value = generator.valueToCode(block, "value", Order.NONE) || "0";
+    const format = block.getFieldValue("format") || "NumberFormat.Int8LE";
+    const repeated = block.getFieldValue("repeated") || "false";
+    return `pins.i2cWriteNumber(${addr}, ${value}, ${format}, ${repeated});\n`;
+  };
+  asAny.forBlock["pins_spi_frequency"] = (block: Blockly.Block, generator: Blockly.CodeGenerator) => `pins.spiFrequency(${generator.valueToCode(block, "frequency", Order.NONE) || "1000000"});\n`;
+  asAny.forBlock["pins_spi_format"] = (block: Blockly.Block, generator: Blockly.CodeGenerator) => `pins.spiFormat(${generator.valueToCode(block, "bits", Order.NONE) || "8"}, ${generator.valueToCode(block, "mode", Order.NONE) || "3"});\n`;
+  asAny.forBlock["pins_spi_write"] = (block: Blockly.Block, generator: Blockly.CodeGenerator) => [`pins.spiWrite(${generator.valueToCode(block, "value", Order.NONE) || "0"})`, Order.FUNCTION_CALL];
+  asAny.forBlock["pins_spi_set_pins"] = (block: Blockly.Block) => `pins.spiSetPins(DigitalPin.${block.getFieldValue("MOSI") || "P0"}, DigitalPin.${block.getFieldValue("MISO") || "P0"}, DigitalPin.${block.getFieldValue("SCK") || "P0"});\n`;
+  asAny.forBlock["pins_set_touch_mode"] = (block: Blockly.Block) => `pins.setTouchMode(DigitalPin.${block.getFieldValue("PIN") || "P0"}, ${block.getFieldValue("MODE") || "TouchMode.Capacitive"});\n`;
+  asAny.forBlock["control_event_value_id"] = (block: Blockly.Block) => [`EventValue.${block.getFieldValue("VAL") || "MICROBIT_EVT_ANY"}`, Order.ATOMIC];
+  asAny.forBlock["control_event_source_id"] = (block: Blockly.Block) => [`EventBusSource.${block.getFieldValue("SRC") || "MICROBIT_ID_BUTTON_A"}`, Order.ATOMIC];
+  asAny.forBlock["control_device_name"] = () => ["control.deviceName()", Order.FUNCTION_CALL];
+  asAny.forBlock["control_device_serial_number"] = () => ["control.deviceSerialNumber()", Order.FUNCTION_CALL];
+  
+  asAny.forBlock["function_definition"] = (block: Blockly.Block, generator: Blockly.CodeGenerator) => {
+    const name = generator.getVariableName(block.getFieldValue("function_name") || "doSomething");
+    const body = generator.statementToCode(block, "STACK");
+    const args = (block as any).arguments_?.map((a: any) => generator.getVariableName(a.name)).join(", ") || "";
+    return `function ${name}(${args}) {\n${body}}\n`;
+  };
+  asAny.forBlock["function_call"] = (block: Blockly.Block, generator: Blockly.CodeGenerator) => {
+    const name = generator.getVariableName(block.getFieldValue("function_name") || "doSomething");
+    const args = (block as any).arguments_?.map((a: any) => generator.valueToCode(block, a.id, Order.NONE) || "null").join(", ") || "";
+    return `${name}(${args});\n`;
+  };
+  asAny.forBlock["function_call_output"] = (block: Blockly.Block, generator: Blockly.CodeGenerator) => {
+    const name = generator.getVariableName(block.getFieldValue("function_name") || "doSomething");
+    const args = (block as any).arguments_?.map((a: any) => generator.valueToCode(block, a.id, Order.NONE) || "null").join(", ") || "";
+    return [`${name}(${args})`, Order.FUNCTION_CALL];
+  };
+  asAny.forBlock["function_declaration"] = () => "";
+  asAny.forBlock["argument_reporter_boolean"] = (block: Blockly.Block, generator: Blockly.CodeGenerator) => [generator.getVariableName(block.getFieldValue("VALUE")), Order.ATOMIC];
+  asAny.forBlock["argument_reporter_number"] = (block: Blockly.Block, generator: Blockly.CodeGenerator) => [generator.getVariableName(block.getFieldValue("VALUE")), Order.ATOMIC];
+  asAny.forBlock["argument_reporter_string"] = (block: Blockly.Block, generator: Blockly.CodeGenerator) => [generator.getVariableName(block.getFieldValue("VALUE")), Order.ATOMIC];
+  asAny.forBlock["argument_reporter_array"] = (block: Blockly.Block, generator: Blockly.CodeGenerator) => [generator.getVariableName(block.getFieldValue("VALUE")), Order.ATOMIC];
+  asAny.forBlock["argument_reporter_custom"] = (block: Blockly.Block, generator: Blockly.CodeGenerator) => [generator.getVariableName(block.getFieldValue("VALUE")), Order.ATOMIC];
 }
 
 function downloadTextFile(fileName: string, content: string) {
@@ -4141,6 +4721,12 @@ export default function BlocklyEditorClient() {
   const [codeEditorValue, setCodeEditorValue] = useState("// Drag blocks to generate MakeCode-like TypeScript");
   const [toolboxWidth, setToolboxWidth] = useState(180); // Total offset including flyout
   const [sidebarWidth, setSidebarWidth] = useState(180); // Just the category bar
+  
+  const [functionEditorConfig, setFunctionEditorConfig] = useState<{ 
+      isOpen: boolean, 
+      mutation?: Element,
+      cb?: (mutation: Element) => void 
+  }>({ isOpen: false });
 
   const normalizeSearch = (value: string) => value.trim().toLowerCase();
   const getEntryText = (entry: any) => {
@@ -4274,6 +4860,7 @@ export default function BlocklyEditorClient() {
 
     const workspace = Blockly.inject(blocklyHostRef.current, {
       toolbox: filteredToolbox,
+      renderer: "pxt",
       trashcan: true,
       media: "/blockly/media/",
       grid: {
@@ -4299,6 +4886,14 @@ export default function BlocklyEditorClient() {
         .replace(/^(\d)/, "fn_$1");
       appendPythonSnippet(`def ${safeName}():\n    pass`);
       return true;
+    });
+
+    workspace.registerButtonCallback('MAKE_FUNCTION', () => {
+      setFunctionEditorConfig({ isOpen: true, mutation: undefined, cb: undefined });
+    });
+
+    FunctionManager.getInstance().setEditFunctionExternal((mutation, cb) => {
+      setFunctionEditorConfig({ isOpen: true, mutation: mutation, cb });
     });
 
     workspaceRef.current = workspace;
@@ -4619,6 +5214,72 @@ export default function BlocklyEditorClient() {
         accept=".xml,text/xml"
         className="hidden"
         onChange={handleImportXml}
+      />
+
+      <FunctionEditor 
+          isOpen={functionEditorConfig.isOpen}
+          mutation={functionEditorConfig.mutation}
+          onClose={() => setFunctionEditorConfig({ isOpen: false })}
+          onDone={(mut) => {
+              const { cb } = functionEditorConfig;
+              setFunctionEditorConfig({ isOpen: false });
+              
+              if (cb) {
+                  // This was an edit action
+                  cb(mut);
+              } else if (workspaceRef.current) {
+                  // This was a create action
+                  const workspace = workspaceRef.current;
+                  
+                  // Generate an XML block using the mutation
+                  let xml = Blockly.utils.xml.createElement('xml');
+                  let block = Blockly.utils.xml.createElement('block');
+                  block.setAttribute('type', 'function_definition');
+                  
+                  // Give it a reasonable starting position
+                  let topBlock = workspace.getTopBlocks(true)[0];
+                  let x = 10, y = 10;
+                  if (topBlock) {
+                      let xy = topBlock.getRelativeToSurfaceXY();
+                      x = xy.x + (Blockly as any).SNAP_RADIUS * (topBlock.RTL ? -1 : 1);
+                      y = xy.y + (Blockly as any).SNAP_RADIUS * 2;
+                  }
+                  block.setAttribute('x', String(x));
+                  block.setAttribute('y', String(y));
+                  
+                  // Copy mutation attributes
+                  const mutationXml = Blockly.utils.xml.createElement('mutation');
+                  for (let i = 0; i < mut.attributes.length; i++) {
+                      const attr = mut.attributes[i];
+                      mutationXml.setAttribute(attr.name, attr.value);
+                  }
+                  
+                  // Copy mutation child nodes (e.g. <arg> tags for parameters)
+                  for (let i = 0; i < mut.childNodes.length; i++) {
+                      mutationXml.appendChild(mut.childNodes[i].cloneNode(true));
+                  }
+                  
+                  block.appendChild(mutationXml);
+                  
+                  // Ensure name field is set
+                  let field = Blockly.utils.xml.createElement('field');
+                  field.setAttribute('name', 'NAME');
+                  field.appendChild(document.createTextNode(mut.getAttribute("name") || "doSomething"));
+                  block.appendChild(field);
+                  
+                  xml.appendChild(block);
+                  
+                  try {
+                      Blockly.Events.disable();
+                      Blockly.Xml.domToWorkspace(xml, workspace);
+                  } finally {
+                      Blockly.Events.enable();
+                      // Fire create event to sync UI / code
+                      Blockly.Events.fire(new Blockly.Events.BlockCreate(workspace.getTopBlocks(false).pop()!));
+                      syncCode(workspace);
+                  }
+              }
+          }}
       />
 
       <style jsx global>{`
