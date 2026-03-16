@@ -6,6 +6,45 @@ import { FieldMatrix } from "./field_matrix";
 import { FieldCustom } from "./field_utils";
 
 const rowRegex = /^.*[\.#].*$/;
+const pointerEvents = ((globalThis as any).pxt?.BrowserUtils?.pointerEvents) || {
+    down: ["pointerdown", "mousedown", "touchstart"],
+    move: "pointermove",
+    up: "pointerup",
+    leave: "pointerleave"
+};
+const localize = (text: string, ...args: (string | number)[]) => {
+    const lfFn = (globalThis as any).lf || (globalThis as any).pxt?.Util?.lf;
+    if (typeof lfFn === "function") {
+        return lfFn(text, ...args);
+    }
+
+    return text.replace(/\{(\d+)\}/g, (_, index) => String(args[Number(index)] ?? ""));
+};
+
+function createSvgRoot(width: number, height: number) {
+    return Blockly.utils.dom.createSvgElement("svg", {
+        xmlns: "http://www.w3.org/2000/svg",
+        id: "field-matrix",
+        class: "blocklyMatrix",
+        tabindex: "-1",
+        role: "grid",
+        width,
+        height
+    }, null) as SVGSVGElement;
+}
+
+function createSvgChild<T extends SVGElement>(parent: SVGElement, tagName: string, attributes: Record<string, string | number | undefined>) {
+    const normalized: Record<string, string> = {};
+
+    Object.keys(attributes).forEach(key => {
+        const value = attributes[key];
+        if (value !== undefined) {
+            normalized[key] = String(value);
+        }
+    });
+
+    return Blockly.utils.dom.createSvgElement(tagName, normalized, parent) as T;
+}
 
 enum LabelMode {
     None,
@@ -125,8 +164,8 @@ export class FieldLedMatrix extends FieldMatrix implements FieldCustom {
 
     private initMatrix() {
         if (!this.sourceBlock_.isInsertionMarker()) {
-            this.matrixSvg = pxsim.svg.parseString(`<svg xmlns="http://www.w3.org/2000/svg" id="field-matrix" class="blocklyMatrix" tabindex="-1" role="grid" width="${this.size_.width}" height="${this.size_.height}"/>`);
-            this.matrixSvg.ariaLabel = lf("LED grid");
+            this.matrixSvg = createSvgRoot(this.size_.width, this.size_.height);
+            this.matrixSvg.ariaLabel = localize("LED grid");
             const workspace = Blockly.getMainWorkspace() as Blockly.WorkspaceSvg
             this.matrixSvg.style.boxShadow = `rgba(255, 255, 255, 0.3) 0 0 0 ${4 * workspace.getAbsoluteScale()}px`;
             this.matrixSvg.style.transition = "box-shadow 0.25s"
@@ -145,7 +184,7 @@ export class FieldLedMatrix extends FieldMatrix implements FieldCustom {
             this.createMatrixDisplay({
                 cellWidth: FieldLedMatrix.CELL_WIDTH,
                 cellHeight: FieldLedMatrix.CELL_WIDTH,
-                cellLabel: lf("LED"),
+                cellLabel: localize("LED"),
                 cellHorizontalMargin: FieldLedMatrix.CELL_HORIZONTAL_MARGIN,
                 cellVerticalMargin: FieldLedMatrix.CELL_VERTICAL_MARGIN,
                 cornerRadius: FieldLedMatrix.CELL_CORNER_RADIUS,
@@ -158,19 +197,19 @@ export class FieldLedMatrix extends FieldMatrix implements FieldCustom {
 
             if (this.xAxisLabel !== LabelMode.None) {
                 const y = this.scale * this.numMatrixRows * (FieldLedMatrix.CELL_WIDTH + FieldLedMatrix.CELL_VERTICAL_MARGIN) + FieldLedMatrix.CELL_VERTICAL_MARGIN * 2 + FieldLedMatrix.BOTTOM_MARGIN
-                const xAxis = pxsim.svg.child(this.matrixSvg, "g", { transform: `translate(${0} ${y})` });
+                const xAxis = createSvgChild<SVGGElement>(this.matrixSvg, "g", { transform: `translate(${0} ${y})` });
                 for (let i = 0; i < this.numMatrixCols; i++) {
                     const x = this.getYAxisWidth() + this.scale * i * (FieldLedMatrix.CELL_WIDTH + FieldLedMatrix.CELL_HORIZONTAL_MARGIN) + FieldLedMatrix.CELL_WIDTH / 2 + FieldLedMatrix.CELL_HORIZONTAL_MARGIN / 2;
-                    const lbl = pxsim.svg.child(xAxis, "text", { x, class: "blocklyText" })
+                    const lbl = createSvgChild<SVGTextElement>(xAxis, "text", { x, class: "blocklyText" })
                     lbl.textContent = this.getLabel(i, this.xAxisLabel);
                 }
             }
 
             if (this.yAxisLabel !== LabelMode.None) {
-                const yAxis = pxsim.svg.child(this.matrixSvg, "g", {});
+                const yAxis = createSvgChild<SVGGElement>(this.matrixSvg, "g", {});
                 for (let i = 0; i < this.numMatrixRows; i++) {
                     const y = this.scale * i * (FieldLedMatrix.CELL_WIDTH + FieldLedMatrix.CELL_VERTICAL_MARGIN) + FieldLedMatrix.CELL_WIDTH / 2 + FieldLedMatrix.CELL_VERTICAL_MARGIN * 2;
-                    const lbl = pxsim.svg.child(yAxis, "text", { x: 0, y, class: "blocklyText" })
+                    const lbl = createSvgChild<SVGTextElement>(yAxis, "text", { x: 0, y, class: "blocklyText" })
                     lbl.textContent = this.getLabel(i, this.yAxisLabel);
                 }
             }
@@ -209,14 +248,14 @@ export class FieldLedMatrix extends FieldMatrix implements FieldCustom {
 
     private clearLedDragHandler = (ev: MouseEvent) => {
         const svgRoot = (this.sourceBlock_ as Blockly.BlockSvg).getSvgRoot();
-        pxsim.pointerEvents.down.forEach(evid => svgRoot.removeEventListener(evid, this.dontHandleMouseEvent_));
-        svgRoot.removeEventListener(pxsim.pointerEvents.move, this.dontHandleMouseEvent_);
-        document.removeEventListener(pxsim.pointerEvents.up, this.clearLedDragHandler);
-        document.removeEventListener(pxsim.pointerEvents.leave, this.clearLedDragHandler);
+        pointerEvents.down.forEach((evid: string) => svgRoot.removeEventListener(evid, this.dontHandleMouseEvent_));
+        svgRoot.removeEventListener(pointerEvents.move, this.dontHandleMouseEvent_);
+        document.removeEventListener(pointerEvents.up, this.clearLedDragHandler);
+        document.removeEventListener(pointerEvents.leave, this.clearLedDragHandler);
 
         (Blockly as any).Touch.clearTouchIdentifier();
 
-        this.matrixSvg.removeEventListener(pxsim.pointerEvents.move, this.handleRootMouseMoveListener);
+        this.matrixSvg.removeEventListener(pointerEvents.move, this.handleRootMouseMoveListener);
 
         ev.stopPropagation();
         ev.preventDefault();
@@ -238,7 +277,7 @@ export class FieldLedMatrix extends FieldMatrix implements FieldCustom {
     }
 
     protected attachPointerEventHandlersToCell(x: number, y: number, cellRect: SVGElement) {
-        pxsim.pointerEvents.down.forEach(evid => cellRect.addEventListener(evid, (ev: MouseEvent) => {
+        pointerEvents.down.forEach((evid: string) => cellRect.addEventListener(evid, (ev: MouseEvent) => {
             if (!this.sourceBlock_.isEditable()) return;
 
             const svgRoot = (this.sourceBlock_ as Blockly.BlockSvg).getSvgRoot();
@@ -249,14 +288,14 @@ export class FieldLedMatrix extends FieldMatrix implements FieldCustom {
             Blockly.common.setSelected(this.sourceBlock_ as Blockly.BlockSvg);
 
             this.toggleCell(x, y);
-            pxsim.pointerEvents.down.forEach(evid => svgRoot.addEventListener(evid, this.dontHandleMouseEvent_));
-            svgRoot.addEventListener(pxsim.pointerEvents.move, this.dontHandleMouseEvent_);
+            pointerEvents.down.forEach((evid: string) => svgRoot.addEventListener(evid, this.dontHandleMouseEvent_));
+            svgRoot.addEventListener(pointerEvents.move, this.dontHandleMouseEvent_);
 
-            document.addEventListener(pxsim.pointerEvents.up, this.clearLedDragHandler);
-            document.addEventListener(pxsim.pointerEvents.leave, this.clearLedDragHandler);
+            document.addEventListener(pointerEvents.up, this.clearLedDragHandler);
+            document.addEventListener(pointerEvents.leave, this.clearLedDragHandler);
 
             // Begin listening on the canvas and toggle any matches
-            this.matrixSvg.addEventListener(pxsim.pointerEvents.move, this.handleRootMouseMoveListener);
+            this.matrixSvg.addEventListener(pointerEvents.move, this.handleRootMouseMoveListener);
 
             ev.stopPropagation();
             ev.preventDefault();
@@ -337,13 +376,11 @@ export class FieldLedMatrix extends FieldMatrix implements FieldCustom {
 
     // The return value of this function is inserted in the code
     getValue() {
-        // getText() returns the value that is set by calls to setValue()
-        let text = removeQuotes(this.value_);
-        return `\`\n${FieldLedMatrix.TAB}${text}\n${FieldLedMatrix.TAB}\``;
+        return removeQuotes(this.value_);
     }
 
     getFieldDescription(): string {
-        return lf("{0}x{1} LED Grid", this.numMatrixCols, this.numMatrixRows);
+        return localize("{0}x{1} LED Grid", this.numMatrixCols, this.numMatrixRows);
     }
 
     // Restores the block state from the text value of the field

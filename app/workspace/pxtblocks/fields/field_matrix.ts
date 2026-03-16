@@ -1,5 +1,22 @@
 import * as Blockly from "blockly";
 
+function createSvgChild<T extends SVGElement>(parent: SVGElement, tagName: string, attributes: Record<string, string | number | undefined>) {
+    return Blockly.utils.dom.createSvgElement(tagName, normalizeAttributes(attributes), parent) as T;
+}
+
+function normalizeAttributes(attributes: Record<string, string | number | undefined>) {
+    const normalized: Record<string, string> = {};
+
+    Object.keys(attributes).forEach(key => {
+        const value = attributes[key];
+        if (value !== undefined) {
+            normalized[key] = String(value);
+        }
+    });
+
+    return normalized;
+}
+
 interface MatrixDisplayProps {
     cellWidth: number;
     cellHeight: number;
@@ -45,12 +62,12 @@ export abstract class FieldMatrix extends Blockly.Field {
 
         // Create the cells of the matrix that is displayed
         for (let y = 0; y < this.numMatrixRows; y++) {
-            const row = pxsim.svg.child(this.matrixSvg, "g", { 'role': 'row' });
+            const row = createSvgChild<SVGGElement>(this.matrixSvg, "g", { 'role': 'row' });
             for (let x = 0; x < this.numMatrixCols; x++) {
                 const tx = scale * x * (cellWidth + cellHorizontalMargin) + cellHorizontalMargin + padLeft;
                 const ty = scale * y * (cellHeight + cellVerticalMargin) + cellVerticalMargin;
 
-                const cellG = pxsim.svg.child(row, "g", { transform: `translate(${tx} ${ty})`, 'role': 'gridcell' });
+                const cellG = createSvgChild<SVGGElement>(row, "g", { transform: `translate(${tx} ${ty})`, 'role': 'gridcell' });
                 const rectOptions = {
                     'id': this.getCellId(x,y),  // For aria-activedescendant
                     'aria-label': cellLabel,
@@ -64,7 +81,7 @@ export abstract class FieldMatrix extends Blockly.Field {
                     'data-y': y,
                     'rx': Math.max(2, scale * cornerRadius)
                 };
-                const cellRect = pxsim.svg.child(cellG, "rect", rectOptions) as SVGRectElement;
+                const cellRect = createSvgChild<SVGRectElement>(cellG, "rect", rectOptions);
                 this.cells[x][y] = cellRect;
             }
         }
@@ -195,7 +212,7 @@ export abstract class FieldMatrix extends Blockly.Field {
         const cellWidth = parseInt(cell.getAttribute("width"))
         const cornerRadius = parseInt(cell.getAttribute("rx"));
 
-        pxsim.svg.child(cellG, "rect", {
+        createSvgChild<SVGRectElement>(cellG, "rect", {
             transform: 'translate(-2, -2)',
             width: cellWidth + 4,
             height: cellWidth + 4,
@@ -205,7 +222,7 @@ export abstract class FieldMatrix extends Blockly.Field {
             fill: "none"
         });
         if (useTwoToneFocusIndicator) {
-            pxsim.svg.child(cellG, "rect", {
+            createSvgChild<SVGRectElement>(cellG, "rect", {
                 transform: 'translate(-1, -1)',
                 width: cellWidth + 2,
                 height: cellWidth + 2,

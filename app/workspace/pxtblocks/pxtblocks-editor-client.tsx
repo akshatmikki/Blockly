@@ -25,6 +25,7 @@ import "./index"; // Force block evaluation in the correct PXT order to avoid ci
 
 import PxtSimulatorPane from "./pxt-simulator-pane";
 import { FunctionEditor } from "./components/FunctionEditor";
+import { FieldLedMatrix } from "./fields/field_ledmatrix";
 import { FunctionManager } from "./plugins/functions/functionManager";
 
 const toolbox = {
@@ -1886,6 +1887,22 @@ function registerPxtLikeBlocks() {
   pxtLikeBlocksRegistered = true;
 
   const asAny = javascriptGenerator as any;
+  const normalizeGesture = (gesture?: string) => {
+    switch (gesture) {
+      case "SHAKE": return "Shake";
+      case "LOGO_UP": return "LogoUp";
+      case "LOGO_DOWN": return "LogoDown";
+      case "FREE_FALL": return "FreeFall";
+      default: return gesture || "Shake";
+    }
+  };
+  const normalizeSound = (sound?: string) => {
+    switch (sound) {
+      case "Loud": return "DetectedSound.Loud";
+      case "Quiet": return "DetectedSound.Quiet";
+      default: return sound || "DetectedSound.Loud";
+    }
+  };
 
   if (!Blockly.Msg.CONTROLS_REPEAT_TITLE || !Blockly.Msg.CONTROLS_REPEAT_TITLE.includes("%1")) {
     Blockly.Msg.CONTROLS_REPEAT_TITLE = "repeat %1";
@@ -4016,6 +4033,28 @@ function registerPxtLikeBlocks() {
     { type: "control_device_serial_number", message0: "device serial number", output: "String", colour: 210 }
   ]);
 
+  defineBlock("device_show_leds", {
+    init: function (this: Blockly.Block) {
+      this.appendDummyInput()
+        .appendField("show leds")
+        .appendField(
+          new FieldLedMatrix(". . . . .\n. . . . .\n. . . . .\n. . . . .\n. . . . .", {
+            columns: 5,
+            rows: 5,
+            scale: 0.72,
+            onColor: "#9fd0ff",
+            offColor: "#1d73c9"
+          }),
+          "MATRIX"
+        );
+      this.setPreviousStatement(true);
+      this.setNextStatement(true);
+      this.setColour(210);
+      this.setTooltip("Show 5x5 LED pattern");
+      this.setHelpUrl("");
+    }
+  });
+
   asAny.forBlock["on_start"] = (block: Blockly.Block, generator: Blockly.CodeGenerator) => {
     const body = generator.statementToCode(block, "DO");
     return `// on start\n${body}`;
@@ -4070,6 +4109,7 @@ function registerPxtLikeBlocks() {
     const matrix = String(block.getFieldValue("MATRIX") || "");
     const lines = matrix
       .split("\n")
+      .filter((row) => /[.#01]/.test(row))
       .map((row) => row.replace(/\./g, "0").replace(/#/g, "1").replace(/\s+/g, ""));
     const normalized = [...lines, "00000", "00000", "00000", "00000", "00000"].slice(0, 5);
     return `basic.showLeds(\`\n${normalized.join("\n")}\n\`);\n`;
@@ -4084,7 +4124,7 @@ function registerPxtLikeBlocks() {
   };
 
   asAny.forBlock["input_on_gesture"] = (block: Blockly.Block, generator: Blockly.CodeGenerator) => {
-    const gesture = block.getFieldValue("GESTURE") || "SHAKE";
+    const gesture = normalizeGesture(block.getFieldValue("GESTURE"));
     const body = generator.statementToCode(block, "DO");
     return `input.onGesture(Gesture.${gesture}, function () {\n${body}});\n`;
   };
@@ -4117,12 +4157,12 @@ function registerPxtLikeBlocks() {
   asAny.forBlock["input_temperature"] = () => ["input.temperature()", Order.FUNCTION_CALL];
 
   asAny.forBlock["input_is_gesture"] = (block: Blockly.Block) => {
-    const gesture = block.getFieldValue("GESTURE") || "SHAKE";
+    const gesture = normalizeGesture(block.getFieldValue("GESTURE"));
     return [`input.isGesture(Gesture.${gesture})`, Order.FUNCTION_CALL];
   };
 
   asAny.forBlock["input_on_sound"] = (block: Blockly.Block, generator: Blockly.CodeGenerator) => {
-    const sound = block.getFieldValue('SOUND');
+    const sound = normalizeSound(block.getFieldValue('SOUND'));
     const branch = generator.statementToCode(block, 'DO');
     return `input.onSound(${sound}, () => {\n${branch}});\n`;
   };
