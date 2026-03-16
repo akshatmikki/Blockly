@@ -1887,22 +1887,6 @@ function registerPxtLikeBlocks() {
   pxtLikeBlocksRegistered = true;
 
   const asAny = javascriptGenerator as any;
-  const normalizeGesture = (gesture?: string) => {
-    switch (gesture) {
-      case "SHAKE": return "Shake";
-      case "LOGO_UP": return "LogoUp";
-      case "LOGO_DOWN": return "LogoDown";
-      case "FREE_FALL": return "FreeFall";
-      default: return gesture || "Shake";
-    }
-  };
-  const normalizeSound = (sound?: string) => {
-    switch (sound) {
-      case "Loud": return "DetectedSound.Loud";
-      case "Quiet": return "DetectedSound.Quiet";
-      default: return sound || "DetectedSound.Loud";
-    }
-  };
 
   if (!Blockly.Msg.CONTROLS_REPEAT_TITLE || !Blockly.Msg.CONTROLS_REPEAT_TITLE.includes("%1")) {
     Blockly.Msg.CONTROLS_REPEAT_TITLE = "repeat %1";
@@ -4124,7 +4108,7 @@ function registerPxtLikeBlocks() {
   };
 
   asAny.forBlock["input_on_gesture"] = (block: Blockly.Block, generator: Blockly.CodeGenerator) => {
-    const gesture = normalizeGesture(block.getFieldValue("GESTURE"));
+    const gesture = block.getFieldValue("GESTURE") || "SHAKE";
     const body = generator.statementToCode(block, "DO");
     return `input.onGesture(Gesture.${gesture}, function () {\n${body}});\n`;
   };
@@ -4157,12 +4141,12 @@ function registerPxtLikeBlocks() {
   asAny.forBlock["input_temperature"] = () => ["input.temperature()", Order.FUNCTION_CALL];
 
   asAny.forBlock["input_is_gesture"] = (block: Blockly.Block) => {
-    const gesture = normalizeGesture(block.getFieldValue("GESTURE"));
+    const gesture = block.getFieldValue("GESTURE") || "SHAKE";
     return [`input.isGesture(Gesture.${gesture})`, Order.FUNCTION_CALL];
   };
 
   asAny.forBlock["input_on_sound"] = (block: Blockly.Block, generator: Blockly.CodeGenerator) => {
-    const sound = normalizeSound(block.getFieldValue('SOUND'));
+    const sound = block.getFieldValue('SOUND');
     const branch = generator.statementToCode(block, 'DO');
     return `input.onSound(${sound}, () => {\n${branch}});\n`;
   };
