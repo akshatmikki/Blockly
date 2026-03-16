@@ -27,6 +27,7 @@ import PxtSimulatorPane from "./pxt-simulator-pane";
 import { FunctionEditor } from "./components/FunctionEditor";
 import { FieldLedMatrix } from "./fields/field_ledmatrix";
 import { FunctionManager } from "./plugins/functions/functionManager";
+import { setDuplicateOnDrag } from "./plugins/duplicateOnDrag";
 
 const toolbox = {
   kind: "categoryToolbox",
@@ -300,9 +301,48 @@ const toolbox = {
         },
         { kind: "label", text: "Receive" },
         { kind: "sep", gap: "8" },
-        { kind: "block", type: "radio_on_received_number" },
-        { kind: "block", type: "radio_on_received_value" },
-        { kind: "block", type: "radio_on_received_string" },
+        {
+          kind: "block",
+          type: "radio_on_received_number",
+          inputs: {
+            receivedNumber: {
+              block: {
+                type: "argument_reporter_number",
+                fields: { VALUE: "receivedNumber" }
+              }
+            }
+          }
+        },
+        {
+          kind: "block",
+          type: "radio_on_received_value",
+          inputs: {
+            name: {
+              block: {
+                type: "argument_reporter_string",
+                fields: { VALUE: "name" }
+              }
+            },
+            value: {
+              block: {
+                type: "argument_reporter_number",
+                fields: { VALUE: "value" }
+              }
+            }
+          }
+        },
+        {
+          kind: "block",
+          type: "radio_on_received_string",
+          inputs: {
+            receivedString: {
+              block: {
+                type: "argument_reporter_string",
+                fields: { VALUE: "receivedString" }
+              }
+            }
+          }
+        },
         {
           kind: "block",
           type: "radio_received_packet",
@@ -2439,7 +2479,7 @@ function registerPxtLikeBlocks() {
     {
       type: "device_show_number",
       message0: "show number %1",
-      args0: [{ type: "input_value", name: "NUM", check: "Number" }],
+      args0: [{ type: "input_value", name: "NUM", check: ["Number", "String"] }],
       previousStatement: null,
       nextStatement: null,
       colour: 210,
@@ -2449,7 +2489,7 @@ function registerPxtLikeBlocks() {
     {
       type: "device_show_string",
       message0: "show string %1",
-      args0: [{ type: "input_value", name: "TEXT", check: "String" }],
+      args0: [{ type: "input_value", name: "TEXT", check: ["String", "Number"] }],
       previousStatement: null,
       nextStatement: null,
       colour: 210,
@@ -3555,13 +3595,14 @@ function registerPxtLikeBlocks() {
       type: "radio_on_received_number",
       message0: "on radio received %1",
       args0: [
-        { type: "field_variable", name: "receivedNumber", variable: "receivedNumber" }
+        { type: "input_value", name: "receivedNumber", check: "Number" }
       ],
       message1: "%1",
       args1: [{ type: "input_statement", name: "DO" }],
       previousStatement: null,
       nextStatement: null,
       colour: 340,
+      inputsInline: true,
       tooltip: "Run when radio receives number",
       helpUrl: ""
     },
@@ -3569,13 +3610,14 @@ function registerPxtLikeBlocks() {
       type: "radio_on_received_string",
       message0: "on radio received %1",
       args0: [
-        { type: "field_variable", name: "receivedString", variable: "receivedString" }
+        { type: "input_value", name: "receivedString", check: "String" }
       ],
       message1: "%1",
       args1: [{ type: "input_statement", name: "DO" }],
       previousStatement: null,
       nextStatement: null,
       colour: 340,
+      inputsInline: true,
       tooltip: "Run when radio receives text",
       helpUrl: ""
     },
@@ -3583,14 +3625,15 @@ function registerPxtLikeBlocks() {
       type: "radio_on_received_value",
       message0: "on radio received %1 %2",
       args0: [
-        { type: "field_variable", name: "name", variable: "name" },
-        { type: "field_variable", name: "value", variable: "value" }
+        { type: "input_value", name: "name", check: "String" },
+        { type: "input_value", name: "value", check: "Number" }
       ],
       message1: "%1",
       args1: [{ type: "input_statement", name: "DO" }],
       previousStatement: null,
       nextStatement: null,
       colour: 340,
+      inputsInline: true,
       tooltip: "Run when radio receives a name and value",
       helpUrl: ""
     },
@@ -3602,14 +3645,14 @@ function registerPxtLikeBlocks() {
           type: "field_dropdown",
           name: "TYPE",
           options: [
-            ["signal strength", "SIGNAL"],
-            ["time", "TIME"],
-            ["serial number", "SERIAL"]
+            ["signal strength", "SignalStrength"],
+            ["time", "Time"],
+            ["serial number", "SerialNumber"]
           ]
         }
       ],
       output: "Number",
-      colour: 340,
+      colour: 160,
       tooltip: "Properties of last received packet",
       helpUrl: ""
     },
@@ -4017,6 +4060,11 @@ function registerPxtLikeBlocks() {
     { type: "control_device_serial_number", message0: "device serial number", output: "String", colour: 210 }
   ]);
 
+  setDuplicateOnDrag("radio_on_received_number", "receivedNumber");
+  setDuplicateOnDrag("radio_on_received_string", "receivedString");
+  setDuplicateOnDrag("radio_on_received_value", "name");
+  setDuplicateOnDrag("radio_on_received_value", "value");
+
   defineBlock("device_show_leds", {
     init: function (this: Blockly.Block) {
       this.appendDummyInput()
@@ -4076,7 +4124,8 @@ function registerPxtLikeBlocks() {
 
   asAny.forBlock["device_show_string"] = (block: Blockly.Block, generator: Blockly.CodeGenerator) => {
     const text = generator.valueToCode(block, "TEXT", Order.NONE) || "\"\"";
-    return `basic.showString(${text});\n`;
+    // Ensure we are passing a string to showString
+    return `basic.showString("" + ${text});\n`;
   };
 
   asAny.forBlock["device_show_icon"] = (block: Blockly.Block) => {
@@ -4190,7 +4239,7 @@ function registerPxtLikeBlocks() {
 
   asAny.forBlock["radio_message_code"] = (block: Blockly.Block) => {
     const message = block.getFieldValue('message');
-    return [`RadioMessage.${message}`, Order.MEMBER_ACCESS];
+    return [`RadioMessage.${message}`, Order.ATOMIC];
   };
 
   asAny.forBlock["input_on_logo_event"] = (block: Blockly.Block, generator: Blockly.CodeGenerator) => {
@@ -4398,29 +4447,29 @@ function registerPxtLikeBlocks() {
   };
 
   asAny.forBlock["radio_on_received_number"] = (block: Blockly.Block, generator: Blockly.CodeGenerator) => {
-    const variable = (block.getFieldValue("receivedNumber") || "receivedNumber").replace(/\s+/g, "_");
+    const variable = generator.valueToCode(block, "receivedNumber", Order.NONE) || "receivedNumber";
     const body = generator.statementToCode(block, "DO");
     return `radio.onReceivedNumber(function (${variable}) {\n${body}});\n`;
   };
 
   asAny.forBlock["radio_on_received_string"] = (block: Blockly.Block, generator: Blockly.CodeGenerator) => {
-    const variable = (block.getFieldValue("receivedString") || "receivedString").replace(/\s+/g, "_");
+    const variable = generator.valueToCode(block, "receivedString", Order.NONE) || "receivedString";
     const body = generator.statementToCode(block, "DO");
     return `radio.onReceivedString(function (${variable}) {\n${body}});\n`;
   };
 
   asAny.forBlock["radio_on_received_value"] = (block: Blockly.Block, generator: Blockly.CodeGenerator) => {
-    const nameVar = (block.getFieldValue("name") || "name").replace(/\s+/g, "_");
-    const valueVar = (block.getFieldValue("value") || "value").replace(/\s+/g, "_");
+    const nameVar = generator.valueToCode(block, "name", Order.NONE) || "name";
+    const valueVar = generator.valueToCode(block, "value", Order.NONE) || "value";
     const body = generator.statementToCode(block, "DO");
     return `radio.onReceivedValue(function (${nameVar}, ${valueVar}) {\n${body}});\n`;
   };
 
   asAny.forBlock["radio_received_packet"] = (block: Blockly.Block) => {
-    const type = block.getFieldValue("TYPE") || "TYPE";
-    if (type === "SIGNAL") return ["radio.receivedPacket(RadioPacketProperty.SignalStrength)", Order.FUNCTION_CALL];
-    if (type === "TIME") return ["radio.receivedPacket(RadioPacketProperty.Time)", Order.FUNCTION_CALL];
-    if (type === "SERIAL") return ["radio.receivedPacket(RadioPacketProperty.SerialNumber)", Order.FUNCTION_CALL];
+    const type = block.getFieldValue("TYPE") || "Time";
+    if (type === "SignalStrength") return ["radio.receivedPacket(RadioPacketProperty.SignalStrength)", Order.FUNCTION_CALL];
+    if (type === "Time") return ["radio.receivedPacket(RadioPacketProperty.Time)", Order.FUNCTION_CALL];
+    if (type === "SerialNumber") return ["radio.receivedPacket(RadioPacketProperty.SerialNumber)", Order.FUNCTION_CALL];
     return ["radio.receivedPacket(RadioPacketProperty.Time)", Order.FUNCTION_CALL];
   };
 

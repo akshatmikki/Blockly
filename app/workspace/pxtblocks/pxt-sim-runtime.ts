@@ -20,7 +20,7 @@ export function getPxtSimulatorHost() {
 
 export function getPxtSimulatorUrl() {
   const host = getPxtSimulatorHost();
-  return `${host}/run.html?server=1&fullscreen=1&single=1&simTop=-170`;
+  return `${host}/run.html?server=1&simTop=0`;
 }
 
 export function buildPxtProjectFiles(code: string) {
@@ -33,7 +33,8 @@ export function buildPxtProjectFiles(code: string) {
         name: "blockly-project",
         description: "",
         dependencies: {
-          core: "*"
+          core: "*",
+          radio: "*"
         },
         files: [
           "main.ts"

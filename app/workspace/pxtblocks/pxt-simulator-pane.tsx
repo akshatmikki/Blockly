@@ -183,7 +183,25 @@ export default function PxtSimulatorPane({ code }: Props) {
       const data = event.data;
       console.log("[PXT Sim Pane] Received message:", data);
 
-      if (data.type === "simulator" || data.type === "ready") {
+      // Echo broadcast messages (like radio packets) back to the simulators
+      // so boards can communicate with each other.
+      // We add a 'fromHost' flag to avoid infinite loops.
+      if (data.broadcast && !data.fromHost && iframeRef.current) {
+        // Ensure the serial number is passed along for simulation purposes
+        const echoed = { ...data, fromHost: true };
+        iframeRef.current.contentWindow?.postMessage(echoed, "*");
+      }
+
+      if (data.type === "radiopacket") {
+        console.log("[PXT Sim Pane] Full Radio Packet Data received by Host:", data);
+        // Sometimes group is nested in payload
+        if (data.payload) {
+          console.log("[PXT Sim Pane] Payload:", data.payload);
+        }
+      }
+
+      const isReadyMsg = data.type === "simulator" || data.type === "ready";
+      if (isReadyMsg) {
         setSimReady(true);
 
         if (data.command === "project-received") {
@@ -192,9 +210,10 @@ export default function PxtSimulatorPane({ code }: Props) {
         } else if (pendingCodeRef.current) {
           const pending = pendingCodeRef.current;
           pendingCodeRef.current = null;
-
           sendWithRetry(pending);
-        } else if (data.command === "ready") {
+        } else if (data.command === "ready" && status !== "running") {
+          // Only send if we are not already running to avoid restart loops
+          // when multiple boards report ready.
           sendWithRetry(latestCodeRef.current);
         }
       }
