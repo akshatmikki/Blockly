@@ -1885,6 +1885,8 @@ function registerPxtLikeBlocks() {
   if (pxtLikeBlocksRegistered) return;
   pxtLikeBlocksRegistered = true;
 
+  const asAny = javascriptGenerator as any;
+
   if (!Blockly.Msg.CONTROLS_REPEAT_TITLE || !Blockly.Msg.CONTROLS_REPEAT_TITLE.includes("%1")) {
     Blockly.Msg.CONTROLS_REPEAT_TITLE = "repeat %1";
   }
@@ -1894,6 +1896,8 @@ function registerPxtLikeBlocks() {
   Blockly.Msg['LISTS_CREATE_EMPTY_TITLE'] = "create empty array";
   Blockly.Msg['LISTS_CREATE_WITH_INPUT_WITH'] = "create array with";
   Blockly.Msg['TEXT_APPEND_APPENDTEXT'] = "append text";
+  Blockly.Msg['NEW_VARIABLE_DROPDOWN'] = "New variable...";
+  Blockly.Msg['NEW_VARIABLE_ID'] = "new_variable";
   if (!Blockly.Msg.PROCEDURE_ALREADY_EXISTS) {
     Blockly.Msg.PROCEDURE_ALREADY_EXISTS = "A function named %1 already exists.";
   }
@@ -1983,6 +1987,25 @@ function registerPxtLikeBlocks() {
     }
   });
 
+  asAny.forBlock['lists_getIndex'] = (block: any, generator: any) => {
+    const list = generator.valueToCode(block, 'LIST', Order.MEMBER) || '[]';
+    const mode = block.getFieldValue('MODE') || 'GET';
+    const where = block.getFieldValue('WHERE') || 'FROM_START';
+    let at = '';
+    if (where === 'FROM_START' || where === 'FROM_END') {
+      at = generator.valueToCode(block, 'AT', Order.NONE) || '0';
+    }
+
+    if (mode === 'GET') {
+      if (where === 'FIRST') return [`${list}[0]`, Order.MEMBER];
+      if (where === 'LAST') return [`${list}[${list}.length - 1]`, Order.MEMBER];
+      if (where === 'FROM_START') return [`${list}[${at}]`, Order.MEMBER];
+      return [`${list}[${at || 0}]`, Order.MEMBER];
+    } else {
+      return [`${list}.pop()`, Order.FUNCTION_CALL];
+    }
+  };
+
   defineBlock('lists_setIndex', {
     init: function (this: any) {
       const modeField = new Blockly.FieldDropdown([
@@ -2042,6 +2065,25 @@ function registerPxtLikeBlocks() {
       this.updateShape_(state['where']);
     }
   });
+
+  asAny.forBlock['lists_setIndex'] = (block: any, generator: any) => {
+    const list = generator.valueToCode(block, 'LIST', Order.MEMBER) || '[]';
+    const mode = block.getFieldValue('MODE') || 'SET';
+    const where = block.getFieldValue('WHERE') || 'FROM_START';
+    const value = generator.valueToCode(block, 'VALUE', Order.NONE) || 'null';
+    let at = '';
+    if (where === 'FROM_START' || where === 'FROM_END') {
+      at = generator.valueToCode(block, 'AT', Order.NONE) || '0';
+    }
+
+    if (mode === 'SET') {
+      if (where === 'FIRST') return `${list}[0] = ${value};\n`;
+      if (where === 'LAST') return `${list}[${list}.length - 1] = ${value};\n`;
+      return `${list}[${at || 0}] = ${value};\n`;
+    } else {
+      return `${list}.push(${value});\n`;
+    }
+  };
 
   defineBlock('controls_for', {
     init: function (this: any) {
@@ -3974,7 +4016,6 @@ function registerPxtLikeBlocks() {
     { type: "control_device_serial_number", message0: "device serial number", output: "String", colour: 210 }
   ]);
 
-  const asAny = javascriptGenerator as any;
   asAny.forBlock["on_start"] = (block: Blockly.Block, generator: Blockly.CodeGenerator) => {
     const body = generator.statementToCode(block, "DO");
     return `// on start\n${body}`;
@@ -4643,7 +4684,7 @@ function registerPxtLikeBlocks() {
   asAny.forBlock["control_event_source_id"] = (block: Blockly.Block) => [`EventBusSource.${block.getFieldValue("SRC") || "MICROBIT_ID_BUTTON_A"}`, Order.ATOMIC];
   asAny.forBlock["control_device_name"] = () => ["control.deviceName()", Order.FUNCTION_CALL];
   asAny.forBlock["control_device_serial_number"] = () => ["control.deviceSerialNumber()", Order.FUNCTION_CALL];
-  
+
   asAny.forBlock["function_definition"] = (block: Blockly.Block, generator: Blockly.CodeGenerator) => {
     const name = generator.getVariableName(block.getFieldValue("function_name") || "doSomething");
     const body = generator.statementToCode(block, "STACK");
@@ -4721,11 +4762,11 @@ export default function BlocklyEditorClient() {
   const [codeEditorValue, setCodeEditorValue] = useState("// Drag blocks to generate MakeCode-like TypeScript");
   const [toolboxWidth, setToolboxWidth] = useState(180); // Total offset including flyout
   const [sidebarWidth, setSidebarWidth] = useState(180); // Just the category bar
-  
-  const [functionEditorConfig, setFunctionEditorConfig] = useState<{ 
-      isOpen: boolean, 
-      mutation?: Element,
-      cb?: (mutation: Element) => void 
+
+  const [functionEditorConfig, setFunctionEditorConfig] = useState<{
+    isOpen: boolean,
+    mutation?: Element,
+    cb?: (mutation: Element) => void
   }>({ isOpen: false });
 
   const normalizeSearch = (value: string) => value.trim().toLowerCase();
@@ -5216,70 +5257,70 @@ export default function BlocklyEditorClient() {
         onChange={handleImportXml}
       />
 
-      <FunctionEditor 
-          isOpen={functionEditorConfig.isOpen}
-          mutation={functionEditorConfig.mutation}
-          onClose={() => setFunctionEditorConfig({ isOpen: false })}
-          onDone={(mut) => {
-              const { cb } = functionEditorConfig;
-              setFunctionEditorConfig({ isOpen: false });
-              
-              if (cb) {
-                  // This was an edit action
-                  cb(mut);
-              } else if (workspaceRef.current) {
-                  // This was a create action
-                  const workspace = workspaceRef.current;
-                  
-                  // Generate an XML block using the mutation
-                  let xml = Blockly.utils.xml.createElement('xml');
-                  let block = Blockly.utils.xml.createElement('block');
-                  block.setAttribute('type', 'function_definition');
-                  
-                  // Give it a reasonable starting position
-                  let topBlock = workspace.getTopBlocks(true)[0];
-                  let x = 10, y = 10;
-                  if (topBlock) {
-                      let xy = topBlock.getRelativeToSurfaceXY();
-                      x = xy.x + (Blockly as any).SNAP_RADIUS * (topBlock.RTL ? -1 : 1);
-                      y = xy.y + (Blockly as any).SNAP_RADIUS * 2;
-                  }
-                  block.setAttribute('x', String(x));
-                  block.setAttribute('y', String(y));
-                  
-                  // Copy mutation attributes
-                  const mutationXml = Blockly.utils.xml.createElement('mutation');
-                  for (let i = 0; i < mut.attributes.length; i++) {
-                      const attr = mut.attributes[i];
-                      mutationXml.setAttribute(attr.name, attr.value);
-                  }
-                  
-                  // Copy mutation child nodes (e.g. <arg> tags for parameters)
-                  for (let i = 0; i < mut.childNodes.length; i++) {
-                      mutationXml.appendChild(mut.childNodes[i].cloneNode(true));
-                  }
-                  
-                  block.appendChild(mutationXml);
-                  
-                  // Ensure name field is set
-                  let field = Blockly.utils.xml.createElement('field');
-                  field.setAttribute('name', 'NAME');
-                  field.appendChild(document.createTextNode(mut.getAttribute("name") || "doSomething"));
-                  block.appendChild(field);
-                  
-                  xml.appendChild(block);
-                  
-                  try {
-                      Blockly.Events.disable();
-                      Blockly.Xml.domToWorkspace(xml, workspace);
-                  } finally {
-                      Blockly.Events.enable();
-                      // Fire create event to sync UI / code
-                      Blockly.Events.fire(new Blockly.Events.BlockCreate(workspace.getTopBlocks(false).pop()!));
-                      syncCode(workspace);
-                  }
-              }
-          }}
+      <FunctionEditor
+        isOpen={functionEditorConfig.isOpen}
+        mutation={functionEditorConfig.mutation}
+        onClose={() => setFunctionEditorConfig({ isOpen: false })}
+        onDone={(mut) => {
+          const { cb } = functionEditorConfig;
+          setFunctionEditorConfig({ isOpen: false });
+
+          if (cb) {
+            // This was an edit action
+            cb(mut);
+          } else if (workspaceRef.current) {
+            // This was a create action
+            const workspace = workspaceRef.current;
+
+            // Generate an XML block using the mutation
+            let xml = Blockly.utils.xml.createElement('xml');
+            let block = Blockly.utils.xml.createElement('block');
+            block.setAttribute('type', 'function_definition');
+
+            // Give it a reasonable starting position
+            let topBlock = workspace.getTopBlocks(true)[0];
+            let x = 10, y = 10;
+            if (topBlock) {
+              let xy = topBlock.getRelativeToSurfaceXY();
+              x = xy.x + (Blockly as any).SNAP_RADIUS * (topBlock.RTL ? -1 : 1);
+              y = xy.y + (Blockly as any).SNAP_RADIUS * 2;
+            }
+            block.setAttribute('x', String(x));
+            block.setAttribute('y', String(y));
+
+            // Copy mutation attributes
+            const mutationXml = Blockly.utils.xml.createElement('mutation');
+            for (let i = 0; i < mut.attributes.length; i++) {
+              const attr = mut.attributes[i];
+              mutationXml.setAttribute(attr.name, attr.value);
+            }
+
+            // Copy mutation child nodes (e.g. <arg> tags for parameters)
+            for (let i = 0; i < mut.childNodes.length; i++) {
+              mutationXml.appendChild(mut.childNodes[i].cloneNode(true));
+            }
+
+            block.appendChild(mutationXml);
+
+            // Ensure name field is set
+            let field = Blockly.utils.xml.createElement('field');
+            field.setAttribute('name', 'NAME');
+            field.appendChild(document.createTextNode(mut.getAttribute("name") || "doSomething"));
+            block.appendChild(field);
+
+            xml.appendChild(block);
+
+            try {
+              Blockly.Events.disable();
+              Blockly.Xml.domToWorkspace(xml, workspace);
+            } finally {
+              Blockly.Events.enable();
+              // Fire create event to sync UI / code
+              Blockly.Events.fire(new Blockly.Events.BlockCreate(workspace.getTopBlocks(false).pop()!));
+              syncCode(workspace);
+            }
+          }
+        }}
       />
 
       <style jsx global>{`

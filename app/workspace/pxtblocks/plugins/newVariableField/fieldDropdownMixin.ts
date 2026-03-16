@@ -38,10 +38,14 @@ export function showEditorMixin(this: Blockly.FieldDropdown, e?: MouseEvent) {
                 image.alt = label.alt || '';
                 return image;
             }
-            return label;
+            if ((label as any) instanceof HTMLElement || (label as any) instanceof SVGElement) {
+                return label;
+            }
+            const labelText = typeof label === 'string' ? label : (label as any)?.text;
+            return labelText || "";
         })();
 
-        const menuItem = new Blockly.MenuItem(content, value as string);
+        const menuItem = new Blockly.MenuItem(content || "", value as string);
         menuItem.setRole(Blockly.utils.aria.Role.OPTION);
         menuItem.setRightToLeft(block.RTL);
         menuItem.setCheckable(true);

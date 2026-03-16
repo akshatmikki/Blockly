@@ -297,7 +297,7 @@ export class FieldLedMatrix extends FieldMatrix implements FieldCustom {
     }
 
     private getOpacity(x: number, y: number) {
-        const offOpacity = this.offColor ? '1.0': '0.2';
+        const offOpacity = this.offColor ? '1.0' : '0.2';
         return this.cellState[x][y] ? '1.0' : offOpacity;
     }
 
