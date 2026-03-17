@@ -3554,7 +3554,7 @@ function registerPxtLikeBlocks() {
       args0: [{ type: "input_value", name: "GROUP", check: "Number" }],
       previousStatement: null,
       nextStatement: null,
-      colour: 340,
+      colour: "#E3008C",
       tooltip: "Set radio group",
       helpUrl: ""
     },
@@ -3564,7 +3564,7 @@ function registerPxtLikeBlocks() {
       args0: [{ type: "input_value", name: "NUM", check: "Number" }],
       previousStatement: null,
       nextStatement: null,
-      colour: 340,
+      colour: "#E3008C",
       tooltip: "Send a number on radio",
       helpUrl: ""
     },
@@ -3574,7 +3574,7 @@ function registerPxtLikeBlocks() {
       args0: [{ type: "input_value", name: "TEXT", check: "String" }],
       previousStatement: null,
       nextStatement: null,
-      colour: 340,
+      colour: "#E3008C",
       tooltip: "Send text on radio",
       helpUrl: ""
     },
@@ -3587,7 +3587,7 @@ function registerPxtLikeBlocks() {
       ],
       previousStatement: null,
       nextStatement: null,
-      colour: 340,
+      colour: "#E3008C",
       tooltip: "Send a name and numeric value on radio",
       helpUrl: ""
     },
@@ -3601,7 +3601,7 @@ function registerPxtLikeBlocks() {
       args1: [{ type: "input_statement", name: "DO" }],
       previousStatement: null,
       nextStatement: null,
-      colour: 340,
+      colour: "#E3008C",
       inputsInline: true,
       tooltip: "Run when radio receives number",
       helpUrl: ""
@@ -3616,7 +3616,7 @@ function registerPxtLikeBlocks() {
       args1: [{ type: "input_statement", name: "DO" }],
       previousStatement: null,
       nextStatement: null,
-      colour: 340,
+      colour: "#E3008C",
       inputsInline: true,
       tooltip: "Run when radio receives text",
       helpUrl: ""
@@ -3632,7 +3632,7 @@ function registerPxtLikeBlocks() {
       args1: [{ type: "input_statement", name: "DO" }],
       previousStatement: null,
       nextStatement: null,
-      colour: 340,
+      colour: "#E3008C",
       inputsInline: true,
       tooltip: "Run when radio receives a name and value",
       helpUrl: ""
@@ -3652,7 +3652,7 @@ function registerPxtLikeBlocks() {
         }
       ],
       output: "Number",
-      colour: 160,
+      colour: "#E3008C",
       tooltip: "Properties of last received packet",
       helpUrl: ""
     },
@@ -3662,7 +3662,7 @@ function registerPxtLikeBlocks() {
       args0: [{ type: "input_value", name: "POWER", check: "Number" }],
       previousStatement: null,
       nextStatement: null,
-      colour: 340,
+      colour: "#E3008C",
       tooltip: "Set transmit power",
       helpUrl: ""
     },
@@ -3681,7 +3681,7 @@ function registerPxtLikeBlocks() {
       ],
       previousStatement: null,
       nextStatement: null,
-      colour: 340,
+      colour: "#E3008C",
       tooltip: "Set transmit serial number",
       helpUrl: ""
     },
@@ -3691,7 +3691,7 @@ function registerPxtLikeBlocks() {
       args0: [{ type: "input_value", name: "BAND", check: "Number" }],
       previousStatement: null,
       nextStatement: null,
-      colour: 340,
+      colour: "#E3008C",
       tooltip: "Set frequency band",
       helpUrl: ""
     },
@@ -3734,7 +3734,7 @@ function registerPxtLikeBlocks() {
       ],
       previousStatement: null,
       nextStatement: null,
-      colour: 340,
+      colour: "#E3008C",
       tooltip: "Raise an event over radio",
       helpUrl: ""
     },

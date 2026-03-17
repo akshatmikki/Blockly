@@ -34,7 +34,8 @@ export function buildPxtProjectFiles(code: string) {
         description: "",
         dependencies: {
           core: "*",
-          radio: "*"
+          radio: "*",
+          "radio-broadcast": "*"
         },
         files: [
           "main.ts"
