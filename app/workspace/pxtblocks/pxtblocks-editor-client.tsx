@@ -1603,31 +1603,80 @@ const pythonAdvancedContents = [
         kind: "block",
         type: "variables_set",
         inputs: {
-          VALUE: { shadow: { type: "lists_create_with", extraState: { itemCount: 1 } } }
+          VALUE: {
+            block: {
+              type: "lists_create_with",
+              extraState: { itemCount: 2 },
+              inputs: {
+                ADD0: { shadow: { type: "math_number", fields: { NUM: 0 } } },
+                ADD1: { shadow: { type: "math_number", fields: { NUM: 1 } } }
+              }
+            }
+          }
         }
       },
-      { kind: "block", type: "lists_create_with", extraState: { itemCount: 3 } },
-      { kind: "block", type: "lists_create_empty" },
-      { kind: "sep", gap: "8" },
-      { kind: "label", text: "Read" },
-      { kind: "block", type: "lists_length" },
       {
         kind: "block",
-        type: "lists_getIndex",
-        fields: { MODE: "GET", WHERE: "FROM_START" },
+        type: "variables_set",
+        fields: { VAR: { name: "text list", type: "" } },
+        inputs: {
+          VALUE: {
+            block: {
+              type: "lists_create_with",
+              extraState: { itemCount: 3 },
+              inputs: {
+                ADD0: { shadow: { type: "text", fields: { TEXT: "a" } } },
+                ADD1: { shadow: { type: "text", fields: { TEXT: "b" } } },
+                ADD2: { shadow: { type: "text", fields: { TEXT: "c" } } }
+              }
+            }
+          }
+        }
+      },
+      { kind: "block", type: "lists_create_with", extraState: { itemCount: 0 } },
+      { kind: "sep", gap: "8" },
+      { kind: "label", text: "Read" },
+      {
+        kind: "block",
+        type: "lists_length",
+        inputs: { VALUE: { shadow: { type: "variables_get", fields: { VAR: "list" } } } }
+      },
+      {
+        kind: "block",
+        type: "lists_getIndex_get",
         inputs: {
           LIST: { shadow: { type: "variables_get", fields: { VAR: "list" } } },
           AT: { shadow: { type: "math_number", fields: { NUM: 0 } } }
         }
       },
-      { kind: "block", type: "lists_getIndex", fields: { MODE: "GET_REMOVE", WHERE: "LAST" } },
-      { kind: "block", type: "lists_getIndex", fields: { MODE: "GET", WHERE: "RANDOM" } },
+      {
+        kind: "block",
+        type: "lists_getIndex_get_remove",
+        inputs: {
+          LIST: { shadow: { type: "variables_get", fields: { VAR: "list" } } },
+          AT: { shadow: { type: "math_number", fields: { NUM: 0 } } }
+        }
+      },
+      {
+        kind: "block",
+        type: "lists_getIndex_get_remove_last",
+        inputs: { LIST: { shadow: { type: "variables_get", fields: { VAR: "list" } } } }
+      },
+      {
+        kind: "block",
+        type: "lists_getIndex_get_remove_first",
+        inputs: { LIST: { shadow: { type: "variables_get", fields: { VAR: "list" } } } }
+      },
+      {
+        kind: "block",
+        type: "lists_getIndex_get_random",
+        inputs: { LIST: { shadow: { type: "variables_get", fields: { VAR: "list" } } } }
+      },
       { kind: "sep", gap: "8" },
       { kind: "label", text: "Modify" },
       {
         kind: "block",
-        type: "lists_setIndex",
-        fields: { MODE: "SET", WHERE: "FROM_START" },
+        type: "lists_setIndex_set",
         inputs: {
           LIST: { shadow: { type: "variables_get", fields: { VAR: "list" } } },
           AT: { shadow: { type: "math_number", fields: { NUM: 0 } } }
@@ -1635,17 +1684,52 @@ const pythonAdvancedContents = [
       },
       {
         kind: "block",
-        type: "lists_setIndex",
-        fields: { MODE: "INSERT", WHERE: "LAST" },
+        type: "lists_setIndex_add",
+        inputs: { LIST: { shadow: { type: "variables_get", fields: { VAR: "list" } } } }
+      },
+      {
+        kind: "block",
+        type: "lists_getIndex_remove_last",
+        inputs: { LIST: { shadow: { type: "variables_get", fields: { VAR: "list" } } } }
+      },
+      {
+        kind: "block",
+        type: "lists_getIndex_remove_first",
+        inputs: { LIST: { shadow: { type: "variables_get", fields: { VAR: "list" } } } }
+      },
+      {
+        kind: "block",
+        type: "lists_setIndex_insert_first",
+        inputs: { LIST: { shadow: { type: "variables_get", fields: { VAR: "list" } } } }
+      },
+      {
+        kind: "block",
+        type: "lists_setIndex_insert_at",
         inputs: {
-          LIST: { shadow: { type: "variables_get", fields: { VAR: "list" } } }
+          LIST: { shadow: { type: "variables_get", fields: { VAR: "list" } } },
+          AT: { shadow: { type: "math_number", fields: { NUM: 0 } } }
         }
       },
-      { kind: "block", type: "lists_getIndex", fields: { MODE: "REMOVE", WHERE: "LAST" } },
+      {
+        kind: "block",
+        type: "lists_getIndex_remove_at",
+        inputs: {
+          LIST: { shadow: { type: "variables_get", fields: { VAR: "list" } } },
+          AT: { shadow: { type: "math_number", fields: { NUM: 0 } } }
+        }
+      },
       { kind: "sep", gap: "8" },
       { kind: "label", text: "Operations" },
-      { kind: "block", type: "lists_indexOf" },
-      { kind: "block", type: "lists_reverse" }
+      {
+        kind: "block",
+        type: "lists_indexOf",
+        inputs: { LIST: { shadow: { type: "variables_get", fields: { VAR: "list" } } } }
+      },
+      {
+        kind: "block",
+        type: "lists_reverse",
+        inputs: { LIST: { shadow: { type: "variables_get", fields: { VAR: "list" } } } }
+      }
     ]
   },
   {
@@ -1934,8 +2018,8 @@ function registerPxtLikeBlocks() {
 
   // Consolidate all blocks with correct input names and labels
   // Define missing messages to fix rendering errors like ATE_EMPTY_TITLE
-  Blockly.Msg['LISTS_CREATE_EMPTY_TITLE'] = "create empty array";
-  Blockly.Msg['LISTS_CREATE_WITH_INPUT_WITH'] = "create array with";
+  Blockly.Msg['LISTS_CREATE_EMPTY_TITLE'] = "empty array";
+  Blockly.Msg['LISTS_CREATE_WITH_INPUT_WITH'] = "array of";
   Blockly.Msg['TEXT_APPEND_APPENDTEXT'] = "append text";
   Blockly.Msg['NEW_VARIABLE_DROPDOWN'] = "New variable...";
   Blockly.Msg['NEW_VARIABLE_ID'] = "new_variable";
@@ -1978,6 +2062,17 @@ function registerPxtLikeBlocks() {
       Blockly.common.defineBlocksWithJsonArray([spec]);
     }
   };
+
+  // Override lists_create_with to strictly match MakeCode Array looks
+  const origListsCreateWith = (Blockly.Blocks as any)['lists_create_with'];
+  if (origListsCreateWith && origListsCreateWith.init) {
+    const origInit = origListsCreateWith.init;
+    origListsCreateWith.init = function() {
+      origInit.call(this);
+      this.setColour("#f97316");
+      this.setInputsInline(true);
+    };
+  }
 
   // Redefine lists_getIndex manually to fix "Missing LIST connection"
   defineBlock('lists_getIndex', {
@@ -2124,6 +2219,64 @@ function registerPxtLikeBlocks() {
     } else {
       return `${list}.push(${value});\n`;
     }
+  };
+
+  asAny.forBlock['lists_getIndex_get'] = (block: any, generator: any) => {
+    const list = generator.valueToCode(block, 'LIST', Order.MEMBER) || '[]';
+    const at = generator.valueToCode(block, 'AT', Order.NONE) || '0';
+    return [`${list}[${at}]`, Order.MEMBER];
+  };
+  asAny.forBlock['lists_getIndex_get_remove'] = (block: any, generator: any) => {
+    const list = generator.valueToCode(block, 'LIST', Order.MEMBER) || '[]';
+    const at = generator.valueToCode(block, 'AT', Order.NONE) || '0';
+    return [`${list}.splice(${at}, 1)[0]`, Order.FUNCTION_CALL];
+  };
+  asAny.forBlock['lists_getIndex_get_remove_last'] = (block: any, generator: any) => {
+    const list = generator.valueToCode(block, 'LIST', Order.MEMBER) || '[]';
+    return [`${list}.pop()`, Order.FUNCTION_CALL];
+  };
+  asAny.forBlock['lists_getIndex_get_remove_first'] = (block: any, generator: any) => {
+    const list = generator.valueToCode(block, 'LIST', Order.MEMBER) || '[]';
+    return [`${list}.shift()`, Order.FUNCTION_CALL];
+  };
+  asAny.forBlock['lists_getIndex_get_random'] = (block: any, generator: any) => {
+    const list = generator.valueToCode(block, 'LIST', Order.MEMBER) || '[]';
+    return [`${list}[Math.floor(Math.random() * ${list}.length)]`, Order.MEMBER];
+  };
+  asAny.forBlock['lists_setIndex_set'] = (block: any, generator: any) => {
+    const list = generator.valueToCode(block, 'LIST', Order.MEMBER) || '[]';
+    const at = generator.valueToCode(block, 'AT', Order.NONE) || '0';
+    const value = generator.valueToCode(block, 'VALUE', Order.NONE) || 'null';
+    return `${list}[${at}] = ${value};\n`;
+  };
+  asAny.forBlock['lists_setIndex_add'] = (block: any, generator: any) => {
+    const list = generator.valueToCode(block, 'LIST', Order.MEMBER) || '[]';
+    const value = generator.valueToCode(block, 'VALUE', Order.NONE) || 'null';
+    return `${list}.push(${value});\n`;
+  };
+  asAny.forBlock['lists_getIndex_remove_last'] = (block: any, generator: any) => {
+    const list = generator.valueToCode(block, 'LIST', Order.MEMBER) || '[]';
+    return `${list}.pop();\n`;
+  };
+  asAny.forBlock['lists_getIndex_remove_first'] = (block: any, generator: any) => {
+    const list = generator.valueToCode(block, 'LIST', Order.MEMBER) || '[]';
+    return `${list}.shift();\n`;
+  };
+  asAny.forBlock['lists_setIndex_insert_first'] = (block: any, generator: any) => {
+    const list = generator.valueToCode(block, 'LIST', Order.MEMBER) || '[]';
+    const value = generator.valueToCode(block, 'VALUE', Order.NONE) || 'null';
+    return `${list}.unshift(${value});\n`;
+  };
+  asAny.forBlock['lists_setIndex_insert_at'] = (block: any, generator: any) => {
+    const list = generator.valueToCode(block, 'LIST', Order.MEMBER) || '[]';
+    const at = generator.valueToCode(block, 'AT', Order.NONE) || '0';
+    const value = generator.valueToCode(block, 'VALUE', Order.NONE) || 'null';
+    return `${list}.splice(${at}, 0, ${value});\n`;
+  };
+  asAny.forBlock['lists_getIndex_remove_at'] = (block: any, generator: any) => {
+    const list = generator.valueToCode(block, 'LIST', Order.MEMBER) || '[]';
+    const at = generator.valueToCode(block, 'AT', Order.NONE) || '0';
+    return `${list}.splice(${at}, 1);\n`;
   };
 
   defineBlock('controls_for', {
@@ -2348,27 +2501,99 @@ function registerPxtLikeBlocks() {
       type: "lists_length",
       message0: "length of array %1",
       args0: [{ type: "input_value", name: "VALUE", check: "Array" }],
-      output: "Number", colour: 260
+      output: "Number", colour: "#f97316"
     },
     {
       type: "lists_create_empty",
       message0: "empty array",
-      output: "Array", colour: 260
+      output: "Array", colour: "#f97316"
     },
     {
       type: "lists_indexOf",
-      message0: "index of %2 in array %1",
+      message0: "%1 find index of %2",
       args0: [
         { type: "input_value", name: "LIST", check: "Array" },
         { type: "input_value", name: "VALUE" }
       ],
-      output: "Number", colour: 260, inputsInline: true
+      output: "Number", colour: "#f97316", inputsInline: true
     },
     {
       type: "lists_reverse",
-      message0: "reverse array %1",
+      message0: "reverse %1",
       args0: [{ type: "input_value", name: "LIST", check: "Array" }],
-      previousStatement: null, nextStatement: null, colour: 260
+      previousStatement: null, nextStatement: null, colour: "#f97316"
+    },
+    {
+      type: "lists_getIndex_get",
+      message0: "%1 get value at %2",
+      args0: [{ type: "input_value", name: "LIST", check: "Array" }, { type: "input_value", name: "AT", check: "Number" }],
+      output: null, colour: "#f97316", inputsInline: true
+    },
+    {
+      type: "lists_getIndex_get_remove",
+      message0: "%1 get and remove value at %2",
+      args0: [{ type: "input_value", name: "LIST", check: "Array" }, { type: "input_value", name: "AT", check: "Number" }],
+      output: null, colour: "#f97316", inputsInline: true
+    },
+    {
+      type: "lists_getIndex_get_remove_last",
+      message0: "get and remove last value from %1",
+      args0: [{ type: "input_value", name: "LIST", check: "Array" }],
+      output: null, colour: "#f97316", inputsInline: true
+    },
+    {
+      type: "lists_getIndex_get_remove_first",
+      message0: "get and remove first value from %1",
+      args0: [{ type: "input_value", name: "LIST", check: "Array" }],
+      output: null, colour: "#f97316", inputsInline: true
+    },
+    {
+      type: "lists_getIndex_get_random",
+      message0: "get random value from %1",
+      args0: [{ type: "input_value", name: "LIST", check: "Array" }],
+      output: null, colour: "#f97316", inputsInline: true
+    },
+    {
+      type: "lists_setIndex_set",
+      message0: "%1 set value at %2 to %3",
+      args0: [{ type: "input_value", name: "LIST", check: "Array" }, { type: "input_value", name: "AT", check: "Number" }, { type: "input_value", name: "VALUE" }],
+      previousStatement: null, nextStatement: null, colour: "#f97316", inputsInline: true
+    },
+    {
+      type: "lists_setIndex_add",
+      message0: "%1 add value %2 to end",
+      args0: [{ type: "input_value", name: "LIST", check: "Array" }, { type: "input_value", name: "VALUE" }],
+      previousStatement: null, nextStatement: null, colour: "#f97316", inputsInline: true
+    },
+    {
+      type: "lists_getIndex_remove_last",
+      message0: "remove last value from %1",
+      args0: [{ type: "input_value", name: "LIST", check: "Array" }],
+      previousStatement: null, nextStatement: null, colour: "#f97316", inputsInline: true
+    },
+    {
+      type: "lists_getIndex_remove_first",
+      message0: "remove first value from %1",
+      args0: [{ type: "input_value", name: "LIST", check: "Array" }],
+      previousStatement: null, nextStatement: null, colour: "#f97316", inputsInline: true
+    },
+    {
+      type: "lists_setIndex_insert_first",
+      message0: "%1 insert %2 at beginning",
+      args0: [{ type: "input_value", name: "LIST", check: "Array" }, { type: "input_value", name: "VALUE" }],
+      previousStatement: null, nextStatement: null, colour: "#f97316", inputsInline: true
+    },
+    {
+      type: "lists_setIndex_insert_at",
+      message0: "%1 insert at %2 value %3",
+      args0: [{ type: "input_value", name: "LIST", check: "Array" }, { type: "input_value", name: "AT", check: "Number" }, { type: "input_value", name: "VALUE" }],
+      previousStatement: null, nextStatement: null, colour: "#f97316", inputsInline: true
+    },
+    {
+      type: "lists_getIndex_remove_at",
+      message0: "%1 remove value at %2",
+      args0: [{ type: "input_value", name: "LIST", check: "Array" }, { type: "input_value", name: "AT", check: "Number" }],
+      previousStatement: null, nextStatement: null, colour: "#f97316", inputsInline: true
     },
 
     // Text Blocks
@@ -4644,16 +4869,51 @@ function registerPxtLikeBlocks() {
     const y = generator.valueToCode(block, "Y", Order.NONE) || "2";
     return `let ${v} = game.createSprite(${x}, ${y});\n`;
   };
-  asAny.forBlock["game_delete_sprite"] = (block: Blockly.Block) => `${(block.getFieldValue("SPRITE") || "sprite").replace(/\s+/g, "_")}.delete();\n`;
-  asAny.forBlock["game_sprite_is_deleted"] = (block: Blockly.Block) => [`${(block.getFieldValue("SPRITE") || "sprite").replace(/\s+/g, "_")}.isDeleted()`, Order.FUNCTION_CALL];
-  asAny.forBlock["game_sprite_move_by"] = (block: Blockly.Block, generator: Blockly.CodeGenerator) => `${(block.getFieldValue("SPRITE") || "sprite").replace(/\s+/g, "_")}.move(${generator.valueToCode(block, "BY", Order.NONE) || "1"});\n`;
-  asAny.forBlock["game_sprite_turn_by"] = (block: Blockly.Block, generator: Blockly.CodeGenerator) => `${(block.getFieldValue("SPRITE") || "sprite").replace(/\s+/g, "_")}.turn(Direction.${block.getFieldValue("DIR") || "Right"}, ${generator.valueToCode(block, "DEG", Order.NONE) || "45"});\n`;
-  asAny.forBlock["game_sprite_change_x_by"] = (block: Blockly.Block, generator: Blockly.CodeGenerator) => `${(block.getFieldValue("SPRITE") || "sprite").replace(/\s+/g, "_")}.change(LedSpriteProperty.X, ${generator.valueToCode(block, "BY", Order.NONE) || "1"});\n`;
-  asAny.forBlock["game_sprite_set_x_to"] = (block: Blockly.Block, generator: Blockly.CodeGenerator) => `${(block.getFieldValue("SPRITE") || "sprite").replace(/\s+/g, "_")}.set(LedSpriteProperty.X, ${generator.valueToCode(block, "X", Order.NONE) || "0"});\n`;
-  asAny.forBlock["game_sprite_x"] = (block: Blockly.Block) => [`${(block.getFieldValue("SPRITE") || "sprite").replace(/\s+/g, "_")}.get(LedSpriteProperty.X)`, Order.FUNCTION_CALL];
-  asAny.forBlock["game_sprite_is_touching"] = (block: Blockly.Block) => [`${(block.getFieldValue("A") || "sprite").replace(/\s+/g, "_")}.isTouching(${(block.getFieldValue("B") || "otherSprite").replace(/\s+/g, "_")})`, Order.FUNCTION_CALL];
-  asAny.forBlock["game_sprite_is_touching_edge"] = (block: Blockly.Block) => [`${(block.getFieldValue("SPRITE") || "sprite").replace(/\s+/g, "_")}.isTouchingEdge()`, Order.FUNCTION_CALL];
-  asAny.forBlock["game_sprite_if_on_edge_bounce"] = (block: Blockly.Block) => `${(block.getFieldValue("SPRITE") || "sprite").replace(/\s+/g, "_")}.ifOnEdgeBounce();\n`;
+  asAny.forBlock["game_delete_sprite"] = (block: Blockly.Block, generator: any) => {
+    const sprite = generator.valueToCode(block, "SPRITE", Order.MEMBER) || "sprite";
+    return `if (${sprite}) ${sprite}.delete();\n`;
+  };
+  asAny.forBlock["game_sprite_is_deleted"] = (block: Blockly.Block, generator: any) => {
+    const sprite = generator.valueToCode(block, "SPRITE", Order.MEMBER) || "sprite";
+    return [`${sprite} ? ${sprite}.isDeleted() : false`, Order.CONDITIONAL || 13];
+  };
+  asAny.forBlock["game_sprite_move_by"] = (block: Blockly.Block, generator: any) => {
+    const sprite = generator.valueToCode(block, "SPRITE", Order.MEMBER) || "sprite";
+    const dist = generator.valueToCode(block, "BY", Order.NONE) || "1";
+    return `if (${sprite}) ${sprite}.move(${dist});\n`;
+  };
+  asAny.forBlock["game_sprite_turn_by"] = (block: Blockly.Block, generator: any) => {
+    const sprite = generator.valueToCode(block, "SPRITE", Order.MEMBER) || "sprite";
+    const deg = generator.valueToCode(block, "DEG", Order.NONE) || "45";
+    return `if (${sprite}) ${sprite}.turn(Direction.${block.getFieldValue("DIR") || "Right"}, ${deg});\n`;
+  };
+  asAny.forBlock["game_sprite_change_x_by"] = (block: Blockly.Block, generator: any) => {
+    const sprite = generator.valueToCode(block, "SPRITE", Order.MEMBER) || "sprite";
+    const by = generator.valueToCode(block, "BY", Order.NONE) || "1";
+    return `if (${sprite}) ${sprite}.change(LedSpriteProperty.${block.getFieldValue("PROP") || "X"}, ${by});\n`;
+  };
+  asAny.forBlock["game_sprite_set_x_to"] = (block: Blockly.Block, generator: any) => {
+    const sprite = generator.valueToCode(block, "SPRITE", Order.MEMBER) || "sprite";
+    const val = generator.valueToCode(block, "X", Order.NONE) || "0";
+    return `if (${sprite}) ${sprite}.set(LedSpriteProperty.${block.getFieldValue("PROP") || "X"}, ${val});\n`;
+  };
+  asAny.forBlock["game_sprite_x"] = (block: Blockly.Block, generator: any) => {
+    const sprite = generator.valueToCode(block, "SPRITE", Order.MEMBER) || "sprite";
+    return [`${sprite} ? ${sprite}.get(LedSpriteProperty.${block.getFieldValue("PROP") || "X"}) : 0`, Order.CONDITIONAL || 13];
+  };
+  asAny.forBlock["game_sprite_is_touching"] = (block: Blockly.Block, generator: any) => {
+    const a = generator.valueToCode(block, "A", Order.MEMBER) || "sprite";
+    const b = generator.valueToCode(block, "B", Order.MEMBER) || "otherSprite";
+    return [`(${a} && ${b}) ? ${a}.isTouching(${b}) : false`, Order.LOGICAL_AND || 11];
+  };
+  asAny.forBlock["game_sprite_is_touching_edge"] = (block: Blockly.Block, generator: any) => {
+    const sprite = generator.valueToCode(block, "SPRITE", Order.MEMBER) || "sprite";
+    return [`${sprite} ? ${sprite}.isTouchingEdge() : false`, Order.CONDITIONAL || 13];
+  };
+  asAny.forBlock["game_sprite_if_on_edge_bounce"] = (block: Blockly.Block, generator: any) => {
+    const sprite = generator.valueToCode(block, "SPRITE", Order.MEMBER) || "sprite";
+    return `if (${sprite}) ${sprite}.ifOnEdgeBounce();\n`;
+  };
   asAny.forBlock["game_remove_life"] = (block: Blockly.Block, generator: Blockly.CodeGenerator) => `game.removeLife(${generator.valueToCode(block, "N", Order.NONE) || "1"});\n`;
   asAny.forBlock["game_add_life"] = (block: Blockly.Block, generator: Blockly.CodeGenerator) => `game.addLife(${generator.valueToCode(block, "N", Order.NONE) || "1"});\n`;
   asAny.forBlock["game_set_life"] = (block: Blockly.Block, generator: Blockly.CodeGenerator) => `game.setLife(${generator.valueToCode(block, "N", Order.NONE) || "0"});\n`;

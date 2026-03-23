@@ -1,4 +1,4 @@
-/// <reference path="../../built/pxtlib.d.ts" />
+/// <reference path="../../../../node_modules/pxt-microbit/node_modules/pxt-core/built/pxtlib.d.ts" />
 
 
 import * as Blockly from "blockly";
@@ -59,6 +59,46 @@ function eventWeight(b: Blockly.Block, e: Environment) {
         return -hash;
 }
 
+function isLoopBlock(type: string) {
+    return type === "pxt_controls_for"
+        || type === "controls_for"
+        || type === "controls_simple_for"
+        || type === "pxt_controls_for_of"
+        || type === "controls_for_of"
+        || type === "controls_forEach"
+        || type === "controls_repeat_ext"
+        || type === "device_while"
+        || type === "loops_every_interval"
+        || type === "device_forever";
+}
+
+function addMicrobitSpriteSafetyDiagnostics(e: Environment, blocks: Blockly.Block[]) {
+    const spriteCreateBlocks = blocks.filter(b => b.type === "game_create_sprite");
+    const firstLoopSpriteCreate = spriteCreateBlocks.find(block => {
+        let parent = block.getParent();
+        while (parent) {
+            if (isLoopBlock(parent.type)) return true;
+            parent = parent.getParent();
+        }
+        return false;
+    });
+
+    if (firstLoopSpriteCreate) {
+        e.diagnostics.push({
+            blockId: firstLoopSpriteCreate.id,
+            message: lf("Creating LED sprites inside loops can exceed the micro:bit simulator limit and crash the simulator.")
+        });
+        return;
+    }
+
+    if (spriteCreateBlocks.length > 4) {
+        e.diagnostics.push({
+            blockId: spriteCreateBlocks[4].id,
+            message: lf("micro:bit simulator supports only a few LED sprites at once. Reduce the number of 'create sprite' blocks.")
+        });
+    }
+}
+
 function compileWorkspace(e: Environment, w: Blockly.Workspace, blockInfo: pxtc.BlocksInfo): [pxt.blocks.JsNode[], BlockDiagnostic[]] {
     try {
         // all compiled top level blocks are events
@@ -79,6 +119,7 @@ function compileWorkspace(e: Environment, w: Blockly.Workspace, blockInfo: pxtc.
         // drop disabled blocks
         allBlocks = allBlocks.filter(b => b.isEnabled());
         topblocks = topblocks.filter(b => b.isEnabled());
+        addMicrobitSpriteSafetyDiagnostics(e, allBlocks);
         trackAllVariables(topblocks, e);
         infer(allBlocks, e, w);
 
@@ -334,6 +375,7 @@ function compileStatementBlock(e: Environment, b: Blockly.Block): pxt.blocks.JsN
             break;
         case 'pxt_controls_for_of':
         case 'controls_for_of':
+        case 'controls_forEach':
             r = compileControlsForOf(e, b, comments);
             break;
         case 'variables_set':
@@ -443,6 +485,8 @@ export function compileExpression(e: Environment, b: Blockly.Block, comments: st
             expr = compileMathOp2(e, b, comments); break;
         case "math_op3":
             expr = compileMathOp3(e, b, comments); break;
+        case "math_random_int":
+            expr = compileMathRandomInt(e, b, comments); break;
         case "math_arithmetic":
         case "logic_compare":
         case "logic_operation":
@@ -464,8 +508,41 @@ export function compileExpression(e: Environment, b: Blockly.Block, comments: st
             expr = compileCreateList(e, b, comments); break;
         case "lists_index_get":
             expr = compileListGet(e, b, comments); break;
+        case "lists_getIndex":
+            expr = compileListsGetIndex(e, b, comments); break;
+        case "pxt_lists_index_get":
+            expr = compilePxtListGet(e, b, comments); break;
+        case "pxt_lists_index_get_remove":
+            expr = compilePxtListGetRemove(e, b, comments); break;
+        case "pxt_lists_get_remove_last":
+            expr = compilePxtListGetRemoveLast(e, b, comments); break;
+        case "pxt_lists_get_remove_first":
+            expr = compilePxtListGetRemoveFirst(e, b, comments); break;
+        case "pxt_lists_get_random":
+            expr = compilePxtListGetRandom(e, b, comments); break;
+        case "pxt_lists_length":
+        case "lists_length":
+            expr = compilePxtListLength(e, b, comments); break;
+        case "lists_create_empty":
+            expr = pxt.blocks.mkText("[]"); break;
+        case "lists_indexOf":
+            expr = compilePxtListIndexOf(e, b, comments); break;
+        case "lists_reverse":
+            expr = compilePxtListReverse(e, b, comments); break;
+        case "pxt_lists_is_empty":
+            expr = compilePxtListIsEmpty(e, b, comments); break;
         case "lists_index_set":
             expr = compileListSet(e, b, comments); break;
+        case "pxt_lists_index_set":
+            expr = compilePxtListSet(e, b, comments); break;
+        case "pxt_lists_add_end":
+            expr = compilePxtListAddEnd(e, b, comments); break;
+        case "pxt_lists_remove_last":
+            expr = compilePxtListRemoveLast(e, b, comments); break;
+        case "pxt_lists_remove_first":
+            expr = compilePxtListRemoveFirst(e, b, comments); break;
+        case "pxt_lists_insert_beginning":
+            expr = compilePxtListInsertBeginning(e, b, comments); break;
         case "math_js_op":
         case "math_js_round":
             expr = compileMathJsOp(e, b, comments); break;
@@ -868,8 +945,11 @@ function mkVariableDeclaration(v: VarInfo, blockInfo: pxtc.BlocksInfo) {
         let tpname = t.type
         // If the type is "Array" or null[] it means that we failed to narrow the type of array.
         // Best we can do is just default to number[]
-        if (tpname === "Array" || tpname === "null[]") {
-            tpname = "number[]";
+        if (tpname.indexOf("[]") !== -1) {
+            tpname = "any[]";
+        }
+        if (tpname === "game.LedSprite" || tpname === "LedSprite") {
+            tpname = "any";
         }
         let tpinfo = blockInfo.apis.byQName[tpname]
         if (tpinfo && tpinfo.attributes.autoCreate)
@@ -1097,6 +1177,122 @@ function compileListSet(e: Environment, b: Blockly.Block, comments: string[]): p
     return listBlock.type === "lists_create_with" ? prefixWithSemicolon(res) : res;
 }
 
+function compilePxtListGet(e: Environment, b: Blockly.Block, comments: string[]): pxt.blocks.JsNode {
+    const listExpr = compileExpression(e, getInputTargetBlock(e, b, "LIST"), comments);
+    const index = compileExpression(e, getInputTargetBlock(e, b, "INDEX"), comments);
+    return pxt.blocks.mkGroup([listExpr, pxt.blocks.mkText("["), index, pxt.blocks.mkText("]")]);
+}
+
+function compilePxtListGetRemove(e: Environment, b: Blockly.Block, comments: string[]): pxt.blocks.JsNode {
+    const listExpr = compileExpression(e, getInputTargetBlock(e, b, "LIST"), comments);
+    const index = compileExpression(e, getInputTargetBlock(e, b, "INDEX"), comments);
+    return pxt.blocks.mkGroup([listExpr, pxt.blocks.mkText(".splice("), index, pxt.blocks.mkText(", 1)[0]")]);
+}
+
+function compilePxtListGetRemoveLast(e: Environment, b: Blockly.Block, comments: string[]): pxt.blocks.JsNode {
+    const listExpr = compileExpression(e, getInputTargetBlock(e, b, "LIST"), comments);
+    return pxt.blocks.mkGroup([listExpr, pxt.blocks.mkText(".pop()")]);
+}
+
+function compilePxtListGetRemoveFirst(e: Environment, b: Blockly.Block, comments: string[]): pxt.blocks.JsNode {
+    const listExpr = compileExpression(e, getInputTargetBlock(e, b, "LIST"), comments);
+    return pxt.blocks.mkGroup([listExpr, pxt.blocks.mkText(".shift()")]);
+}
+
+function compilePxtListGetRandom(e: Environment, b: Blockly.Block, comments: string[]): pxt.blocks.JsNode {
+    const listExpr = compileExpression(e, getInputTargetBlock(e, b, "LIST"), comments);
+    return pxt.blocks.mkGroup([listExpr, pxt.blocks.mkText("._pickRandom()")]);
+}
+
+function compilePxtListLength(e: Environment, b: Blockly.Block, comments: string[]): pxt.blocks.JsNode {
+    const listBlock = getInputTargetBlock(e, b, "LIST") || getInputTargetBlock(e, b, "VALUE");
+    const listExpr = compileExpression(e, listBlock, comments);
+    return pxt.blocks.mkGroup([listExpr, pxt.blocks.mkText(".length")]);
+}
+
+function compilePxtListIndexOf(e: Environment, b: Blockly.Block, comments: string[]): pxt.blocks.JsNode {
+    const listExpr = compileExpression(e, getInputTargetBlock(e, b, "LIST"), comments);
+    const value = compileExpression(e, getInputTargetBlock(e, b, "VALUE"), comments);
+    return pxt.blocks.mkGroup([listExpr, pxt.blocks.mkText(".indexOf("), value, pxt.blocks.mkText(")")]);
+}
+
+function compilePxtListReverse(e: Environment, b: Blockly.Block, comments: string[]): pxt.blocks.JsNode {
+    const listExpr = compileExpression(e, getInputTargetBlock(e, b, "LIST"), comments);
+    return pxt.blocks.mkGroup([listExpr, pxt.blocks.mkText(".reverse()")]);
+}
+
+function compileMathRandomInt(e: Environment, b: Blockly.Block, comments: string[]): pxt.blocks.JsNode {
+    let from = compileExpression(e, getInputTargetBlock(e, b, "FROM"), comments);
+    let to = compileExpression(e, getInputTargetBlock(e, b, "TO"), comments);
+    return pxt.blocks.mkGroup([pxt.blocks.mkText("randint("), from, pxt.blocks.mkText(", "), to, pxt.blocks.mkText(")")]);
+}
+
+function compileListsGetIndex(e: Environment, b: Blockly.Block, comments: string[]): pxt.blocks.JsNode {
+    const listExpr = compileExpression(e, getInputTargetBlock(e, b, "LIST"), comments);
+    const mode = b.getFieldValue("MODE") || "GET"; // GET, GET_REMOVE, REMOVE
+    const where = b.getFieldValue("WHERE") || "FROM_START";
+    
+    if (where === "FROM_START") {
+        const index = compileExpression(e, getInputTargetBlock(e, b, "AT") || getInputTargetBlock(e, b, "INDEX"), comments);
+        if (mode === "GET") return pxt.blocks.mkGroup([listExpr, pxt.blocks.mkText("["), index, pxt.blocks.mkText("]")]);
+        if (mode === "GET_REMOVE") return pxt.blocks.mkGroup([listExpr, pxt.blocks.mkText(".splice("), index, pxt.blocks.mkText(", 1)[0]")]);
+        if (mode === "REMOVE") return pxt.blocks.mkGroup([listExpr, pxt.blocks.mkText(".splice("), index, pxt.blocks.mkText(", 1)")]);
+    } else if (where === "FIRST") {
+        if (mode === "GET") return pxt.blocks.mkGroup([listExpr, pxt.blocks.mkText("[0]")]);
+        if (mode === "GET_REMOVE") return pxt.blocks.mkGroup([listExpr, pxt.blocks.mkText(".shift()")]);
+        if (mode === "REMOVE") return pxt.blocks.mkGroup([listExpr, pxt.blocks.mkText(".shift()")]);
+    } else if (where === "LAST") {
+        if (mode === "GET") return pxt.blocks.mkGroup([listExpr, pxt.blocks.mkText("["), listExpr, pxt.blocks.mkText(".length - 1]")]);
+        if (mode === "GET_REMOVE") return pxt.blocks.mkGroup([listExpr, pxt.blocks.mkText(".pop()")]);
+        if (mode === "REMOVE") return pxt.blocks.mkGroup([listExpr, pxt.blocks.mkText(".pop()")]);
+    } else if (where === "RANDOM") {
+        return pxt.blocks.mkGroup([pxt.blocks.mkText("Math.pickRandom("), listExpr, pxt.blocks.mkText(")")]);
+    }
+    
+    // Fallback exactly to what was generated but safely
+    const fallbackTs = extractTsExpression(e, b, comments);
+    return fallbackTs || pxt.blocks.mkText("null");
+}
+
+function compilePxtListIsEmpty(e: Environment, b: Blockly.Block, comments: string[]): pxt.blocks.JsNode {
+    const listExpr = compileExpression(e, getInputTargetBlock(e, b, "LIST"), comments);
+    return pxt.blocks.mkGroup([listExpr, pxt.blocks.mkText(".length === 0")]);
+}
+
+function compilePxtListSet(e: Environment, b: Blockly.Block, comments: string[]): pxt.blocks.JsNode {
+    const listExpr = compileExpression(e, getInputTargetBlock(e, b, "LIST"), comments);
+    const index = compileExpression(e, getInputTargetBlock(e, b, "INDEX"), comments);
+    const value = compileExpression(e, getInputTargetBlock(e, b, "VALUE"), comments);
+    const res = pxt.blocks.mkGroup([listExpr, pxt.blocks.mkText("["), index, pxt.blocks.mkText("] = "), value]);
+    return getInputTargetBlock(e, b, "LIST")?.type === "lists_create_with" ? prefixWithSemicolon(res) : res;
+}
+
+function compilePxtListAddEnd(e: Environment, b: Blockly.Block, comments: string[]): pxt.blocks.JsNode {
+    const listExpr = compileExpression(e, getInputTargetBlock(e, b, "LIST"), comments);
+    const value = compileExpression(e, getInputTargetBlock(e, b, "VALUE"), comments);
+    const res = pxt.blocks.mkGroup([listExpr, pxt.blocks.mkText(".push("), value, pxt.blocks.mkText(")")]);
+    return getInputTargetBlock(e, b, "LIST")?.type === "lists_create_with" ? prefixWithSemicolon(res) : res;
+}
+
+function compilePxtListRemoveLast(e: Environment, b: Blockly.Block, comments: string[]): pxt.blocks.JsNode {
+    const listExpr = compileExpression(e, getInputTargetBlock(e, b, "LIST"), comments);
+    const res = pxt.blocks.mkGroup([listExpr, pxt.blocks.mkText(".pop()")]);
+    return getInputTargetBlock(e, b, "LIST")?.type === "lists_create_with" ? prefixWithSemicolon(res) : res;
+}
+
+function compilePxtListRemoveFirst(e: Environment, b: Blockly.Block, comments: string[]): pxt.blocks.JsNode {
+    const listExpr = compileExpression(e, getInputTargetBlock(e, b, "LIST"), comments);
+    const res = pxt.blocks.mkGroup([listExpr, pxt.blocks.mkText(".shift()")]);
+    return getInputTargetBlock(e, b, "LIST")?.type === "lists_create_with" ? prefixWithSemicolon(res) : res;
+}
+
+function compilePxtListInsertBeginning(e: Environment, b: Blockly.Block, comments: string[]): pxt.blocks.JsNode {
+    const listExpr = compileExpression(e, getInputTargetBlock(e, b, "LIST"), comments);
+    const value = compileExpression(e, getInputTargetBlock(e, b, "VALUE"), comments);
+    const res = pxt.blocks.mkGroup([listExpr, pxt.blocks.mkText(".insertAt(0, "), value, pxt.blocks.mkText(")")]);
+    return getInputTargetBlock(e, b, "LIST")?.type === "lists_create_with" ? prefixWithSemicolon(res) : res;
+}
+
 function compileMathJsOp(e: Environment, b: Blockly.Block, comments: string[]): pxt.blocks.JsNode {
     const op = b.getFieldValue("OP");
     const args = [compileExpression(e, getInputTargetBlock(e, b, "ARG0"), comments)];
@@ -1300,6 +1496,68 @@ function compileStdCall(e: Environment, b: Blockly.Block, func: StdFunc, comment
     }
 
     const externalInputs = !b.getInputsInline();
+    const isGuardedSpriteStatement =
+        b.type === "game_delete_sprite" ||
+        b.type === "game_sprite_move_by" ||
+        b.type === "game_sprite_turn_by" ||
+        b.type === "game_sprite_change_x_by" ||
+        b.type === "game_sprite_set_x_to" ||
+        b.type === "game_sprite_if_on_edge_bounce";
+    const isGuardedSpriteBoolean =
+        b.type === "game_sprite_is_deleted" ||
+        b.type === "game_sprite_is_touching_edge";
+    const isGuardedSpriteTouching = b.type === "game_sprite_is_touching";
+    const isGuardedSpriteNumber = b.type === "game_sprite_x";
+
+    const guardedExtensionCall = () => {
+        const call = pxt.blocks.H.extensionCall(callName, args, externalInputs);
+        const spriteArg = args[0];
+
+        if (isGuardedSpriteStatement) {
+            return pxt.blocks.mkGroup([
+                pxt.blocks.mkText("if ("),
+                spriteArg,
+                pxt.blocks.mkText(") "),
+                call
+            ]);
+        }
+
+        if (isGuardedSpriteTouching) {
+            const otherSpriteArg = args[1];
+            return pxt.blocks.mkGroup([
+                pxt.blocks.mkText("("),
+                spriteArg,
+                pxt.blocks.mkText(" && "),
+                otherSpriteArg,
+                pxt.blocks.mkText(" ? "),
+                call,
+                pxt.blocks.mkText(" : false)")
+            ]);
+        }
+
+        if (isGuardedSpriteBoolean) {
+            return pxt.blocks.mkGroup([
+                pxt.blocks.mkText("("),
+                spriteArg,
+                pxt.blocks.mkText(" ? "),
+                call,
+                pxt.blocks.mkText(" : false)")
+            ]);
+        }
+
+        if (isGuardedSpriteNumber) {
+            return pxt.blocks.mkGroup([
+                pxt.blocks.mkText("("),
+                spriteArg,
+                pxt.blocks.mkText(" ? "),
+                call,
+                pxt.blocks.mkText(" : 0)")
+            ]);
+        }
+
+        return call;
+    };
+
     if (func.isIdentity)
         return args[0];
     else if (func.property) {
@@ -1324,7 +1582,7 @@ function compileStdCall(e: Environment, b: Blockly.Block, func: StdFunc, comment
                 args.unshift(pxt.blocks.mkText(func.attrs.defaultInstance));
             }
         }
-        return pxt.blocks.H.extensionCall(callName, args, externalInputs);
+        return guardedExtensionCall();
     } else if (callNamespace) {
         return pxt.blocks.H.namespaceCall(callNamespace, callName, args, externalInputs);
     } else {

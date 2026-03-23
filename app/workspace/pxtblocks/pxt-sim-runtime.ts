@@ -23,9 +23,28 @@ export function getPxtSimulatorUrl() {
   return `${host}/run.html?server=1&simTop=0`;
 }
 
-export function buildPxtProjectFiles(code: string) {
+function containsRepeatedSpriteCreation(code: string) {
+  return /while\s*\([^)]*\)\s*\{[\s\S]*?game\.createSprite\s*\(/.test(code)
+    || /basic\.forever\s*\(\s*function\s*\(\)\s*\{[\s\S]*?game\.createSprite\s*\(/.test(code)
+    || /loops\.everyInterval\s*\([^)]*,\s*function\s*\(\)\s*\{[\s\S]*?game\.createSprite\s*\(/.test(code);
+}
 
-  const mainTs = code?.trim() || "basic.showString('Hello')";
+export function sanitizeSimulatorTypescript(code: string) {
+  const source = code?.trim() || "basic.showString('Hello')";
+
+  if (containsRepeatedSpriteCreation(source)) {
+    return {
+      code: `// Repeated LED sprite creation can crash the micro:bit simulator.\nbasic.showString("Fix blocks")`,
+      warning: "Repeated LED sprite creation can crash the micro:bit simulator."
+    };
+  }
+
+  return { code: source };
+}
+
+export function buildPxtProjectFiles(code: string) {
+  const mainTs = sanitizeSimulatorTypescript(code).code;
+  console.log("[PXT Sim Runtime] Generated main.ts content:\n", mainTs);
 
   return {
     "pxt.json": JSON.stringify(

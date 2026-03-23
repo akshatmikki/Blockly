@@ -79,6 +79,7 @@ export function infer(allBlocks: Blockly.Block[], e: Environment, w: Blockly.Wor
                     break;
                 case "pxt_controls_for_of":
                 case "controls_for_of":
+                case "controls_forEach":
                     const listArgument = getInputTargetBlock(e, b, "LIST");
                     if (listArgument && listArgument.type !== "placeholder") {
                         const listTp = returnType(e, listArgument);
@@ -123,17 +124,56 @@ export function infer(allBlocks: Blockly.Block[], e: Environment, w: Blockly.Wor
                     attachPlaceholderIf(e, b, "COND", pBoolean.type);
                     break;
                 case "lists_index_get":
+                case "lists_getIndex":
+                case "pxt_lists_index_get":
+                case "pxt_lists_index_get_remove":
+                case "pxt_lists_get_random":
                     unionParam(e, b, "LIST", ground("Array"));
                     unionParam(e, b, "INDEX", ground(pNumber.type));
                     const listType = returnType(e, getInputTargetBlock(e, b, "LIST"));
                     const ret = returnType(e, b);
                     genericLink(listType, ret);
                     break;
+                case "pxt_lists_get_remove_last":
+                case "pxt_lists_get_remove_first":
+                case "lists_reverse":
+                    unionParam(e, b, "LIST", ground("Array"));
+                    const listType2 = returnType(e, getInputTargetBlock(e, b, "LIST"));
+                    const ret2 = returnType(e, b);
+                    genericLink(listType2, ret2);
+                    break;
                 case "lists_index_set":
+                case "pxt_lists_index_set":
+                case "pxt_lists_insert_beginning":
                     unionParam(e, b, "LIST", ground("Array"));
                     attachPlaceholderIf(e, b, "VALUE");
-                    handleGenericType(b, "LIST");
+                    if (!handleGenericType(b, "LIST")) {
+                        const listType = returnType(e, getInputTargetBlock(e, b, "LIST"));
+                        const valueType = returnType(e, getInputTargetBlock(e, b, "VALUE"));
+                        genericLink(listType, valueType);
+                    }
                     unionParam(e, b, "INDEX", ground(pNumber.type));
+                    break;
+                case "pxt_lists_add_end":
+                    unionParam(e, b, "LIST", ground("Array"));
+                    attachPlaceholderIf(e, b, "VALUE");
+                    if (!handleGenericType(b, "LIST")) {
+                        const listType = returnType(e, getInputTargetBlock(e, b, "LIST"));
+                        const valueType = returnType(e, getInputTargetBlock(e, b, "VALUE"));
+                        genericLink(listType, valueType);
+                    }
+                    break;
+                case "lists_length":
+                    unionParam(e, b, "VALUE", ground("Array"));
+                    break;
+                case "lists_indexOf":
+                    unionParam(e, b, "LIST", ground("Array"));
+                    attachPlaceholderIf(e, b, "VALUE");
+                    if (!handleGenericType(b, "LIST")) {
+                        const listType = returnType(e, getInputTargetBlock(e, b, "LIST"));
+                        const valueType = returnType(e, getInputTargetBlock(e, b, "VALUE"));
+                        genericLink(listType, valueType);
+                    }
                     break;
                 case 'function_definition':
                     getReturnTypeOfFunction(e, b.getField("function_name",).getText());
@@ -595,6 +635,7 @@ export function getDeclaredVariables(block: Blockly.Block, e: Environment): Decl
             }];
         case 'pxt_controls_for_of':
         case 'controls_for_of':
+        case 'controls_forEach':
             return [{
                 name: getLoopVariableField(e, block).getField("VAR").getText(),
                 type: mkPoint(null)

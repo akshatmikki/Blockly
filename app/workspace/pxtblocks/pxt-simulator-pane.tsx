@@ -6,6 +6,7 @@ import {
   getPxtSimulatorHost,
   getPxtSimulatorUrl,
   postToSimulator,
+  sanitizeSimulatorTypescript,
   type PxtSimulatorControl,
   type PxtSimulatorStatus
 } from "./pxt-sim-runtime";
@@ -13,9 +14,10 @@ import * as React from "react";
 
 type Props = {
   code: string;
+  isCompiling: boolean;
 };
 
-export default function PxtSimulatorPane({ code }: Props) {
+export default function PxtSimulatorPane({ code, isCompiling }: Props) {
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
   const debounceRef = useRef<number | null>(null);
   const pendingCodeRef = useRef<string | null>(null);
@@ -23,9 +25,13 @@ export default function PxtSimulatorPane({ code }: Props) {
   const retryTimerRef = useRef<number | null>(null);
   const retryCountRef = useRef(0);
   const projectAckRef = useRef(false);
+  const hasUserStartedRunRef = useRef(false);
+  const lastSimulatorCommandRef = useRef<string | null>(null);
+  const statusRef = useRef<PxtSimulatorStatus>("loading");
+  const queuedRunAfterCompileRef = useRef(false);
 
   const [status, setStatus] = useState<PxtSimulatorStatus>("loading");
-  const [autoRun, setAutoRun] = useState(true);
+  const [autoRun, setAutoRun] = useState(false);
   const [frameLoaded, setFrameLoaded] = useState(false);
   const [simReady, setSimReady] = useState(false);
   const [frameKey, setFrameKey] = useState(0);
@@ -50,12 +56,17 @@ export default function PxtSimulatorPane({ code }: Props) {
       return false;
     }
 
-    const files = buildPxtProjectFiles(tsCode);
+    const sanitized = sanitizeSimulatorTypescript(tsCode);
+    const files = buildPxtProjectFiles(sanitized.code);
 
     const sent = postToSimulator(iframe, {
       type: "simulateproject",
       project: JSON.stringify(files)
     });
+    if (sanitized.warning) {
+      console.warn("[PXT Sim Pane] Blocked unsafe simulator code:", sanitized.warning);
+    }
+    console.log("[PXT Sim Pane] Generated TS code for simulation:\n", sanitized.code);
     console.log("[PXT Sim Pane] Sent simulateproject:", sent);
     return sent;
   }, []);
@@ -73,6 +84,14 @@ export default function PxtSimulatorPane({ code }: Props) {
   const controls: PxtSimulatorControl = useMemo(
     () => ({
       run: (tsCode: string) => {
+        hasUserStartedRunRef.current = true;
+
+        if (isCompiling) {
+          queuedRunAfterCompileRef.current = true;
+          setStatus("loading");
+          return;
+        }
+
         if (useUrlMode) {
           setFrameLoaded(false);
           setSimReady(false);
@@ -112,7 +131,7 @@ export default function PxtSimulatorPane({ code }: Props) {
         setStatus("stopped");
       }
     }),
-    [sendProject, simReady, useUrlMode]
+    [isCompiling, sendProject, simReady, useUrlMode]
   );
 
   const stopRetry = useCallback(() => {
@@ -149,12 +168,22 @@ export default function PxtSimulatorPane({ code }: Props) {
   }, [code]);
 
   useEffect(() => {
+    if (isCompiling || !queuedRunAfterCompileRef.current) return;
+    queuedRunAfterCompileRef.current = false;
+    controls.run(latestCodeRef.current);
+  }, [controls, isCompiling]);
+
+  useEffect(() => {
+    statusRef.current = status;
+  }, [status]);
+
+  useEffect(() => {
     if (!frameLoaded) return;
-    setStatus("ready");
+    setStatus(hasUserStartedRunRef.current ? "ready" : "idle");
   }, [frameLoaded]);
 
   useEffect(() => {
-    if (!frameLoaded || !autoRun) return;
+    if (!frameLoaded || !autoRun || !hasUserStartedRunRef.current) return;
 
     if (debounceRef.current) {
       clearTimeout(debounceRef.current);
@@ -181,7 +210,15 @@ export default function PxtSimulatorPane({ code }: Props) {
         return;
 
       const data = event.data;
-      console.log("[PXT Sim Pane] Received message:", data);
+      const commandKey =
+        data && typeof data === "object" && "type" in data
+          ? `${String((data as any).type)}:${String((data as any).command ?? "")}`
+          : null;
+
+      if (!(commandKey === "simulator:ready" && lastSimulatorCommandRef.current === commandKey)) {
+        console.log("[PXT Sim Pane] Received message:", data);
+      }
+      lastSimulatorCommandRef.current = commandKey;
 
       // Echo broadcast messages (like radio packets) back to the simulators
       // so boards can communicate with each other.
@@ -201,17 +238,21 @@ export default function PxtSimulatorPane({ code }: Props) {
       }
 
       const isReadyMsg = data.type === "simulator" || data.type === "ready";
-      if (isReadyMsg) {
-        setSimReady(true);
+        if (isReadyMsg) {
+          setSimReady(true);
 
-        if (data.command === "project-received") {
-          projectAckRef.current = true;
-          stopRetry();
+          if (data.command === "project-received") {
+            projectAckRef.current = true;
+            stopRetry();
         } else if (pendingCodeRef.current) {
-          const pending = pendingCodeRef.current;
-          pendingCodeRef.current = null;
-          sendWithRetry(pending);
-        } else if (data.command === "ready" && status !== "running") {
+            const pending = pendingCodeRef.current;
+            pendingCodeRef.current = null;
+            sendWithRetry(pending);
+        } else if (
+          hasUserStartedRunRef.current &&
+          data.command === "ready" &&
+          statusRef.current !== "running"
+        ) {
           // Only send if we are not already running to avoid restart loops
           // when multiple boards report ready.
           sendWithRetry(latestCodeRef.current);
@@ -282,13 +323,13 @@ export default function PxtSimulatorPane({ code }: Props) {
           onLoad={() => {
             setFrameLoaded(true);
             setSimReady(true);
-            setStatus("ready");
+            setStatus(hasUserStartedRunRef.current ? "ready" : "idle");
 
             if (pendingCodeRef.current) {
               const pending = pendingCodeRef.current;
               pendingCodeRef.current = null;
               sendWithRetry(pending);
-            } else if (autoRun) {
+            } else if (autoRun && hasUserStartedRunRef.current) {
               sendWithRetry(latestCodeRef.current);
             }
           }}

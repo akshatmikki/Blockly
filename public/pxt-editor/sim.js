@@ -3826,8 +3826,7 @@ var pxsim;
         //%
         function __playSoundExpression(notes, waitTillDone) {
             notes = lookupBuiltIn(notes);
-            // Volume is multiplied by 0.03 so that it matches the output of other audio blocks.
-            const volume = (pxsim.music.volume() / 0xff) * 0.03;
+            const volume = pxsim.music.volume() / 0xff;
             pxsim.codal.music.__playSoundExpression(notes, waitTillDone, volume);
         }
         music.__playSoundExpression = __playSoundExpression;

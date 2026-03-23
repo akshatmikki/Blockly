@@ -87,7 +87,8 @@ export const buildinBlockStatements: pxt.Map<boolean> = {
     "controls_for_of": true,
     "variables_set": true,
     "variables_change": true,
-    "device_while": true
+    "device_while": true,
+    "controls_forEach": true
 }
 
 // Cached block info from the last inject operation
