@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
 
-export const runtime = 'nodejs';
-
 export function middleware(req: NextRequest) {
   const pathname = req.nextUrl.pathname;
 

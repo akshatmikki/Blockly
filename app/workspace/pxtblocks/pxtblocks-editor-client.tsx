@@ -34,8 +34,8 @@ const toolbox = {
   contents: [
     {
       kind: "category",
-      name: "\uD83D\uDFE6 Basic",
-      colour: "#1f88e5",
+      name: "Basic",
+      colour: "#1E90FF",
       contents: [
         {
           kind: "block",
@@ -74,8 +74,8 @@ const toolbox = {
     },
     {
       kind: "category",
-      name: "\uD83D\uDD18 Input",
-      colour: "#b400d6",
+      name: "Input",
+      colour: "#D400D4",
       contents: [
         { kind: "block", type: "input_on_button_pressed" },
         { kind: "block", type: "input_on_gesture" },
@@ -121,8 +121,8 @@ const toolbox = {
     },
     {
       kind: "category",
-      name: "\uD83C\uDFB5 Music",
-      colour: "#d83b01",
+      name: "Music",
+      colour: "#E25822",
       contents: [
         { kind: "label", text: "Melody" },
         { kind: "block", type: "music_play_melody" },
@@ -161,8 +161,8 @@ const toolbox = {
     },
     {
       kind: "category",
-      name: "\u25A4 LED",
-      colour: "#5e35b1",
+      name: "LED",
+      colour: "#5C2D91",
       contents: [
         {
           kind: "block",
@@ -247,8 +247,8 @@ const toolbox = {
     },
     {
       kind: "category",
-      name: "\uD83D\uDCE1 Radio",
-      colour: "#e91e63",
+      name: "Radio",
+      colour: "#E3008C",
       contents: [
         { kind: "label", text: "Group" },
         { kind: "sep", gap: "8" },
@@ -387,8 +387,8 @@ const toolbox = {
     { kind: "sep" },
     {
       kind: "category",
-      name: "\uD83D\uDD04 Loops",
-      colour: "#5ca65c",
+      name: "Loops",
+      colour: "#00AA00",
       contents: [
         {
           kind: "block",
@@ -434,8 +434,8 @@ const toolbox = {
     },
     {
       kind: "category",
-      name: "\u2B28 Logic",
-      colour: "#5c81a6",
+      name: "Logic",
+      colour: "#00AAAA",
       contents: [
         { kind: "label", text: "Conditionals" },
         {
@@ -490,14 +490,14 @@ const toolbox = {
     },
     {
       kind: "category",
-      name: "\uD835\uDCE7 Variables",
+      name: "Variables",
       custom: "VARIABLE",
-      colour: "#a65c81"
+      colour: "#DC143C"
     },
     {
       kind: "category",
       name: "Math",
-      colour: "#5c68a6",
+      colour: "#9400D3",
       contents: [
         {
           kind: "block",
@@ -619,8 +619,8 @@ const toolbox = {
     },
     {
       kind: "category",
-      name: "\u23F5 Advanced",
-      colour: "#0f766e",
+      name: "Advanced",
+      colour: "#374151",
       contents: [
         {
           kind: "category",
